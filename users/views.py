@@ -10,6 +10,7 @@ from tours.models import Guide, TourOperator
 from tours.serializers import GuideSerializer, TourOperatorSerializer
 from .models import CustomUser
 from .serializers import CustomUserSerializer
+from .permissions import OwnerOrReadOnly
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
@@ -18,7 +19,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
 
 class OwnerObjectsViewSet(viewsets.ViewSet):
-    permission_classes = [permissions.IsAuthenticated]
+    
 
     @action(detail=False, methods=['get', 'post', 'put', 'delete'])
     def hotels(self, request):
@@ -72,6 +73,7 @@ class OwnerObjectsViewSet(viewsets.ViewSet):
     def guides(self, request):
         if request.method == 'GET':
             guides = Guide.objects.filter(owner=request.user)
+            print(guides, request.user.id)
             serializer = GuideSerializer(guides, many=True)
             return Response(serializer.data)
         elif request.method == 'POST':
@@ -115,3 +117,13 @@ class OwnerObjectsViewSet(viewsets.ViewSet):
             touroperator = TourOperator.objects.get(id=request.data['id'], owner=request.user)
             touroperator.delete()
             return Response(status=204)
+
+
+class CabinetViewSet(viewsets.ViewSet):
+    permission_classes = [OwnerOrReadOnly,]
+
+
+    @action(detail=False, methods=['get', 'post', 'put', 'delete'])
+    def guides(self, request):
+        return OwnerObjectsViewSet.guides(self, request)
+       
