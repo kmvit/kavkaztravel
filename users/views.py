@@ -124,6 +124,6 @@ class CabinetViewSet(viewsets.ViewSet):
 
 
     @action(detail=False, methods=['get', 'post', 'put', 'delete'])
-    def guides(self, request):
+    def guide(self, request):
         return OwnerObjectsViewSet.guides(self, request)
        
