@@ -18,6 +18,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
 
 class OwnerObjectsViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
     
 
     @action(detail=False, methods=['get', 'post', 'put', 'delete'])
