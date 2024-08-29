@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
+from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 from django.core.management.utils import get_random_secret_key
@@ -28,7 +29,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY",  default=get_random_secret_key())
 DEBUG = True
 
 
-os.environ.get("HOST", default="127.0.0.1, localhost").split(
+ALLOWED_HOSTS = os.environ.get("HOST", default="127.0.0.1, localhost").split(
     ","
 )
 # Application definition
