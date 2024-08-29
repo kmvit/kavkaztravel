@@ -51,9 +51,11 @@ INSTALLED_APPS = [
     'tours',
     'attractions',
     'entertainments',
+    
     'reviews',
     'drf_spectacular',
     'drf_spectacular_sidecar',  # required for Django collectstatic discovery
+    'blog'
 ]
 
 MIDDLEWARE = [
