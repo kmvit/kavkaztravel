@@ -3,7 +3,7 @@ from .models import Guide, TourOperator
 
 
 class GuideSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner =serializers.StringRelatedField(read_only=True)# serializers.ReadOnlyField(source='owner.username')
 
     class Meta:
         model = Guide
@@ -11,7 +11,7 @@ class GuideSerializer(serializers.ModelSerializer):
 
 
 class TourOperatorSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.username')
+    owner = serializers.StringRelatedField(read_only=True)#serializers.ReadOnlyField(source='owner.username')
 
     class Meta:
         model = TourOperator

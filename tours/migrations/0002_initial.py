@@ -10,36 +10,45 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("regions", "0001_initial"),
-        ("restaurants", "0001_initial"),
+        ("tours", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="restaurant",
+            model_name="guide",
             name="owner",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="restaurants",
+                related_name="guides",
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
         migrations.AddField(
-            model_name="restaurant",
+            model_name="guide",
             name="region",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="restaurants",
+                related_name="guides",
                 to="regions.region",
             ),
         ),
         migrations.AddField(
-            model_name="restaurantimage",
-            name="restaurant",
+            model_name="touroperator",
+            name="owner",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="images",
-                to="restaurants.restaurant",
+                related_name="touroperators",
+                to=settings.AUTH_USER_MODEL,
+            ),
+        ),
+        migrations.AddField(
+            model_name="touroperator",
+            name="region",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="touroperators",
+                to="regions.region",
             ),
         ),
     ]

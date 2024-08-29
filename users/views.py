@@ -19,6 +19,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
 class OwnerObjectsViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    
 
     @action(detail=False, methods=['get', 'post', 'put', 'delete'])
     def hotels(self, request):
@@ -115,3 +116,4 @@ class OwnerObjectsViewSet(viewsets.ViewSet):
             touroperator = TourOperator.objects.get(id=request.data['id'], owner=request.user)
             touroperator.delete()
             return Response(status=204)
+       
