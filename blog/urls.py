@@ -9,6 +9,6 @@ router.register(r'blog', BlogViewSet)
    
 
 urlpatterns = [
-       path('blog/<slug:slug>/', BlogViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), 
+       path('blog/<slug:slug>/', BlogViewSet.as_view({'get': 'retrieve'}), 
             name='blog-detail')] + router.urls
 

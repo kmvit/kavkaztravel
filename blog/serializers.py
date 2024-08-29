@@ -3,17 +3,8 @@ from .models import Blog
 
 
 class BlogSerializer(serializers.ModelSerializer):
-   
+    """Сериалайзер для модели Blog."""
     class Meta:
         model = Blog
-        fields = fields = (
-            "id",
-            "title",
-            "slug",
-            "photo",
-            "content",
-            "created_at",
-            "updated_at",
-            "published",
-        )
+        fields = '__all__'
  

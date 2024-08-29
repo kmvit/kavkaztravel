@@ -1,10 +1,9 @@
 from django.db import models
+from core.models import BaseContent
 
-class Blog(models.Model):
+class Blog(BaseContent):
+    """Класс для модели Blog."""
     title = models.CharField(max_length=200, verbose_name="Название")
-    slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL")
-    photo = models.ImageField(default=None, blank=True, null=True, verbose_name="Фото")
-    content = models.TextField(verbose_name="Текст")               
     created_at = models.DateTimeField(auto_now_add=True)  
     updated_at = models.DateTimeField(auto_now=True)      
     published = models.BooleanField(default=False)  

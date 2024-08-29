@@ -3,6 +3,7 @@ from django.utils import timezone
 
 
 class BaseContent(models.Model):
+    """Базовый класс для моделей."""
     name = models.CharField(max_length=100)
     url = models.SlugField(unique=True, blank=True)
     description = models.TextField(blank=True, null=True)
