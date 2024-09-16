@@ -5,7 +5,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-
+from django.urls import re_path
 from Kavkaztome import settings
 
 schema_view = get_schema_view(
@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/', include('entertainments.urls')),
     path('api/', include('users.urls')),
     path('api/', include('reviews.urls')),
+    re_path(r'^auth/', include('drf_social_oauth2.urls', namespace='drf')),
     path('api/', include('blog.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'),
