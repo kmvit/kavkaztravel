@@ -22,9 +22,7 @@ class Year(BaseContent):
     """Класс для года выпуска машины."""
     name = models.PositiveIntegerField(verbose_name="Год выпуска машины", blank=True, null=True)
 
-    def __str__(self):
-        return self.name
-
+ 
 
 class Color(BaseContent):
     """Класс для года выпуска машины."""
@@ -44,24 +42,30 @@ class BodyType(BaseContent):
 
 class Auto(BaseContent):
     """Класс для модели Машины."""
-    brand = models.ForeignKey(Brand, verbose_name="Брэнд",
-        on_delete=models.CASCADE,
+    brand = models.ForeignKey(Brand,
+        on_delete=models.CASCADE, null=True,
+                               blank=True,
     )
-    model = models.ForeignKey(Model, verbose_name="Модель",
-        on_delete=models.CASCADE,
+    model = models.ForeignKey(Model,
+        on_delete=models.CASCADE, null=True,
+                               blank=True,
     )
-    year = models.ForeignKey(Year, verbose_name="Год выпуска",
-        on_delete=models.CASCADE,
+    year = models.ForeignKey(Year,
+        on_delete=models.CASCADE, null=True,
+                               blank=True,
     )
-    color = models.ForeignKey(Color, verbose_name="Цвет",
-        on_delete=models.CASCADE,
+    color = models.ForeignKey(Color,
+        on_delete=models.CASCADE, null=True,
+                               blank=True,
     )
-    body_type = models.ForeignKey(BodyType, verbose_name="Кузов",
-        on_delete=models.CASCADE,
+    body_type = models.ForeignKey(BodyType,
+        on_delete=models.CASCADE, null=True,
+                               blank=True,
     )
 
     def __str__(self):
-        return self.model
+      return str(self.name)
+    
 
 class Foto(models.Model):
     """Класс для модели фото машины."""

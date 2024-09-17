@@ -7,7 +7,9 @@ from .serializers import (
     BodyTypeSerializer, AutoSerializer, FotoSerializer, CompanySerializer
 )
 from django.shortcuts import get_object_or_404 
-
+from http import HTTPStatus
+from rest_framework import status
+from rest_framework.response import Response
 
 class BrandViewSet(viewsets.ModelViewSet):
     """
@@ -56,20 +58,53 @@ class AutoViewSet(viewsets.ModelViewSet):
     queryset = Auto.objects.all()
     serializer_class = AutoSerializer
 
-    def perform_create(self, serializer): 
-        brand_id = self.kwargs.get('brand_id') 
-        brand = get_object_or_404(Brand, id=brand_id) 
-        model_id = self.kwargs.get('model_id') 
-        model = get_object_or_404(Model, id=model_id) 
-        year_id = self.kwargs.get('year_id') 
-        year = get_object_or_404(Year, id=year_id) 
-        color_id = self.kwargs.get('сolor_id') 
-        color = get_object_or_404(Year, id=color_id) 
-        body_type_id = self.kwargs.get('body_type_id') 
-        body_type = get_object_or_404(Year, id=body_type_id) 
+    def perform_create(self, serializer):
+        brand_id = int(self.request.data.get("brand"))
+        brand = get_object_or_404(Brand, id=brand_id)
+        model_id = int(self.request.data.get('model'))
+        model = get_object_or_404(Model, id=model_id)
+        year_id = self.request.data.get('year')
+        year = get_object_or_404(Year, id=year_id)
+        color_id = int(self.request.data.get('color'))
+        color = get_object_or_404(Color, id=color_id)
+        body_type_id = int(self.request.data.get('body_type'))
+        body_type = get_object_or_404(BodyType, id=body_type_id)
 
+        serializer.save(
+            brand=brand,
+            model=model,
+            color=color,
+            year=year,
+            body_type=body_type
+        )
+        return Response(status=status.HTTP_201_CREATED)
 
-        serializer.save(brand=brand, model=model, year=year, color=color, body_type=body_type) 
+    
+    def perform_update(self, serializer):
+        brand_id = int(self.request.data.get("brand", self.get_object().brand.id))
+        brand = get_object_or_404(Brand, id=brand_id)
+        model_id = int(self.request.data.get('model', self.get_object().model.id))
+        model = get_object_or_404(Model, id=model_id)
+        year_id = self.request.data.get('year', self.get_object().year.id)
+        year = get_object_or_404(Year, id=year_id)
+        color_id = int(self.request.data.get('color', self.get_object().color.id))
+        color = get_object_or_404(Color, id=color_id)
+        body_type_id = int(self.request.data.get('body_type', self.get_object().body_type.id))
+        body_type = get_object_or_404(BodyType, id=body_type_id)
+
+        serializer.save(
+            brand=brand,
+            model=model,
+            color=color,
+            year=year,
+            body_type=body_type
+        )
+        return Response(status=status.HTTP_200_OK)
+
+    def destroy(self, request, *args, **kwargs):
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response(status=204)
 
 
 class FotoViewSet(viewsets.ModelViewSet):

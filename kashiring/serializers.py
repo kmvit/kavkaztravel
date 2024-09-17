@@ -52,11 +52,11 @@ class AutoSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Auto.
     """
-    brand = serializers.StringRelatedField(read_only=True)
-    model = serializers.StringRelatedField(read_only=True)
-    year =  serializers.StringRelatedField(read_only=True)
-    color =  serializers.StringRelatedField(read_only=True)
-    body_type = serializers.StringRelatedField(read_only=True)
+    brand =serializers.PrimaryKeyRelatedField(read_only=True)
+    model = serializers.PrimaryKeyRelatedField(read_only=True)
+    year =  serializers.PrimaryKeyRelatedField(read_only=True)
+    color =  serializers.PrimaryKeyRelatedField(read_only=True)
+    body_type = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Auto
