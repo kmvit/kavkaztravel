@@ -1,6 +1,4 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status
-from rest_framework.response import Response
+from rest_framework import viewsets
 from .models import (
     Brand, Model, Year, Color, BodyType, Auto, Foto, Company
 )
@@ -8,11 +6,14 @@ from .serializers import (
     BrandSerializer, ModelSerializer, YearSerializer, ColorSerializer,
     BodyTypeSerializer, AutoSerializer, FotoSerializer, CompanySerializer
 )
-
+from django.shortcuts import get_object_or_404 
+from http import HTTPStatus
+from rest_framework import status
+from rest_framework.response import Response
 
 class BrandViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for performing CRUD operations on Brand models.
+    Представление для CRUD операций с моделями Brand.
     """
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
@@ -20,7 +21,7 @@ class BrandViewSet(viewsets.ModelViewSet):
 
 class ModelViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for performing CRUD operations on Model models.
+    Представление для CRUD операций с моделями Model.
     """
     queryset = Model.objects.all()
     serializer_class = ModelSerializer
@@ -28,7 +29,7 @@ class ModelViewSet(viewsets.ModelViewSet):
 
 class YearViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for performing CRUD operations on Year models.
+    Представление для CRUD операций с моделями Year.
     """
     queryset = Year.objects.all()
     serializer_class = YearSerializer
@@ -36,7 +37,7 @@ class YearViewSet(viewsets.ModelViewSet):
 
 class ColorViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for performing CRUD operations on Color models.
+    Представление для CRUD операций с моделями Color.
     """
     queryset = Color.objects.all()
     serializer_class = ColorSerializer
@@ -44,7 +45,7 @@ class ColorViewSet(viewsets.ModelViewSet):
 
 class BodyTypeViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for performing CRUD operations on BodyType models.
+    Представление для CRUD операций с моделями BodyType.
     """
     queryset = BodyType.objects.all()
     serializer_class = BodyTypeSerializer
@@ -52,48 +53,23 @@ class BodyTypeViewSet(viewsets.ModelViewSet):
 
 class AutoViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for performing CRUD operations on Auto models.
+    Представление для CRUD операций с моделями Auto.
     """
     queryset = Auto.objects.all()
     serializer_class = AutoSerializer
 
-    def get_related_objects(self, data):
-        """
-        Helper method to get related objects from the request data.
-        """
-        try:
-            brand = Brand.objects.get(id=int(data.get("brand")))
-            model = Model.objects.get(id=int(data.get('model')))
-            year = Year.objects.get(id=int(data.get('year')))
-            color = Color.objects.get(id=int(data.get('color')))
-            body_type = BodyType.objects.get(id=int(data.get('body_type')))
-        except (Brand.DoesNotExist, Model.DoesNotExist, Year.DoesNotExist,
-                Color.DoesNotExist, BodyType.DoesNotExist) as e:
-            raise serializers.ValidationError({"detail": str(e)})
-
-        return brand, model, year, color, body_type
-
     def perform_create(self, serializer):
-        brand, model, year, color, body_type = self.get_related_objects(
-            self.request.data
-        )
-        serializer.save(
-            brand=brand,
-            model=model,
-            color=color,
-            year=year,
-            body_type=body_type
-        )
+        brand_id = int(self.request.data.get("brand"))
+        brand = get_object_or_404(Brand, id=brand_id)
+        model_id = int(self.request.data.get('model'))
+        model = get_object_or_404(Model, id=model_id)
+        year_id = self.request.data.get('year')
+        year = get_object_or_404(Year, id=year_id)
+        color_id = int(self.request.data.get('color'))
+        color = get_object_or_404(Color, id=color_id)
+        body_type_id = int(self.request.data.get('body_type'))
+        body_type = get_object_or_404(BodyType, id=body_type_id)
 
-    def perform_update(self, serializer):
-        data = self.request.data
-        brand, model, year, color, body_type = self.get_related_objects({
-            'brand': data.get("brand", self.get_object().brand.id),
-            'model': data.get('model', self.get_object().model.id),
-            'year': data.get('year', self.get_object().year.id),
-            'color': data.get('color', self.get_object().color.id),
-            'body_type': data.get('body_type', self.get_object().body_type.id)
-        })
         serializer.save(
             brand=brand,
             model=model,
@@ -101,16 +77,39 @@ class AutoViewSet(viewsets.ModelViewSet):
             year=year,
             body_type=body_type
         )
+        return Response(status=status.HTTP_201_CREATED)
+
+    
+    def perform_update(self, serializer):
+        brand_id = int(self.request.data.get("brand", self.get_object().brand.id))
+        brand = get_object_or_404(Brand, id=brand_id)
+        model_id = int(self.request.data.get('model', self.get_object().model.id))
+        model = get_object_or_404(Model, id=model_id)
+        year_id = self.request.data.get('year', self.get_object().year.id)
+        year = get_object_or_404(Year, id=year_id)
+        color_id = int(self.request.data.get('color', self.get_object().color.id))
+        color = get_object_or_404(Color, id=color_id)
+        body_type_id = int(self.request.data.get('body_type', self.get_object().body_type.id))
+        body_type = get_object_or_404(BodyType, id=body_type_id)
+
+        serializer.save(
+            brand=brand,
+            model=model,
+            color=color,
+            year=year,
+            body_type=body_type
+        )
+        return Response(status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response(status=204)
 
 
 class FotoViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for performing CRUD operations on Foto models.
+    Представление для CRUD операций с моделями Foto.
     """
     queryset = Foto.objects.all()
     serializer_class = FotoSerializer
@@ -118,7 +117,7 @@ class FotoViewSet(viewsets.ModelViewSet):
 
 class CompanyViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for performing CRUD operations on Company models.
+    Представление для CRUD операций с моделями Company.
     """
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
