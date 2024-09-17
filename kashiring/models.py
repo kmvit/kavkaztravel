@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from core.models import BaseContent
 
@@ -74,4 +75,7 @@ class Company(BaseContent):
     """Класс для модели Компа."""
     working_hours = models.TextField(blank=True, null=True)
     auto = models.ManyToManyField(Auto, blank=True, verbose_name="машины")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
+                              on_delete=models.CASCADE,
+                              related_name='company')
     

@@ -57,6 +57,9 @@ INSTALLED_APPS = [
     'drf_spectacular_sidecar',  # required for Django collectstatic discovery
     'blog',
     "kashiring",
+    
+
+   
 
 ]
 
