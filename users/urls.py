@@ -8,7 +8,10 @@ router = DefaultRouter()
 router.register(r'users', CustomUserViewSet)
 router.register(r'owner_objects', OwnerObjectsViewSet,
                 basename='owner_objects')
-
+router.register(r'cabinet', OwnerObjectsViewSet,
+                basename='cabinet')
 urlpatterns = [
     path('v1/', include(router.urls)),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.jwt'))
 ]

@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="Restaurant",
+            name="Blog",
             fields=[
                 (
                     "id",
@@ -34,26 +34,13 @@ class Migration(migrations.Migration):
                 ),
                 ("seo_title", models.CharField(blank=True, max_length=255, null=True)),
                 ("seo_description", models.TextField(blank=True, null=True)),
-                ("address", models.CharField(max_length=300)),
+                ("title", models.CharField(max_length=200, verbose_name="Название")),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("published", models.BooleanField(default=False)),
             ],
             options={
-                "verbose_name": "Объект питания",
-                "verbose_name_plural": "Объекты питания",
+                "abstract": False,
             },
-        ),
-        migrations.CreateModel(
-            name="RestaurantImage",
-            fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                ("image", models.ImageField(upload_to="")),
-            ],
         ),
     ]
