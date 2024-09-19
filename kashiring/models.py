@@ -20,10 +20,10 @@ class Model(BaseContent):
 
 class Year(BaseContent):
     """Класс для года выпуска машины."""
-    name = models.PositiveIntegerField(verbose_name="Год выпуска машины", blank=True, null=True)
-
- 
-
+    name = models.CharField(max_length=50, blank=True, null=True)
+    year = models.PositiveIntegerField(verbose_name="Год выпуска машины", blank=True, null=True)
+    
+    
 class Color(BaseContent):
     """Класс для года выпуска машины."""
     name = models.CharField(max_length=50, verbose_name="Цвет машины", blank=True, null=True)
@@ -62,6 +62,7 @@ class Auto(BaseContent):
         on_delete=models.CASCADE, null=True,
                                blank=True,
     )
+    
 
     def __str__(self):
       return str(self.name)

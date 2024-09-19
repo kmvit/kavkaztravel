@@ -27,7 +27,7 @@ class YearSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Year
-        fields = '__all__'
+        fields = ("year",)
 
 
 class ColorSerializer(serializers.ModelSerializer):
@@ -50,7 +50,7 @@ class BodyTypeSerializer(serializers.ModelSerializer):
 
 class AutoSerializer(serializers.ModelSerializer):
     """
-    Сериализатор для модели Auto.
+    Сериализатор для создания и изменения обьектов модели.
     """
     brand =serializers.PrimaryKeyRelatedField(read_only=True)
     model = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -63,23 +63,39 @@ class AutoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class FotoSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели Foto.
-    """
-    auto = AutoSerializer()
+class AutoGETSerializer(serializers.ModelSerializer):
+    brand = serializers.StringRelatedField(read_only=True)
+    model = serializers.StringRelatedField(read_only=True)
+    year =  YearSerializer()
+    color =  serializers.StringRelatedField(read_only=True)
+    body_type = serializers.StringRelatedField(read_only=True)
 
     class Meta:
-        model = Foto
-        fields = '__all__'
+        model = Auto
+        fields = ("id", "brand", "model", "year", "color", "body_type")
 
+
+class AutoMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Auto
+        fields = ('name',)
+
+
+class CompanyAutoSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели Company.
+    """
+    auto = AutoMiniSerializer(many=True)
+
+    class Meta:
+        model = Company
+        fields = ("name", "auto",)
 
 class CompanySerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Company.
     """
-    auto = AutoSerializer(many=True)
-
+    
     class Meta:
         model = Company
-        fields = '__all__'
+        fields = ("name",)

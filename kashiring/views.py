@@ -4,7 +4,7 @@ from .models import (
 )
 from .serializers import (
     BrandSerializer, ModelSerializer, YearSerializer, ColorSerializer,
-    BodyTypeSerializer, AutoSerializer, FotoSerializer, CompanySerializer
+    BodyTypeSerializer, AutoSerializer, AutoGETSerializer, CompanyAutoSerializer, CompanySerializer
 )
 from django.shortcuts import get_object_or_404 
 from http import HTTPStatus
@@ -56,7 +56,12 @@ class AutoViewSet(viewsets.ModelViewSet):
     Представление для CRUD операций с моделями Auto.
     """
     queryset = Auto.objects.all()
-    serializer_class = AutoSerializer
+  
+    def get_serializer_class(self):
+        """Функция выбора класса - сериализатора в зависимости от метода"""
+        if self.action in ("list", "retrieve"):
+            return AutoGETSerializer
+        return AutoSerializer
 
     def perform_create(self, serializer):
         brand_id = int(self.request.data.get("brand"))
@@ -105,19 +110,27 @@ class AutoViewSet(viewsets.ModelViewSet):
             instance = self.get_object()
             self.perform_destroy(instance)
             return Response(status=204)
+    
+    def to_representation(self, instance):
+        """
+        Переопределяем метод to_representation для удаления полей с null значениями.
+        """
+        representation = super().to_representation(instance)
+        # Удаляем ключи, значения которых равны None
+        return {key: value for key, value in representation.items() if
+                value is not None}
 
 
-class FotoViewSet(viewsets.ModelViewSet):
+class CompanyAutoViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Представление для CRUD операций с моделями Foto.
+    Представление для READ операций с моделями Company и получения машины.
     """
-    queryset = Foto.objects.all()
-    serializer_class = FotoSerializer
+    queryset = Company.objects.all()
+    serializer_class = CompanyAutoSerializer
 
-
-class CompanyViewSet(viewsets.ModelViewSet):
+class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Представление для CRUD операций с моделями Company.
+    Представление для READ операций с моделями Company.
     """
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
