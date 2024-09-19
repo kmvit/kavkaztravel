@@ -51,14 +51,19 @@ INSTALLED_APPS = [
     'tours',
     'attractions',
     'entertainments',
-    
+
     'reviews',
     'drf_spectacular',
     'drf_spectacular_sidecar',  # required for Django collectstatic discovery
     'oauth2_provider',
     'social_django',
     'rest_framework_social_oauth2',
-    'blog'
+    'blog',
+    "kashiring",
+    
+
+   
+
 ]
 
 MIDDLEWARE = [
@@ -157,9 +162,9 @@ REST_FRAMEWORK = {
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',  # django-oauth-toolkit >= 1.0.0
         'drf_social_oauth2.authentication.SocialAuthentication',
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ],
+    #'DEFAULT_PERMISSION_CLASSES': [
+    #    'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    #],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 

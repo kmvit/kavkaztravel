@@ -9,46 +9,48 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("regions", "0001_initial"),
-        ("tours", "0001_initial"),
+        ("kashiring", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="guide",
+            model_name="company",
             name="owner",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="guides",
+                related_name="company",
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
         migrations.AddField(
-            model_name="guide",
-            name="region",
+            model_name="foto",
+            name="auto",
             field=models.ForeignKey(
+                blank=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="guides",
-                to="regions.region",
+                related_name="Машина",
+                to="kashiring.auto",
             ),
         ),
         migrations.AddField(
-            model_name="touroperator",
-            name="owner",
+            model_name="auto",
+            name="model",
             field=models.ForeignKey(
+                blank=True,
+                null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="touroperators",
-                to=settings.AUTH_USER_MODEL,
+                to="kashiring.model",
             ),
         ),
         migrations.AddField(
-            model_name="touroperator",
-            name="region",
+            model_name="auto",
+            name="year",
             field=models.ForeignKey(
+                blank=True,
+                null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="touroperators",
-                to="regions.region",
+                to="kashiring.year",
             ),
         ),
     ]
