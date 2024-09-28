@@ -76,11 +76,15 @@ class TourConditions(BaseContent):
                               on_delete=models.CASCADE,
                               related_name='tour')
     name = models.CharField(max_length=100, blank=True, null=True)
-    duration =  models.IntegerField(blank=True, null=True)
-    group_size = models.IntegerField(blank=True, null=True)
-    children = models.CharField(max_length=100, blank=True, null=True)
+    duration = models.IntegerField(blank=True, null=True, 
+                                   verbose_name="Продолжительность тура",)
+    group_size = models.IntegerField(blank=True, null=True,
+                                     verbose_name="Количество человек")
+    children = models.CharField(max_length=100, blank=True, null=True,
+                                verbose_name="Наличие детей")
     transport = models.CharField(max_length=100, blank=True, null=True)
-    cost = models.IntegerField(blank=True, null=True)
+    cost = models.IntegerField(blank=True, null=True, 
+                               verbose_name="Стоимость тура")
 
 
 class Order(BaseContent):
