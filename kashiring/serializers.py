@@ -76,9 +76,13 @@ class AutoGETSerializer(serializers.ModelSerializer):
 
 
 class AutoMiniSerializer(serializers.ModelSerializer):
+
+    brand = serializers.StringRelatedField(read_only=True)
+    model = serializers.StringRelatedField(read_only=True)
+
     class Meta:
         model = Auto
-        fields = ('name',)
+        fields = ("id", "brand", "model",)
 
 
 class CompanyAutoSerializer(serializers.ModelSerializer):
