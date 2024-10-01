@@ -35,15 +35,18 @@ class Tour(BaseContent):
                                related_name='touroperators')
 
 
-class GalleryTour(BaseContent):
+class GalleryTour(models.Model):
     """Класс для модели галереи фотографий тура.
     Фотографии содержаться в поле  image."""
     tour = models.ForeignKey(settings.AUTH_USER_MODEL,
                               on_delete=models.CASCADE,
                               related_name='tour')
+    image = models.ImageField(upload_to='content_images/', blank=True,
+                              null=True)
+    
 
 
-class EstimationTour(BaseContent):
+class EstimationTour(models.Model):
     """Класс для модели, который содержит оценки и отзывы."""
     tour = models.ForeignKey(settings.AUTH_USER_MODEL,
                               on_delete=models.CASCADE,
@@ -53,21 +56,23 @@ class EstimationTour(BaseContent):
                                      verbose_name="Оценка тура",
                                      choices=list(zip(range(1, 10), range(1, 10))))
     feedback = models.TextField(blank=True, null=True, verbose_name="Отзыв")
+    image = models.ImageField(upload_to='content_images/', blank=True,
+                              null=True)
+    date = models.DateField(auto_now_add=True, null=True)
 
 
-class DateTour(BaseContent):
+class DateTour(models.Model):
     """Класс для модели, которая содержит 
     даты начало и конца тура."""
     tour = models.ForeignKey(settings.AUTH_USER_MODEL,
                               on_delete=models.CASCADE,
                               related_name='tour')
-    name = models.CharField(max_length=100, blank=True, null=True)
     begin_date = models.DateField(verbose_name="Начало тура",)
     end_date = models.DateField(verbose_name="Конец тура",)
     is_free = models.BooleanField(default = True)
 
 
-class TourConditions(BaseContent):
+class TourConditions(models.Model):
     """Класс для модели, которая содержит условия тура.
     Продолжительность, количество человек в группе,
     наличие детей в группе, стоимость. 
@@ -87,13 +92,12 @@ class TourConditions(BaseContent):
                                verbose_name="Стоимость тура")
 
 
-class Order(BaseContent):
+class Order(models.Model):
     """Класс для модели заказа тура. Содержит информацию
     о заказчике тура и предполагаемой дате тура."""
     tour = models.ForeignKey(settings.AUTH_USER_MODEL,
                               on_delete=models.CASCADE,
                               related_name='tour')
-    name = models.CharField(max_length=100, blank=True, null=True)
     date = models.DateField()
     size =  models.IntegerField(blank=True, null=True)
     username = models.CharField(max_length=150)
