@@ -38,8 +38,7 @@ class Tour(BaseContent):
 class GalleryTour(models.Model):
     """Класс для модели галереи фотографий тура.
     Фотографии содержаться в поле  image."""
-    tour = models.ForeignKey(settings.AUTH_USER_MODEL,
-                              on_delete=models.CASCADE,
+    tour = models.ForeignKey(Tour, on_delete=models.CASCADE,
                               related_name='tour')
     image = models.ImageField(upload_to='content_images/', blank=True,
                               null=True)
@@ -48,8 +47,7 @@ class GalleryTour(models.Model):
 
 class EstimationTour(models.Model):
     """Класс для модели, который содержит оценки и отзывы."""
-    tour = models.ForeignKey(settings.AUTH_USER_MODEL,
-                              on_delete=models.CASCADE,
+    tour = models.ForeignKey(Tour, on_delete=models.CASCADE,
                               related_name='tour')
     estimation = models.IntegerField(blank=True, 
                                      null=True, 
@@ -64,8 +62,7 @@ class EstimationTour(models.Model):
 class DateTour(models.Model):
     """Класс для модели, которая содержит 
     даты начало и конца тура."""
-    tour = models.ForeignKey(settings.AUTH_USER_MODEL,
-                              on_delete=models.CASCADE,
+    tour = models.ForeignKey(Tour, on_delete=models.CASCADE,
                               related_name='tour')
     begin_date = models.DateField(verbose_name="Начало тура",)
     end_date = models.DateField(verbose_name="Конец тура",)
@@ -77,10 +74,8 @@ class TourConditions(models.Model):
     Продолжительность, количество человек в группе,
     наличие детей в группе, стоимость. 
     """
-    tour = models.ForeignKey(settings.AUTH_USER_MODEL,
-                              on_delete=models.CASCADE,
+    tour = models.ForeignKey(Tour, on_delete=models.CASCADE,
                               related_name='tour')
-    name = models.CharField(max_length=100, blank=True, null=True)
     duration = models.IntegerField(blank=True, null=True, 
                                    verbose_name="Продолжительность тура",)
     group_size = models.IntegerField(blank=True, null=True,
@@ -95,8 +90,7 @@ class TourConditions(models.Model):
 class Order(models.Model):
     """Класс для модели заказа тура. Содержит информацию
     о заказчике тура и предполагаемой дате тура."""
-    tour = models.ForeignKey(settings.AUTH_USER_MODEL,
-                              on_delete=models.CASCADE,
+    tour = models.ForeignKey(Tour, on_delete=models.CASCADE,
                               related_name='tour')
     date = models.DateField()
     size =  models.IntegerField(blank=True, null=True)
