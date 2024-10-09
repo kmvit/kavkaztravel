@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions
-from .models import DateTour, GalleryTour, Guide, Tag, Tour, TourOperator
-from .serializers import DateTourrSerializer, GalleryTourSerializer, GuideSerializer, TourGETSerializer, TourOperatorSerializer, TourSerializer
+from .models import DateTour, EstimationTour, GalleryTour, Guide, Order, Tag, Tour, TourOperator
+from .serializers import DateTourrSerializer, EstimationTourGetSerializer, EstimationTourSerializer, GalleryTourSerializer, GuideSerializer, OrderGetSerializer, OrderSerializer, TourGETSerializer, TourOperatorSerializer, TourSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
@@ -76,3 +76,47 @@ class GalleryTourViewSet(viewsets.ReadOnlyModelViewSet):
 class DateTourViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DateTour.objects.all()
     serializer_class = DateTourrSerializer
+
+class OrderViewSet(viewsets.ModelViewSet):
+    """Представление для управления заказами тура.
+    
+    Этот класс предоставляет операции для создания, чтения,
+    обновления и удаления заказов, используя сериализатор OrderSerializer.
+    """
+    
+    queryset = Order.objects.all()
+   
+    def get_serializer_class(self):
+        if self.action in ("list", "retrieve"):
+            return OrderGetSerializer
+        return OrderSerializer
+    
+    def perform_create(self, serializer):
+        """
+        Переопределяем метод perform_create.
+        """
+        tour_id = int(self.request.data.get("tour"))
+        tour = get_object_or_404(Tour, id=tour_id)
+        serializer.save(tour=tour)
+        return Response(status=status.HTTP_201_CREATED)
+
+    def perform_update(self, serializer):
+        """
+        Переопределяем метод perform_update.
+        """
+        tour_id = int(
+            self.request.data.get("tour_operator", self.get_object().tour_id)
+        )
+        tour = get_object_or_404(Tour, id=tour_id)
+        serializer.save(tour=tour)
+        return Response(status=status.HTTP_200_OK)
+
+
+class EstimationTourViewSet(OrderViewSet):
+    queryset = EstimationTour.objects.all()  # Получаем все объекты EstimationTour
+
+    
+    def get_serializer_class(self):
+        if self.action in ("list", "retrieve"):
+            return EstimationTourGetSerializer
+        return EstimationTourSerializer
