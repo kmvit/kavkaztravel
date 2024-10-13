@@ -7,7 +7,7 @@ from handlers import user_router
 
 
 load_dotenv()
-BOT_TOKEN = "6595664152:AAHMpi9kioukFo__YXxqzm8n9z7497C4QKg"
+BOT_TOKEN = 
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
