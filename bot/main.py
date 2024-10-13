@@ -1,0 +1,18 @@
+from aiogram import Bot, Dispatcher
+import os
+from dotenv import load_dotenv
+from handlers import user_router
+
+
+
+
+load_dotenv()
+BOT_TOKEN = "6595664152:AAHMpi9kioukFo__YXxqzm8n9z7497C4QKg"
+
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
+
+dp.include_router(user_router)
+if __name__ == '__main__':
+    print(100)
+    dp.run_polling(bot)

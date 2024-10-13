@@ -1,9 +1,11 @@
+from .filter import TourFilter
 from rest_framework import viewsets, permissions
-from .models import DateTour, EstimationTour, GalleryTour, Guide, Order, Tag, Tour, TourOperator
-from .serializers import DateTourrSerializer, EstimationTourGetSerializer, EstimationTourSerializer, GalleryTourSerializer, GuideSerializer, OrderGetSerializer, OrderSerializer, TourGETSerializer, TourOperatorSerializer, TourSerializer
+from .models import DateTour, EstimationTour, GalleryTour, Geo, Guide, Order, Tag, Tour, TourOperator
+from .serializers import DateTourrSerializer, EstimationTourGetSerializer, EstimationTourSerializer, GalleryTourSerializer, GeoSerializer, GuideSerializer, OrderGetSerializer, OrderSerializer, TagSerializer, TourGETSerializer, TourOperatorSerializer, TourSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
+from django_filters.rest_framework import DjangoFilterBackend
 
 class GuideViewSet(viewsets.ModelViewSet):
     queryset = Guide.objects.all()
@@ -30,9 +32,12 @@ class TourOperatorViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+
 class TourViewSet(viewsets.ModelViewSet):
     queryset = Tour.objects.all()
     serializer_class = TourGETSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TourFilter
     
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
@@ -76,6 +81,14 @@ class GalleryTourViewSet(viewsets.ReadOnlyModelViewSet):
 class DateTourViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DateTour.objects.all()
     serializer_class = DateTourrSerializer
+
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    
+class GeoViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Geo.objects.all()
+    serializer_class = GeoSerializer
 
 class OrderViewSet(viewsets.ModelViewSet):
     """Представление для управления заказами тура.

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import DateTour, EstimationTour, GalleryTour, Guide, Order, Tag, Tour, TourOperator
+from .models import DateTour, EstimationTour, GalleryTour, Geo, Guide, Order, Tag, Tour, TourOperator
 
 
 class GuideSerializer(serializers.ModelSerializer):
@@ -23,21 +23,27 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ('id', 'name')
         
-        
+
+class GeoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Geo
+        fields = ['id', 'geo_title', 'geo_description']
+     
 class TourGETSerializer(serializers.ModelSerializer):
     tag = TagSerializer()
     tour_operator = serializers.StringRelatedField(read_only=True)
+    geo = GeoSerializer()
 
     class Meta:
         model = Tour
-        fields = ('id', 'name', "description",  "seo_title", "seo_description", "tag", 'tour_operator')
+        fields = ('id', 'name', "description",  "geo", "tag", 'tour_operator')
    
 
 class TourSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tour
-        fields = ('id', 'name', "description",  "seo_title", "seo_description", "tag", 'tour_operator')
+        fields = ('id', 'name', "description", "geo", "tag", 'tour_operator')
    
 
 
@@ -47,7 +53,8 @@ class GalleryTourSerializer(serializers.ModelSerializer):
         model = GalleryTour
         fields = ('id', 'tour', 'image')
         
-      
+
+
 class DateTourrSerializer(serializers.ModelSerializer):
     tour = TourGETSerializer()
 
@@ -106,3 +113,4 @@ class EstimationTourGetSerializer(serializers.ModelSerializer):
         if total_estimation>0:
             return round(sum_estimation / total_estimation, 2)
         return 10
+

@@ -32,18 +32,24 @@ class Tour(models.Model):
     tour_operator = models.ForeignKey(TourOperator, on_delete=models.CASCADE,
                                related_name='touroperators')
     tag = models.ForeignKey("Tag", on_delete=models.CASCADE, related_name='tag')
+    geo = models.ForeignKey("Geo", on_delete=models.CASCADE, related_name='tag')
     name = models.CharField(max_length=100)
     content = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     date = models.DateField(auto_now_add=True, null=True)
-    seo_title = models.CharField(max_length=255, blank=True, null=True)
-    seo_description = models.TextField(blank=True, null=True)
     
+   
     def __str__(self):
         return self.name
     
 
+class Geo(models.Model):
+    geo_title = models.CharField(max_length=255, blank=True, null=True)
+    geo_description = models.TextField(blank=True, null=True)
 
+    def __str__(self):
+        return self.geo_title
+    
 class GalleryTour(models.Model):
     """Класс для модели галереи фотографий тура.
     Фотографии содержаться в поле  image."""
