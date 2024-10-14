@@ -1,35 +1,16 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import (
     InlineKeyboardButton,
-    InlineKeyboardMarkup,
 )
 
-from lexicon import BUTTONS
-
-def start_keyboard():
-    """Клавиатура при старте бота."""
-    button_1 = InlineKeyboardButton(
-        text=BUTTONS["Геолокация"],
-        callback_data="geo"
-    )
-    button_2 = InlineKeyboardButton(
-        text=BUTTONS["Тэги"],
-        callback_data="tag"
-    )
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[[button_1],
-                         [button_2],
-                          ])
-    return keyboard
-
 def geo_keyboard(documents):
-    """Клавиатура инлайн-кнопок  для получения запроса geo_title."""
+    """Клавиатура инлайн-кнопок с кнопками геолокации туров.""" 
     kb_builder = InlineKeyboardBuilder()
     buttons: list[InlineKeyboardButton] = []
     if documents:
         print(documents)
-        for z in documents:
-            button = z.get('geo_title', '!')
+        for document in documents:
+            button = document.get('geo_title', '!')
             buttons.append(InlineKeyboardButton(
                 text=f"{button}",
                 callback_data=f"{button}"))
@@ -38,13 +19,13 @@ def geo_keyboard(documents):
 
 
 def tag_keyboard(documents, data):
-    """Клавиатура инлайн-кнопок  для получения запроса geo_title."""
+    """Клавиатура инлайн-кнопок с кнопками тэгов туров.""" 
     kb_builder = InlineKeyboardBuilder()
     buttons: set[InlineKeyboardButton] = set()
     if documents:
         print(documents)
-        for z in documents:
-            button = z.get('tag', {}).get('name', None)
+        for document in documents:
+            button = document.get('tag', {}).get('name', None)
             print(button)
             buttons.add(InlineKeyboardButton(
                 text=f"{button}",
