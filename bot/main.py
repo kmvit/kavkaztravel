@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-BOT_TOKEN = (
-    "6595664152:AAHsDGm0vbrlGkhKc4gsvv1mg9QV6eSkE4s"  # os.environ.get("BOT_TOKEN")
+BOT_TOKEN = (os.environ.get("BOT_TOKEN")
+     
 )
 
 bot = Bot(token=BOT_TOKEN)
