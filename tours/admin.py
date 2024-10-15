@@ -1,5 +1,15 @@
 from django.contrib import admin
-from .models import DateTour, EstimationTour, GalleryTour, Geo, Guide, Order, Tag, Tour, TourOperator
+from .models import (
+    DateTour,
+    EstimationTour,
+    GalleryTour,
+    Geo,
+    Guide,
+    Order,
+    Tag,
+    Tour,
+    TourOperator,
+)
 
 admin.site.register(Guide)
 admin.site.register(TourOperator)
