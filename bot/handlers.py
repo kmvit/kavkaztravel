@@ -1,17 +1,14 @@
-from utils import data_tours, fetch_tours
-from lexicon import LEXICON
-from aiogram import Router
-from aiogram.types import CallbackQuery
+import os
 
+from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-
-from keyboards import geo_keyboard, tag_keyboard
-
-from aiogram import Router, types
-import os
+from aiogram.types import CallbackQuery
 from dotenv import load_dotenv
+from keyboards import geo_keyboard, tag_keyboard
+from lexicon import LEXICON
+from utils import data_tours, fetch_tours
 
 load_dotenv()
 router = Router()
@@ -44,7 +41,7 @@ async def process_start_command(message: types.Message, state: FSMContext):
             )
             return
         await state.set_state(Data.geo)
-        await message.answer(text=LEXICON["geo"], reply_markup=geo_keyboard(geos))
+        await message.answer(text=LEXICON["start"], reply_markup=geo_keyboard(geos))
     except Exception as err:
         print(f"{err}")
 
