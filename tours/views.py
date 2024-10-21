@@ -1,5 +1,7 @@
+from Kavkaztome.permissions import IsOwnerOnly
+
 from .filter import TourFilter
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
 from .models import (
     DateTour,
     EstimationTour,
@@ -34,27 +36,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 class GuideViewSet(viewsets.ModelViewSet):
     queryset = Guide.objects.all()
     serializer_class = GuideSerializer
-
-    def get_permissions(self):
-        if self.action in ["create", "update", "partial_update", "destroy"]:
-            self.permission_classes = [permissions.IsAuthenticated]
-        return super().get_permissions()
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+    permission_classes = (IsOwnerOnly,)
 
 
 class TourOperatorViewSet(viewsets.ModelViewSet):
     queryset = TourOperator.objects.all()
     serializer_class = TourOperatorSerializer
-
-    def get_permissions(self):
-        if self.action in ["create", "update", "partial_update", "destroy"]:
-            self.permission_classes = [permissions.IsAuthenticated]
-        return super().get_permissions()
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+    permission_classes = (IsOwnerOnly,)
 
 
 class TourViewSet(viewsets.ModelViewSet):
@@ -70,6 +58,7 @@ class TourViewSet(viewsets.ModelViewSet):
     serializer_class = TourGETSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TourFilter
+    permission_classes = (IsOwnerOnly,)
 
     def get_serializer_class(self):
         "Функция выбора сериализатора в зависимости от метода."
@@ -87,7 +76,9 @@ class TourViewSet(viewsets.ModelViewSet):
         tag = get_object_or_404(Tag, id=tag_id)
         geo_id = int(self.request.data.get("geo"))
         geo = get_object_or_404(Geo, id=geo_id)
-        serializer.save(tour_operator=tour_operator, tag=tag, geo=geo)
+        serializer.save(
+            tour_operator=tour_operator, tag=tag, geo=geo, owner=self.request.user
+        )
         return Response(status=status.HTTP_201_CREATED)
 
     def perform_update(self, serializer):
@@ -102,7 +93,9 @@ class TourViewSet(viewsets.ModelViewSet):
         tag = get_object_or_404(Tag, id=tag_id)
         geo_id = int(self.request.data.get("geo", self.get_object().geo_id))
         geo = get_object_or_404(Geo, id=geo_id)
-        serializer.save(tour_operator=tour_operator, tag=tag, geo=geo)
+        serializer.save(
+            tour_operator=tour_operator, tag=tag, geo=geo, owner=self.request.user
+        )
         return Response(status=status.HTTP_200_OK)
 
 
@@ -154,6 +147,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     """
 
     queryset = Order.objects.all()
+    permission_classes = (IsOwnerOnly,)
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
@@ -166,7 +160,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         """
         tour_id = int(self.request.data.get("tour"))
         tour = get_object_or_404(Tour, id=tour_id)
-        serializer.save(tour=tour)
+        serializer.save(tour=tour, owner=self.request.user)
         return Response(status=status.HTTP_201_CREATED)
 
     def perform_update(self, serializer):
@@ -175,14 +169,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         """
         tour_id = int(self.request.data.get("tour_operator", self.get_object().tour_id))
         tour = get_object_or_404(Tour, id=tour_id)
-        serializer.save(tour=tour)
+        serializer.save(tour=tour, owner=self.request.user)
         return Response(status=status.HTTP_200_OK)
 
 
 class EstimationTourViewSet(OrderViewSet):
     """Класс для модели, который содержит оценки и отзывы."""
 
-    queryset = EstimationTour.objects.all()  # Получаем все объекты EstimationTour
+    queryset = EstimationTour.objects.all()
+    permission_classes = (IsOwnerOnly,)
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):

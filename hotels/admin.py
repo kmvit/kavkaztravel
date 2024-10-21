@@ -17,8 +17,8 @@ class ImageInline(TabularInline):
 
 class HotelAdmin(admin.ModelAdmin):
     inlines = [ReviewInline, ImageInline]
-    list_display = ('name', 'region', 'owner')
-    search_fields = ('name', 'region__name', 'owner__username')
+    list_display = ("name", "region", "owner")
+    search_fields = ("name", "region__name", "owner__username")
 
 
 admin.site.register(Hotel, HotelAdmin)

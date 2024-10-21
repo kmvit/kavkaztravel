@@ -10,22 +10,19 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("reviews", "0001_initial"),
+        ("blog", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="review",
+            model_name="blog",
             name="owner",
             field=models.ForeignKey(
                 default=1,
                 on_delete=django.db.models.deletion.CASCADE,
+                related_name="blog",
                 to=settings.AUTH_USER_MODEL,
             ),
-        ),
-        migrations.AlterUniqueTogether(
-            name="review",
-            unique_together={("owner", "content_type", "object_id")},
         ),
     ]

@@ -18,7 +18,7 @@ class RegionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Region
-        fields = '__all__'
+        fields = "__all__"
 
     def get_rating(self, obj):
         return obj.calculate_rating()

@@ -10,7 +10,7 @@ from reviews.models import Review
 
 class Tag(models.Model):
     name = models.CharField(max_length=100)
-    icon = models.ImageField(upload_to='tag_icons/')
+    icon = models.ImageField(upload_to="tag_icons/")
 
     def __str__(self):
         return self.name
@@ -42,16 +42,19 @@ class Amenity(models.Model):
 
 class Hotel(BaseContent):
     address = models.CharField(max_length=300)
-    region = models.ForeignKey(Region, on_delete=models.CASCADE,
-                               related_name='hotels')
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
-                              on_delete=models.CASCADE, related_name='hotels')
-    tags = models.ManyToManyField(Tag, related_name='hotels')
-    reviews = GenericRelation(Review, related_query_name='reviews')
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="hotels")
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="hotels",
+        default=1,
+    )
+    tags = models.ManyToManyField(Tag, related_name="hotels")
+    reviews = GenericRelation(Review, related_query_name="reviews")
 
     class Meta:
-        verbose_name = 'Гостиница'
-        verbose_name_plural = 'Гостиницы'
+        verbose_name = "Гостиница"
+        verbose_name_plural = "Гостиницы"
 
     def __str__(self):
         return self.name
@@ -63,8 +66,7 @@ class Hotel(BaseContent):
 
 
 class HotelImage(models.Model):
-    hotel = models.ForeignKey(Hotel, related_name='images',
-                              on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, related_name="images", on_delete=models.CASCADE)
     image = models.ImageField()
 
     def __str__(self):
@@ -72,21 +74,22 @@ class HotelImage(models.Model):
 
 
 class Room(models.Model):
-    hotel = models.ForeignKey(Hotel, related_name='rooms',
-                              on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, related_name="rooms", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     capacity = models.IntegerField()
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="room"
+    )
 
     def __str__(self):
         return f"{self.hotel.name} - {self.name}"
 
 
 class RoomImage(models.Model):
-    room = models.ForeignKey(Room, related_name='images',
-                             on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='room_images/')
+    room = models.ForeignKey(Room, related_name="images", on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="room_images/")
 
     def __str__(self):
         return f"Image for {self.room.name}"
@@ -94,18 +97,17 @@ class RoomImage(models.Model):
 
 class RoomPrice(models.Model):
     SEASONS = (
-        ('low', 'Low Season'),
-        ('high', 'High Season'),
-        ('holiday', 'Holiday Season'),
+        ("low", "Low Season"),
+        ("high", "High Season"),
+        ("holiday", "Holiday Season"),
     )
-    room = models.ForeignKey(Room, related_name='prices',
-                             on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, related_name="prices", on_delete=models.CASCADE)
     date = models.DateField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    season = models.CharField(max_length=10, choices=SEASONS, default='low')
+    season = models.CharField(max_length=10, choices=SEASONS, default="low")
 
     class Meta:
-        unique_together = ('room', 'date')
+        unique_together = ("room", "date")
 
     def __str__(self):
         return f"{self.room.name} - {self.date}: {self.price}"
@@ -113,11 +115,13 @@ class RoomPrice(models.Model):
     @property
     def is_high_season(self):
         today = date.today()
-        return self.season == 'high' or (
-                self.season == 'holiday' and today.month in [12, 1])
+        return self.season == "high" or (
+            self.season == "holiday" and today.month in [12, 1]
+        )
 
     @property
     def is_low_season(self):
         today = date.today()
-        return self.season == 'low' or (
-                self.season == 'holiday' and today.month not in [12, 1])
+        return self.season == "low" or (
+            self.season == "holiday" and today.month not in [12, 1]
+        )

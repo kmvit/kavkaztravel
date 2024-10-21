@@ -10,7 +10,10 @@ class Guide(BaseContent):
 
     region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="guides")
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="guides"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="guides",
+        default=1,
     )
     experience = models.IntegerField()  # Years of experience
 
@@ -22,7 +25,10 @@ class TourOperator(BaseContent):
         Region, on_delete=models.CASCADE, related_name="touroperators"
     )
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="touroperators"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="touroperators",
+        default=1,
     )
     license_number = models.CharField(max_length=100)
 
@@ -43,6 +49,12 @@ class Tour(models.Model):
     description = models.TextField(blank=True, null=True)
     date = models.DateField(auto_now_add=True, null=True)
     slug = models.SlugField(unique=True, blank=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="tour",
+        default=1,
+    )
 
     def __str__(self):
         return self.name
@@ -79,6 +91,12 @@ class EstimationTour(models.Model):
     feedback = models.TextField(blank=True, null=True, verbose_name="Отзыв")
     image = models.ImageField(upload_to="content_images/", blank=True, null=True)
     date = models.DateField(auto_now_add=True, null=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="estimation",
+        default=1,
+    )
 
 
 class DateTour(models.Model):
@@ -119,6 +137,12 @@ class TourConditions(models.Model):
     cost = models.PositiveIntegerField(
         blank=True, null=True, verbose_name="Стоимость тура"
     )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="conditions",
+        default=1,
+    )
 
 
 class Order(models.Model):
@@ -139,6 +163,12 @@ class Order(models.Model):
                 message="Номер должен быть в формате +7XXXXXXXXXX",
             )
         ],
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="owner",
+        default=1,
     )
 
 

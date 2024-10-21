@@ -4,7 +4,7 @@ from .models import Blog
 
 class BlogSerializer(serializers.ModelSerializer):
     """Сериалайзер для модели Blog."""
+
     class Meta:
         model = Blog
-        fields = '__all__'
- 
+        fields = "__all__"
