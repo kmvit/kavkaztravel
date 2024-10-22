@@ -6,7 +6,9 @@ from django.core.validators import RegexValidator
 
 
 class Guide(BaseContent):
-    """Класс для модели гид."""
+    """
+    Класс для модели гид.
+    """
 
     region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="guides")
     owner = models.ForeignKey(
@@ -15,7 +17,7 @@ class Guide(BaseContent):
         related_name="guides",
         default=1,
     )
-    experience = models.IntegerField()  # Years of experience
+    experience = models.IntegerField()  
 
 
 class TourOperator(BaseContent):

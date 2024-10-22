@@ -7,8 +7,19 @@ from core.models import BaseContent
 from regions.models import Region
 from reviews.models import Review
 
-
 class Tag(models.Model):
+    """
+    Модель для представления тегов.
+
+    Теги могут использоваться для классификации и фильтрации различных 
+    объектов, таких как гостиницы или удобства. Каждый тег имеет имя 
+    и иконку.
+
+    Атрибуты:
+        name (str): Название тега.
+        icon (ImageField): Иконка тега, загружаемая в каталог "tag_icons/".
+    """
+
     name = models.CharField(max_length=100)
     icon = models.ImageField(upload_to="tag_icons/")
 
@@ -17,6 +28,17 @@ class Tag(models.Model):
 
 
 class MealPlan(models.Model):
+    """
+    Модель для представления планов питания.
+
+    Планы питания описывают различные варианты меню, доступные для 
+    гостей, включая название и описание.
+
+    Атрибуты:
+        name (str): Название плана питания.
+        description (TextField): Описание плана питания (может быть пустым).
+    """
+
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
 
@@ -25,6 +47,17 @@ class MealPlan(models.Model):
 
 
 class AccommodationType(models.Model):
+    """
+    Модель для представления типов размещения.
+
+    Типы размещения описывают различные варианты проживания, включая 
+    название и описание.
+
+    Атрибуты:
+        name (str): Название типа размещения.
+        description (TextField): Описание типа размещения (может быть пустым).
+    """
+
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
 
@@ -33,6 +66,17 @@ class AccommodationType(models.Model):
 
 
 class Amenity(models.Model):
+    """
+    Модель для представления удобств.
+
+    Удобства описывают дополнительные услуги, предлагаемые в гостинице, 
+    включая название и описание.
+
+    Атрибуты:
+        name (str): Название удобства.
+        description (TextField): Описание удобства (может быть пустым).
+    """
+
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
 
@@ -41,6 +85,19 @@ class Amenity(models.Model):
 
 
 class Hotel(BaseContent):
+    """
+    Модель для представления гостиниц.
+
+    Эта модель описывает гостиницы, включая адрес, регион, владельца, 
+    теги и рецензии. Она также позволяет вычислять средний рейтинг 
+    на основе связанных рецензий.
+
+    Методы:
+        __str__(): Возвращает имя гостиницы.
+        calculate_rating(): Вычисляет средний рейтинг на основе 
+            связанных рецензий.
+    """
+
     address = models.CharField(max_length=300)
     region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="hotels")
     owner = models.ForeignKey(
@@ -66,6 +123,13 @@ class Hotel(BaseContent):
 
 
 class HotelImage(models.Model):
+    """
+    Модель для хранения изображений гостиниц.
+
+    Эта модель связывает изображения с конкретными гостиницами, 
+    позволяя хранить множественные изображения для каждой гостиницы.
+    """
+
     hotel = models.ForeignKey(Hotel, related_name="images", on_delete=models.CASCADE)
     image = models.ImageField()
 
@@ -74,6 +138,13 @@ class HotelImage(models.Model):
 
 
 class Room(models.Model):
+    """
+    Модель для представления номеров гостиниц.
+
+    Эта модель описывает номера в гостиницах, включая название, 
+    описание, цену и вместимость.
+    """
+
     hotel = models.ForeignKey(Hotel, related_name="rooms", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
@@ -88,6 +159,13 @@ class Room(models.Model):
 
 
 class RoomImage(models.Model):
+    """
+    Модель для хранения изображений номеров гостиниц.
+
+    Эта модель связывает изображения с конкретными номерами, 
+    позволяя хранить множественные изображения для каждого номера.
+    """
+
     room = models.ForeignKey(Room, related_name="images", on_delete=models.CASCADE)
     image = models.ImageField(upload_to="room_images/")
 
@@ -96,6 +174,24 @@ class RoomImage(models.Model):
 
 
 class RoomPrice(models.Model):
+    """
+    Модель для представления цен на номера в зависимости от сезона.
+
+    Эта модель хранит информацию о ценах на номера в разные 
+    сезоны и для различных дат.
+    Метаданные:
+        unique_together (tuple): Уникальное сочетание номера и даты 
+            для предотвращения дублирования записей.
+    Методы:
+        __str__(): Возвращает строку с информацией о цене на номер 
+            на указанную дату.
+    Свойства:
+        is_high_season (bool): Возвращает True, если сезон высокий 
+            или праздничный и месяц - декабрь или январь.
+        is_low_season (bool): Возвращает True, если сезон низкий 
+            или праздничный и месяц не декабрь или январь.
+    """
+
     SEASONS = (
         ("low", "Low Season"),
         ("high", "High Season"),

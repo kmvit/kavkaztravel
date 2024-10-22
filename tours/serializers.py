@@ -13,6 +13,12 @@ from .models import (
 
 
 class GuideSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели Guide.
+    
+    Позволяет преобразовывать данные о гиде в формат JSON и обратно.
+    Включает информацию о владельце.
+    """
     owner = serializers.StringRelatedField(
         read_only=True
     )  # serializers.ReadOnlyField(source='owner.username')
@@ -23,6 +29,12 @@ class GuideSerializer(serializers.ModelSerializer):
 
 
 class TourOperatorSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели TourOperator.
+    
+    Позволяет преобразовывать данные о туроператоре в формат JSON и обратно.
+    Включает информацию о владельце.
+    """
     owner = serializers.StringRelatedField(
         read_only=True
     )  # serializers.ReadOnlyField(source='owner.username')

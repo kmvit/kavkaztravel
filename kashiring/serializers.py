@@ -5,6 +5,8 @@ from .models import Brand, Model, Year, Color, BodyType, Auto, Foto, Company
 class BrandSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Brand.
+    
+    Обеспечивает преобразование данных бренда автомобиля в формат JSON и обратно.
     """
 
     class Meta:
@@ -15,6 +17,8 @@ class BrandSerializer(serializers.ModelSerializer):
 class ModelSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Model.
+    
+    Обеспечивает преобразование данных модели автомобиля в формат JSON и обратно.
     """
 
     class Meta:
@@ -25,6 +29,8 @@ class ModelSerializer(serializers.ModelSerializer):
 class YearSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Year.
+    
+    Представляет год выпуска автомобиля.
     """
 
     class Meta:
@@ -35,6 +41,8 @@ class YearSerializer(serializers.ModelSerializer):
 class ColorSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Color.
+    
+    Обеспечивает преобразование данных цвета автомобиля в формат JSON и обратно.
     """
 
     class Meta:
@@ -45,6 +53,8 @@ class ColorSerializer(serializers.ModelSerializer):
 class BodyTypeSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели BodyType.
+    
+    Обеспечивает преобразование данных типа кузова автомобиля в формат JSON и обратно.
     """
 
     class Meta:
@@ -54,7 +64,10 @@ class BodyTypeSerializer(serializers.ModelSerializer):
 
 class AutoSerializer(serializers.ModelSerializer):
     """
-    Сериализатор для создания и изменения обьектов модели.
+    Сериализатор для создания и изменения объектов модели Auto.
+    
+    Обеспечивает преобразование данных автомобиля в формат JSON и обратно.
+    Поля, связанные с брендом, моделью, годом, цветом и типом кузова, доступны только для чтения.
     """
 
     brand = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -69,7 +82,7 @@ class AutoSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         """
-        Переопределяем метод to_representation для удаления полей с null значениями.
+        Переопределяет метод to_representation для удаления полей с null значениями.
         """
         representation = super().to_representation(instance)
         # Удаляем ключи, значения которых равны None
@@ -79,6 +92,11 @@ class AutoSerializer(serializers.ModelSerializer):
 
 
 class AutoGETSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для получения данных об автомобиле.
+    
+    Включает преобразование полей, связанных с брендом и моделью, в строковые представления.
+    """
     brand = serializers.StringRelatedField(read_only=True)
     model = serializers.StringRelatedField(read_only=True)
     year = YearSerializer()
@@ -91,7 +109,7 @@ class AutoGETSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         """
-        Переопределяем метод to_representation для удаления полей с null значениями.
+        Переопределяет метод to_representation для удаления полей с null значениями.
         """
         representation = super().to_representation(instance)
         # Удаляем ключи, значения которых равны None
@@ -101,7 +119,11 @@ class AutoGETSerializer(serializers.ModelSerializer):
 
 
 class AutoMiniSerializer(serializers.ModelSerializer):
-
+    """
+    Мини-сериализатор для модели Auto.
+    
+    Представляет минимальный набор данных об автомобиле, включая бренд и модель.
+    """
     brand = serializers.StringRelatedField(read_only=True)
     model = serializers.StringRelatedField(read_only=True)
 
@@ -116,7 +138,7 @@ class AutoMiniSerializer(serializers.ModelSerializer):
 
 class CompanyAutoSerializer(serializers.ModelSerializer):
     """
-    Сериализатор для модели Company.
+    Сериализатор для получения информации о компании и связанных с ней автомобилях.
     """
 
     auto = AutoMiniSerializer(many=True)
@@ -132,6 +154,8 @@ class CompanyAutoSerializer(serializers.ModelSerializer):
 class CompanySerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Company.
+    
+    Представляет информацию о компании, включая ее название.
     """
 
     class Meta:

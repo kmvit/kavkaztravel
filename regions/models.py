@@ -6,6 +6,10 @@ from reviews.models import Review
 
 
 class Region(BaseContent):
+    """
+    Класс, представляющий регион или город.
+    """
+
     parent = models.ForeignKey(
         "self", on_delete=models.CASCADE, null=True, blank=True, related_name="children"
     )
@@ -19,12 +23,18 @@ class Region(BaseContent):
         verbose_name_plural = "Регионы/города"
 
     def __str__(self):
+        """Возвращает название региона."""
         return self.name
 
 
 class RegionImage(models.Model):
+    """
+    Класс, представляющий изображение региона.
+    """
+
     region = models.ForeignKey(Region, related_name="images", on_delete=models.CASCADE)
     image = models.ImageField()
 
     def __str__(self):
-        return self.region.id
+        """Возвращает идентификатор региона, к которому относится изображение."""
+        return str(self.region.id)

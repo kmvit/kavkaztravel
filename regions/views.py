@@ -5,6 +5,10 @@ from .serializers import RegionSerializer
 
 
 class RegionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для управления регионами.
+    """
+
     queryset = Region.objects.all()
     serializer_class = RegionSerializer
     permission_classes = (IsOwnerOnly,)

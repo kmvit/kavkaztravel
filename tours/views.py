@@ -34,12 +34,22 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 
 class GuideViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для управления объектами модели Guide.
+    
+    Предоставляет полный набор действий (CRUD) для работы с гидами.
+    """
     queryset = Guide.objects.all()
     serializer_class = GuideSerializer
     permission_classes = (IsOwnerOnly,)
 
 
 class TourOperatorViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для управления объектами модели TourOperator.
+    
+    Предоставляет полный набор действий (CRUD) для работы с туроператорами.
+    """
     queryset = TourOperator.objects.all()
     serializer_class = TourOperatorSerializer
     permission_classes = (IsOwnerOnly,)
