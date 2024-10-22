@@ -9,46 +9,43 @@ from django.urls import re_path
 from Kavkaztome import settings
 
 schema_view = get_schema_view(
-   openapi.Info(
-      title="Your Project API",
-      default_version='v1',
-      description="API documentation for Your Project",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="contact@yourproject.local"),
-      license=openapi.License(name="BSD License"),
-   ),
-   public=True,
-   permission_classes=(permissions.IsAuthenticated,),
+    openapi.Info(
+        title="Your Project API",
+        default_version="v1",
+        description="API documentation for Your Project",
+        terms_of_service="https://www.google.com/policies/terms/",
+        contact=openapi.Contact(email="contact@yourproject.local"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.IsAuthenticated,),
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('regions.urls')),
-    path('api/', include('hotels.urls')),
-    path('api/', include('restaurants.urls')),
-    path('api/', include('tours.urls')),
-    path('api/', include('kashiring.urls')),
-    path('api/', include('attractions.urls')),
-    path('api/', include('entertainments.urls')),
-    path('api/', include('users.urls')),
-    path('api/', include('reviews.urls')),
-    re_path(r'^auth/', include('drf_social_oauth2.urls', namespace='drf')),
-    path('api/', include('blog.urls')),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'),
-         name='docs'),
+    path("admin/", admin.site.urls),
+    path("api/", include("regions.urls")),
+    path("api/", include("hotels.urls")),
+    path("api/", include("restaurants.urls")),
+    path("api/", include("tours.urls")),
+    path("api/", include("kashiring.urls")),
+    path("api/", include("attractions.urls")),
+    path("api/", include("entertainments.urls")),
+    path("api/", include("users.urls")),
+    path("api/", include("reviews.urls")),
+    re_path(r"^auth/", include("drf_social_oauth2.urls", namespace="drf")),
+    path("api/", include("blog.urls")),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),
 ]
 if settings.DEBUG:
-    urlpatterns.extend(
-        static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    )
+    urlpatterns.extend(static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT))
     urlpatterns.extend(
         [
-
-            path('api/v1/schema/', SpectacularAPIView.as_view(),
-                 name='schema'),
-            path('api/v1/docs/',
-                 SpectacularSwaggerView.as_view(url_name='schema'),
-                 name='docs'),
+            path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
+            path(
+                "api/v1/docs/",
+                SpectacularSwaggerView.as_view(url_name="schema"),
+                name="docs",
+            ),
         ]
     )

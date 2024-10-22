@@ -8,5 +8,4 @@ class RegionAdmin(admin.ModelAdmin):
     pass
 
 
-
 admin.site.register(Region, RegionAdmin)
