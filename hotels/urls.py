@@ -14,5 +14,5 @@ router.register(r'accommodation_types', AccommodationTypeViewSet)
 router.register(r'amenities', AmenityViewSet)
 
 urlpatterns = [
-    path('v1/', include(router.urls)),
+    path('', include(router.urls)),
 ]
