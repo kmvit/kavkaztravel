@@ -4,8 +4,8 @@ from rest_framework.routers import DefaultRouter
 from .views import ReviewViewSet
 
 router = DefaultRouter()
-router.register(r'reviews', ReviewViewSet)
+router.register(r"reviews", ReviewViewSet)
 
 urlpatterns = [
-    path('v1/', include(router.urls)),
+    path("v1/", include(router.urls)),
 ]

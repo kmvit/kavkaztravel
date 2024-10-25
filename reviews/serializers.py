@@ -3,8 +3,15 @@ from .models import Review
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    user = serializers.ReadOnlyField(source='user.username')
+    """
+    Сериализатор для модели Review.
+
+    Этот сериализатор преобразует объекты Review в формат JSON и обратно.
+    Он позволяет валидировать данные, получаемые от клиента, и обеспечивает
+    необходимое представление отзывов.
+
+    """
 
     class Meta:
         model = Review
-        fields = '__all__'
+        fields = "__all__"

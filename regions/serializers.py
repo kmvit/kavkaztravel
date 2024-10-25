@@ -9,6 +9,13 @@ from entertainments.serializers import EntertainmentSerializer
 
 
 class RegionSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели Region.
+    
+    Позволяет преобразовывать данные региона в формат JSON и обратно, включая связанные 
+    объекты, такие как отели, рестораны, аттракционы и развлечения.
+    """
+
     hotels = HotelSerializer(many=True, read_only=True)
     restaurants = RestaurantSerializer(many=True, read_only=True)
     attractions = AttractionSerializer(many=True, read_only=True)
@@ -18,7 +25,8 @@ class RegionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Region
-        fields = '__all__'
+        fields = "__all__"
 
     def get_rating(self, obj):
+        """Вычисляет и возвращает рейтинг региона на основе отзывов."""
         return obj.calculate_rating()

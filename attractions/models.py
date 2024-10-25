@@ -1,19 +1,27 @@
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from core.models import BaseContent
+from Kavkaztome import settings
 from regions.models import Region
 from reviews.models import Review
 
 
 class Attraction(BaseContent):
     address = models.CharField(max_length=300)
-    region = models.ForeignKey(Region, on_delete=models.CASCADE,
-                               related_name='attractions')
-    reviews = GenericRelation(Review, related_query_name='reviews')
+    region = models.ForeignKey(
+        Region, on_delete=models.CASCADE, related_name="attractions"
+    )
+    reviews = GenericRelation(Review, related_query_name="reviews")
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="attraction",
+        default=1,
+    )
 
     class Meta:
-        verbose_name = 'Развлечение'
-        verbose_name_plural = 'Развлечения'
+        verbose_name = "Развлечение"
+        verbose_name_plural = "Развлечения"
 
     def __str__(self):
         return self.name
@@ -25,8 +33,9 @@ class Attraction(BaseContent):
 
 
 class AttractionImage(models.Model):
-    attraction = models.ForeignKey(Attraction, related_name='images',
-                                   on_delete=models.CASCADE)
+    attraction = models.ForeignKey(
+        Attraction, related_name="images", on_delete=models.CASCADE
+    )
     image = models.ImageField()
 
     def __str__(self):

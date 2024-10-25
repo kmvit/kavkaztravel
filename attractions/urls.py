@@ -3,10 +3,10 @@ from rest_framework.routers import DefaultRouter
 from .views import AttractionViewSet
 
 router = DefaultRouter()
-router.register(r'attractions', AttractionViewSet)
+router.register(r"attractions", AttractionViewSet)
 
-app_name = 'attractions'
+app_name = "attractions"
 
 urlpatterns = [
-    path('v1/', include(router.urls)),
+    path("v1/", include(router.urls)),
 ]
