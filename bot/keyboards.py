@@ -23,10 +23,8 @@ def tag_keyboard(documents, data):
     kb_builder = InlineKeyboardBuilder()
     buttons: set[InlineKeyboardButton] = set()
     if documents:
-        print(documents)
         for document in documents:
             button = document.get("tag", {}).get("name", None)
-            print(button)
             buttons.add(
                 InlineKeyboardButton(text=f"{button}", callback_data=f"{button},{data}")
             )

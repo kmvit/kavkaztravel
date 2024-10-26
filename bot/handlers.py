@@ -1,4 +1,5 @@
 import os
+import logging
 
 from aiogram import Router, types
 from aiogram.filters import Command
@@ -19,6 +20,7 @@ URL = os.environ.get("URL")
 URL_GEO = f"{URL}api/geo/"
 URL_TOUR = f"{URL}api/tour/"
 
+logger = logging.getLogger(__name__)
 
 class Data(StatesGroup):
     """Машина состояний для реализации сценариев диалогов с пользователем."""
@@ -43,7 +45,7 @@ async def process_start_command(message: types.Message, state: FSMContext):
         await state.set_state(Data.geo)
         await message.answer(text=LEXICON["start"], reply_markup=geo_keyboard(geos))
     except Exception as err:
-        print(f"{err}")
+        logger.error(f"{err}")
 
 
 @user_router.callback_query(Data.geo)
@@ -65,7 +67,7 @@ async def get_geo_db(callback: CallbackQuery, state: FSMContext):
             text=LEXICON["tag"], reply_markup=tag_keyboard(tags, callback.data)
         )
     except Exception as err:
-        print(f"{err}")
+        logger.error(f"{err}")
         await state.clear()
 
 
@@ -87,6 +89,7 @@ async def get_tours_db(callback: CallbackQuery, state: FSMContext):
 
         await callback.message.answer(data_tours(tours))
     except Exception as err:
-        print(f"{err}")
+        logger.error(f"{err}")
     finally:
         await state.clear()
+        logger.info(f"запрос пользователя заверешен")
