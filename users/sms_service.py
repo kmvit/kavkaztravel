@@ -1,24 +1,28 @@
 import random
 import string
 import requests
+
 from datetime import timedelta
 from django.utils import timezone
 from django.conf import settings
-from .models import SMSVerification  # Замените на правильный путь к модели
+
+from .models import SMSVerification
+
 
 def generate_code(length=6):
     """Генерация случайного кода из цифр."""
-    return ''.join(random.choices(string.digits, k=length))
+    return "".join(random.choices(string.digits, k=length))
+
 
 def send_sms(phone_number, code):
     """Отправка SMS через API SMS.ru с кодом подтверждения."""
     url = "https://sms.ru/sms/send"
-    
+
     params = {
-        'api_id': settings.SMS_API_KEY,  # API ключ
-        'to': phone_number,              # Номер получателя
-        'msg': f"Ваш код подтверждения: {code}",  # Сообщение с кодом
-        'json': 1  # Ответ в формате JSON
+        "api_id": settings.SMS_API_KEY,  # API ключ
+        "to": phone_number,  # Номер получателя
+        "msg": f"Ваш код подтверждения: {code}",  # Сообщение с кодом
+        "json": 1,  # Ответ в формате JSON
     }
 
     try:
@@ -34,34 +38,41 @@ def send_sms(phone_number, code):
         print("Ответ от API:", response_json)
 
         # Проверяем, что в ответе есть нужный ключ для номера телефона
-        if 'sms' in response_json and phone_number in response_json['sms']:
-            sms_info = response_json['sms'][phone_number]
-            if 'sms_id' in sms_info:
+        if "sms" in response_json and phone_number in response_json["sms"]:
+            sms_info = response_json["sms"][phone_number]
+            if "sms_id" in sms_info:
                 # Возвращаем 'sms_id' из ответа
-                return sms_info['sms_id']
+                return sms_info["sms_id"]
             else:
-                raise Exception(f"Ошибка при отправке SMS: отсутствует 'sms_id' для номера {phone_number}. Ответ: {response_json}")
+                raise Exception(
+                    f"Ошибка при отправке SMS: отсутствует 'sms_id' для номера {phone_number}. Ответ: {response_json}"
+                )
         else:
-            raise Exception(f"Ошибка: данные по номеру {phone_number} отсутствуют в ответе. Ответ: {response_json}")
+            raise Exception(
+                f"Ошибка: данные по номеру {phone_number} отсутствуют в ответе. Ответ: {response_json}"
+            )
 
     except requests.exceptions.RequestException as e:
         raise Exception(f"Ошибка при отправке SMS: {str(e)}")
+
 
 def send_verification_sms(phone_number):
     """Генерация кода и отправка SMS."""
     code = generate_code()  # Генерируем случайный код
     try:
         # Получаем 'sms_id' из ответа
-        message_id = send_sms(phone_number, code)  
+        message_id = send_sms(phone_number, code)
 
         # Создаем запись в базе данных с кодом, временем истечения и статусом
-        expires_at = timezone.now() + timedelta(minutes=5)  # Код будет действителен 5 минут
+        expires_at = timezone.now() + timedelta(
+            minutes=5
+        )  # Код будет действителен 5 минут
         verification = SMSVerification.objects.create(
             phone_number=phone_number,
             verification_code=code,
             message_id=message_id,
-            status='sent',
-            expires_at=expires_at
+            status="sent",
+            expires_at=expires_at,
         )
 
         return verification
