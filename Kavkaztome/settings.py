@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "rest_framework_social_oauth2",
     "blog",
     "kashiring",
+    "sms",
 ]
 
 MIDDLEWARE = [
@@ -200,7 +201,7 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 
-
+# Нстройки для авторизации через Email c использованием библиотеки DJOSER
 DJOSER = {
     "USER_ID_FIELD": "username",
     "LOGIN_FIELD": "email",
@@ -211,3 +212,9 @@ DJOSER = {
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 SITE_NAME = "SaaSitive"
+
+
+#Настройки для авторизации через телефон смс
+# Настройки для SMS.py
+SMS_API_KEY = os.environ.get("SMS_API_KEY")
+SMS_API_URL = 'https://api.smsprovider.com/send_sms'

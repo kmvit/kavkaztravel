@@ -1,6 +1,7 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from hotels.models import Hotel
 from hotels.serializers import HotelSerializer
@@ -8,8 +9,11 @@ from restaurants.models import Restaurant
 from restaurants.serializers import RestaurantSerializer
 from tours.models import Guide, TourOperator
 from tours.serializers import GuideSerializer, TourOperatorSerializer
-from .models import CustomUser
-from .serializers import CustomUserSerializer
+from .models import CustomUser, SMSVerification
+from .serializers import CustomUserSerializer, SMSVerificationSerializer
+from .sms_service import send_verification_sms
+
+
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
@@ -127,3 +131,62 @@ class OwnerObjectsViewSet(viewsets.ViewSet):
             )
             touroperator.delete()
             return Response(status=204)
+
+
+class SendVerificationCodeAPIView(APIView):
+    """Отправка кода подтверждения на указанный номер."""
+
+    def post(self, request):
+        phone_number = request.data.get("phone_number")
+
+        if not phone_number:
+            return Response(
+                {"error": "Phone number is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Отправка SMS с кодом
+        verification = send_verification_sms(phone_number)
+        serializer = SMSVerificationSerializer(verification)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class VerifyCodeAPIView(APIView):
+    """Проверка введенного пользователем кода."""
+
+    def post(self, request):
+        phone_number = request.data.get("phone_number")
+        entered_code = request.data.get("verification_code")
+
+        if not phone_number or not entered_code:
+            return Response(
+                {"error": "Phone number and verification code are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Получаем запись для указанного номера телефона
+        try:
+            verification = SMSVerification.objects.get(phone_number=phone_number)
+        except SMSVerification.DoesNotExist:
+            return Response(
+                {"error": "Verification record not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Проверка на истечение срока действия кода
+        if verification.is_expired():
+            return Response(
+                {"error": "Verification code has expired"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Проверка введенного кода
+        if entered_code == verification.verification_code:
+            return Response(
+                {"message": "Code verified successfully"}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"error": "Invalid verification code"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
