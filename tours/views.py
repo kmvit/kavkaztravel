@@ -4,7 +4,7 @@ from .filter import TourFilter
 from rest_framework import viewsets
 from .models import (
     DateTour,
-    EstimationTour,
+    ReviewTour,
     GalleryTour,
     Geo,
     Guide,
@@ -15,13 +15,13 @@ from .models import (
 )
 from .serializers import (
     DateTourrSerializer,
-    EstimationTourGetSerializer,
-    EstimationTourSerializer,
     GalleryTourSerializer,
     GeoSerializer,
     GuideSerializer,
     OrderGetSerializer,
     OrderSerializer,
+    ReviewTourGetSerializer,
+    ReviewTourSerializer,
     TagSerializer,
     TourGETSerializer,
     TourOperatorSerializer,
@@ -36,9 +36,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 class GuideViewSet(viewsets.ModelViewSet):
     """
     ViewSet для управления объектами модели Guide.
-    
+
     Предоставляет полный набор действий (CRUD) для работы с гидами.
     """
+
     queryset = Guide.objects.all()
     serializer_class = GuideSerializer
     permission_classes = (IsOwnerOnly,)
@@ -47,9 +48,10 @@ class GuideViewSet(viewsets.ModelViewSet):
 class TourOperatorViewSet(viewsets.ModelViewSet):
     """
     ViewSet для управления объектами модели TourOperator.
-    
+
     Предоставляет полный набор действий (CRUD) для работы с туроператорами.
     """
+
     queryset = TourOperator.objects.all()
     serializer_class = TourOperatorSerializer
     permission_classes = (IsOwnerOnly,)
@@ -164,32 +166,32 @@ class OrderViewSet(viewsets.ModelViewSet):
             return OrderGetSerializer
         return OrderSerializer
 
-    def perform_create(self, serializer):
-        """
-        Переопределяем метод perform_create.
-        """
-        tour_id = int(self.request.data.get("tour"))
-        tour = get_object_or_404(Tour, id=tour_id)
-        serializer.save(tour=tour, owner=self.request.user)
-        return Response(status=status.HTTP_201_CREATED)
 
-    def perform_update(self, serializer):
-        """
-        Переопределяем метод perform_update.
-        """
-        tour_id = int(self.request.data.get("tour_operator", self.get_object().tour_id))
-        tour = get_object_or_404(Tour, id=tour_id)
-        serializer.save(tour=tour, owner=self.request.user)
-        return Response(status=status.HTTP_200_OK)
-
-
-class EstimationTourViewSet(OrderViewSet):
+class ReviewTourViewSet(viewsets.ModelViewSet):
     """Класс для модели, который содержит оценки и отзывы."""
 
-    queryset = EstimationTour.objects.all()
+    queryset = ReviewTour.objects.all()
     permission_classes = (IsOwnerOnly,)
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
-            return EstimationTourGetSerializer
-        return EstimationTourSerializer
+            return ReviewTourGetSerializer
+        return ReviewTourSerializer
+
+    def perform_create(self, serializer):
+        """Переопределяем метод perform_create для создания нового отзыва."""
+
+        tour_id = self.request.data.get("tour")
+        tour = get_object_or_404(Tour, id=tour_id)
+        serializer.save(tour=tour, owner=self.request.user)
+
+    def perform_update(self, serializer):
+        """Переопределяем метод perform_update для обновления отзыва."""
+        # Получаем ID тура из запроса или текущего объекта
+        tour_id = self.request.data.get("tour", self.get_object().tour.id)
+
+        # Используем get_object_or_404 для получения тура
+        tour = get_object_or_404(Tour, id=tour_id)
+
+        # Сохраняем отзыв с обновленным туром
+        serializer.save(tour=tour, owner=self.request.user)

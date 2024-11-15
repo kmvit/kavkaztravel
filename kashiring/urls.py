@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     BrandViewSet,
     ModelViewSet,
+    ReviewAutoViewSet,
     YearViewSet,
     ColorViewSet,
     BodyTypeViewSet,
@@ -22,6 +23,8 @@ router.register(r"bodytypes", BodyTypeViewSet, basename="bodytype")
 router.register(r"autos", AutoViewSet, basename="auto")
 router.register(r"company_autos", CompanyAutoViewSet, basename="company_autos")
 router.register(r"company", CompanyViewSet, basename="company")
+router.register(r"review", ReviewAutoViewSet, basename="review")
+
 urlpatterns = [
-    path("kashiring/", include(router.urls)),
+    path("", include(router.urls)),
 ]

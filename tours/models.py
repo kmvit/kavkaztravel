@@ -17,7 +17,7 @@ class Guide(BaseContent):
         related_name="guides",
         default=1,
     )
-    experience = models.IntegerField()  
+    experience = models.IntegerField()
 
 
 class TourOperator(BaseContent):
@@ -61,6 +61,11 @@ class Tour(models.Model):
     def __str__(self):
         return self.name
 
+    def calculate_rating(self):
+        reviews = self.reviews.all()
+        total_rating = sum(review.rating for review in reviews)
+        return total_rating / reviews.count() if reviews.exists() else 0
+
 
 class Geo(models.Model):
     geo_title = models.CharField(max_length=255, blank=True, null=True)
@@ -80,24 +85,49 @@ class GalleryTour(models.Model):
     image = models.ImageField(upload_to="content_images/", blank=True, null=True)
 
 
-class EstimationTour(models.Model):
-    """Класс для модели, который содержит оценки и отзывы."""
+class ReviewTour(models.Model):
+    """Класс для модели, который содержит оценки и отзывы о туре.
 
-    tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name="estimations")
-    estimation = models.IntegerField(
-        blank=True,
-        null=True,
-        verbose_name="Оценка тура",
-        choices=list(zip(range(1, 11), range(1, 11))),
-    )
-    feedback = models.TextField(blank=True, null=True, verbose_name="Отзыв")
-    image = models.ImageField(upload_to="content_images/", blank=True, null=True)
-    date = models.DateField(auto_now_add=True, null=True)
+    Эта модель используется для хранения отзывов и рейтингов, оставленных пользователями на
+    определенный тур. Каждый отзыв включает оценку, комментарий, изображение и дату создания.
+    """
+
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="estimation",
         default=1,
+        verbose_name="Владелец отзыва",
+        help_text="Пользователь, оставивший отзыв.",
+    )
+    rating = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Оценка тура",
+        choices=list(zip(range(1, 6), range(1, 6))),
+        help_text="Оценка тура от 1 до 5, где 1 - плохо, а 5 - отлично.",
+    )
+    comment = models.TextField(
+        verbose_name="Комментарий",
+        help_text="Текстовый комментарий к туру. Пользователь может оставить свой отзыв.",
+    )
+    date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата отзыва",
+        help_text="Дата и время создания отзыва.",
+    )
+    tour = models.ForeignKey(
+        Tour,
+        on_delete=models.CASCADE,
+        related_name="estimations",
+        verbose_name="tour",
+        help_text="Тур, к которому относится этот отзыв.",
+    )
+    image = models.ImageField(
+        upload_to="content_images/",
+        blank=True,
+        null=True,
+        verbose_name="Изображение отзыва",
+        help_text="Опциональное изображение, которое можно прикрепить к отзыву.",
     )
 
 

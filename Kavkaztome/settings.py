@@ -49,9 +49,7 @@ INSTALLED_APPS = [
     "hotels",
     "restaurants",
     "tours",
-    "attractions",
     "entertainments",
-    "reviews",
     "drf_spectacular",
     "drf_spectacular_sidecar",  # required for Django collectstatic discovery
     "oauth2_provider",
@@ -214,7 +212,7 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 SITE_NAME = "SaaSitive"
 
 
-#Настройки для авторизации через телефон смс
+# Настройки для авторизации через телефон смс
 # Настройки для SMS.py
 SMS_API_KEY = os.environ.get("SMS_API_KEY")
-SMS_API_URL = 'https://api.smsprovider.com/send_sms'
+SMS_API_URL = "https://api.smsprovider.com/send_sms"

@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     HotelViewSet,
+    ReviewHotelViewSet,
     RoomViewSet,
     RoomImageViewSet,
     MealPlanViewSet,
@@ -18,7 +19,7 @@ router.register(r"room_images", RoomImageViewSet)
 router.register(r"meal_plans", MealPlanViewSet)
 router.register(r"accommodation_types", AccommodationTypeViewSet)
 router.register(r"amenities", AmenityViewSet)
+router.register(r"review", ReviewHotelViewSet, basename="review")
 
-urlpatterns = [
-    path("v1/", include(router.urls)),
-]
+
+urlpatterns = router.urls

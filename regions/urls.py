@@ -8,5 +8,5 @@ router = DefaultRouter()
 router.register(r"regions", RegionViewSet, basename="regions")
 
 urlpatterns = [
-    path("v1/", include(router.urls)),
+    path("", include(router.urls)),
 ]

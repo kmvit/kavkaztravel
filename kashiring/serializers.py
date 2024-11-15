@@ -1,11 +1,13 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from .models import Brand, Model, Year, Color, BodyType, Auto, Foto, Company
+from django.db.models import Avg
+from .models import Brand, Model, ReviewAuto, Year, Color, BodyType, Auto, Company
 
 
 class BrandSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Brand.
-    
+
     Обеспечивает преобразование данных бренда автомобиля в формат JSON и обратно.
     """
 
@@ -17,7 +19,7 @@ class BrandSerializer(serializers.ModelSerializer):
 class ModelSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Model.
-    
+
     Обеспечивает преобразование данных модели автомобиля в формат JSON и обратно.
     """
 
@@ -29,7 +31,7 @@ class ModelSerializer(serializers.ModelSerializer):
 class YearSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Year.
-    
+
     Представляет год выпуска автомобиля.
     """
 
@@ -41,7 +43,7 @@ class YearSerializer(serializers.ModelSerializer):
 class ColorSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Color.
-    
+
     Обеспечивает преобразование данных цвета автомобиля в формат JSON и обратно.
     """
 
@@ -53,7 +55,7 @@ class ColorSerializer(serializers.ModelSerializer):
 class BodyTypeSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели BodyType.
-    
+
     Обеспечивает преобразование данных типа кузова автомобиля в формат JSON и обратно.
     """
 
@@ -65,7 +67,7 @@ class BodyTypeSerializer(serializers.ModelSerializer):
 class AutoSerializer(serializers.ModelSerializer):
     """
     Сериализатор для создания и изменения объектов модели Auto.
-    
+
     Обеспечивает преобразование данных автомобиля в формат JSON и обратно.
     Поля, связанные с брендом, моделью, годом, цветом и типом кузова, доступны только для чтения.
     """
@@ -94,18 +96,20 @@ class AutoSerializer(serializers.ModelSerializer):
 class AutoGETSerializer(serializers.ModelSerializer):
     """
     Сериализатор для получения данных об автомобиле.
-    
+
     Включает преобразование полей, связанных с брендом и моделью, в строковые представления.
     """
+
     brand = serializers.StringRelatedField(read_only=True)
     model = serializers.StringRelatedField(read_only=True)
     year = YearSerializer()
     color = serializers.StringRelatedField(read_only=True)
     body_type = serializers.StringRelatedField(read_only=True)
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Auto
-        fields = ("id", "brand", "model", "year", "color", "body_type")
+        fields = ("id", "brand", "model", "year", "color", "body_type", "rating")
 
     def to_representation(self, instance):
         """
@@ -117,13 +121,24 @@ class AutoGETSerializer(serializers.ModelSerializer):
             key: value for key, value in representation.items() if value is not None
         }
 
+    def get_rating(self, obj):
+        """Вычисляет и возвращает рейтинг тура на основе отзывов, если их нет - возвращает 0."""
+        # Получаем тур с аннотированным средним рейтингом
+        auto_with_rating = get_object_or_404(
+            Auto.objects.annotate(average_rating=Avg("auto_rating")), id=obj.id
+        )
+        # Если есть отзывы, возвращаем средний рейтинг
+        if auto_with_rating.average_rating is not None:
+            return round(auto_with_rating.average_rating, 2)
+
 
 class AutoMiniSerializer(serializers.ModelSerializer):
     """
     Мини-сериализатор для модели Auto.
-    
+
     Представляет минимальный набор данных об автомобиле, включая бренд и модель.
     """
+
     brand = serializers.StringRelatedField(read_only=True)
     model = serializers.StringRelatedField(read_only=True)
 
@@ -154,10 +169,36 @@ class CompanyAutoSerializer(serializers.ModelSerializer):
 class CompanySerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Company.
-    
+
     Представляет информацию о компании, включая ее название.
     """
 
     class Meta:
         model = Company
         fields = ("name",)
+
+
+class ReviewAutoSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели оценок и отзывов машин для каширинга.
+
+    Этот класс преобразует экземпляры модели ReviewAuto
+    """
+
+    class Meta:
+        model = ReviewAuto
+        fields = ["id", "auto", "rating", "comment", "image"]
+
+
+class ReviewAutoGetSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели оценок и отзывов машин для каширинга.
+
+    Этот класс преобразует экземпляры модели ReviewAuto
+    в JSON и обратно, а также валидирует входные данные.
+    """
+
+    owner = serializers.StringRelatedField(read_only=True)
+    auto = AutoSerializer()
+
+    class Meta:
+        model = ReviewAuto
+        fields = ["id", "auto", "image", "owner", "rating", "comment", "date"]

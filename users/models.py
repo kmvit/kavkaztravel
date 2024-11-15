@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 
+
 class CustomUser(AbstractUser):
 
     USERNAME_FIELD = "email"
@@ -18,16 +19,14 @@ class CustomUser(AbstractUser):
         return self.username
 
 
-
-
 class SMSVerification(models.Model):
     """
     Модель для хранения информации о процессе верификации номера телефона через SMS.
 
-    Используется для отслеживания отправки кода подтверждения на номер телефона, 
+    Используется для отслеживания отправки кода подтверждения на номер телефона,
     а также для управления состоянием верификации и сроком действия кода.
     """
-    
+
     phone_number = models.CharField(max_length=15)  # Номер телефона получателя
     verification_code = models.CharField(max_length=6)  # Код подтверждения
     message_id = models.CharField(max_length=100, unique=True)  # ID сообщения
@@ -43,4 +42,3 @@ class SMSVerification(models.Model):
     def is_expired(self):
         """Проверка, не истек ли срок действия кода."""
         return timezone.now() > self.expires_at
-

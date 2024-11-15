@@ -14,8 +14,6 @@ from .serializers import CustomUserSerializer, SMSVerificationSerializer
 from .sms_service import send_verification_sms
 
 
-
-
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer

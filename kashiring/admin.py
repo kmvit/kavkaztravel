@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Brand, Model, Year, Color, BodyType, Auto, Foto, Company
+from .models import Brand, Model, ReviewAuto, Year, Color, BodyType, Auto, Foto, Company
 
 
 class BrandAdmin(admin.ModelAdmin):
@@ -59,3 +59,4 @@ admin.site.register(BodyType, BodyTypeAdmin)
 admin.site.register(Auto, AutoAdmin)
 admin.site.register(Foto, FotoAdmin)
 admin.site.register(Company, CompanyAdmin)
+# admin.site.register(ReviewAuto)

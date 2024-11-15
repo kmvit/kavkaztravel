@@ -1,11 +1,14 @@
+from django.shortcuts import get_object_or_404
+from django.db.models import Avg
+
 from rest_framework import serializers
 from .models import (
     DateTour,
-    EstimationTour,
     GalleryTour,
     Geo,
     Guide,
     Order,
+    ReviewTour,
     Tag,
     Tour,
     TourOperator,
@@ -15,10 +18,11 @@ from .models import (
 class GuideSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Guide.
-    
+
     Позволяет преобразовывать данные о гиде в формат JSON и обратно.
     Включает информацию о владельце.
     """
+
     owner = serializers.StringRelatedField(
         read_only=True
     )  # serializers.ReadOnlyField(source='owner.username')
@@ -31,10 +35,11 @@ class GuideSerializer(serializers.ModelSerializer):
 class TourOperatorSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели TourOperator.
-    
+
     Позволяет преобразовывать данные о туроператоре в формат JSON и обратно.
     Включает информацию о владельце.
     """
+
     owner = serializers.StringRelatedField(
         read_only=True
     )  # serializers.ReadOnlyField(source='owner.username')
@@ -78,10 +83,33 @@ class TourGETSerializer(serializers.ModelSerializer):
     tag = TagSerializer()
     tour_operator = serializers.StringRelatedField(read_only=True)
     geo = GeoSerializer()
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Tour
-        fields = ("id", "name", "description", "geo", "tag", "tour_operator", "slug")
+        fields = (
+            "id",
+            "name",
+            "description",
+            "geo",
+            "tag",
+            "tour_operator",
+            "slug",
+            "rating",
+        )
+
+    def get_rating(self, obj):
+        """Вычисляет и возвращает рейтинг тура на основе отзывов, если их нет - возвращает 0."""
+        # Получаем тур с аннотированным средним рейтингом
+        tour_with_rating = get_object_or_404(
+            Tour.objects.annotate(average_rating=Avg("tour__rating")), id=obj.id
+        )
+        # Если есть отзывы, возвращаем средний рейтинг
+        if tour_with_rating.average_rating is not None:
+            return round(tour_with_rating.average_rating, 2)
+
+        # Если нет отзывов, возвращаем 0
+        return 0
 
 
 class TourSerializer(serializers.ModelSerializer):
@@ -146,43 +174,27 @@ class OrderGetSerializer(OrderSerializer):
     tour = TourGETSerializer()
 
 
-class EstimationTourSerializer(serializers.ModelSerializer):
+class ReviewTourSerializer(serializers.ModelSerializer):
     """Сериализатор для модели оценок и отзывов тура.
 
-    Этот класс преобразует экземпляры модели EstimationTour
-    в JSON и обратно, а также валидирует входные данные.
+    Этот класс преобразует экземпляры модели ReviewTour
     """
 
     class Meta:
-        model = EstimationTour
-        fields = ["id", "tour", "estimation", "feedback", "image"]
+        model = ReviewTour
+        fields = ["id", "tour", "rating", "comment", "image"]
 
 
-class EstimationTourGetSerializer(serializers.ModelSerializer):
+class ReviewTourGetSerializer(serializers.ModelSerializer):
     """Сериализатор для модели оценок и отзывов тура.
 
-    Этот класс преобразует экземпляры модели EstimationTour
+    Этот класс преобразует экземпляры модели ReviewTour
     в JSON и обратно, а также валидирует входные данные.
     """
 
-    rating = serializers.SerializerMethodField()
+    owner = serializers.StringRelatedField(read_only=True)
     tour = TourGETSerializer()
 
     class Meta:
-        model = EstimationTour
-        fields = ["id", "tour", "estimation", "feedback", "image", "date", "rating"]
-
-    def get_rating(self, obj):
-        """
-        Функция предназначена для получения рейтинга тура.
-
-        Значение передаеться в поле "rating"
-        Рассчитываеться как сумма всех оценок тура
-        деленная на количество отзывов. По умолчанию оценка равна 10.
-        """
-        estimations = EstimationTour.objects.filter(tour=obj.tour)
-        total_estimation = len(estimations)
-        sum_estimation = sum(est.estimation for est in estimations)
-        if total_estimation > 0:
-            return round(sum_estimation / total_estimation, 2)
-        return 10
+        model = ReviewTour
+        fields = ["id", "tour", "image", "owner", "rating", "comment", "date"]

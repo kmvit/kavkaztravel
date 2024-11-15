@@ -1,9 +1,11 @@
 from Kavkaztome.permissions import IsOwnerOnly
 from rest_framework import viewsets
-from .models import Brand, Model, Year, Color, BodyType, Auto, Foto, Company
+from .models import Brand, Model, ReviewAuto, Year, Color, BodyType, Auto, Company
 from .serializers import (
     BrandSerializer,
     ModelSerializer,
+    ReviewAutoGetSerializer,
+    ReviewAutoSerializer,
     YearSerializer,
     ColorSerializer,
     BodyTypeSerializer,
@@ -13,7 +15,7 @@ from .serializers import (
     CompanySerializer,
 )
 from django.shortcuts import get_object_or_404
-from http import HTTPStatus
+
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -145,3 +147,33 @@ class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
+
+
+class ReviewAutoViewSet(viewsets.ModelViewSet):
+    """Класс для модели, который содержит оценки и отзывы."""
+
+    queryset = ReviewAuto.objects.all()
+    permission_classes = (IsOwnerOnly,)
+
+    def get_serializer_class(self):
+        if self.action in ("list", "retrieve"):
+            return ReviewAutoGetSerializer
+        return ReviewAutoSerializer
+
+    def perform_create(self, serializer):
+        """Переопределяем метод perform_create для создания нового отзыва."""
+
+        auto_id = self.request.data.get("auto")
+        restaurant = get_object_or_404(Auto, id=auto_id)
+        serializer.save(tour=restaurant, owner=self.request.user)
+
+    def perform_update(self, serializer):
+        """Переопределяем метод perform_update для обновления отзыва."""
+        # Получаем ID тура из запроса или текущего объекта
+        auto_id = self.request.data.get("auto", self.get_object().auto.id)
+
+        # Используем get_object_or_404 для получения тура
+        auto = get_object_or_404(Auto, id=auto_id)
+
+        # Сохраняем отзыв с обновленным туром
+        serializer.save(auto=auto, owner=self.request.user)
