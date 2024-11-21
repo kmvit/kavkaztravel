@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from core.models import BaseContent
+from core.models import BaseContent, BaseReview, BaseReviewImage
 from regions.models import Region
 from django.core.validators import RegexValidator
 
@@ -85,51 +85,33 @@ class GalleryTour(models.Model):
     image = models.ImageField(upload_to="content_images/", blank=True, null=True)
 
 
-class ReviewTour(models.Model):
+class ReviewTour(BaseReview):
     """Класс для модели, который содержит оценки и отзывы о туре.
 
     Эта модель используется для хранения отзывов и рейтингов, оставленных пользователями на
     определенный тур. Каждый отзыв включает оценку, комментарий, изображение и дату создания.
     """
 
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        default=1,
-        verbose_name="Владелец отзыва",
-        help_text="Пользователь, оставивший отзыв.",
-    )
-    rating = models.PositiveIntegerField(
-        blank=True,
-        null=True,
-        verbose_name="Оценка тура",
-        choices=list(zip(range(1, 6), range(1, 6))),
-        help_text="Оценка тура от 1 до 5, где 1 - плохо, а 5 - отлично.",
-    )
-    comment = models.TextField(
-        verbose_name="Комментарий",
-        help_text="Текстовый комментарий к туру. Пользователь может оставить свой отзыв.",
-    )
-    date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата отзыва",
-        help_text="Дата и время создания отзыва.",
-    )
     tour = models.ForeignKey(
         Tour,
         on_delete=models.CASCADE,
-        related_name="estimations",
+        related_name="tour",
         verbose_name="tour",
         help_text="Тур, к которому относится этот отзыв.",
     )
-    image = models.ImageField(
-        upload_to="content_images/",
-        blank=True,
-        null=True,
-        verbose_name="Изображение отзыва",
-        help_text="Опциональное изображение, которое можно прикрепить к отзыву.",
-    )
+    
 
+
+class ReviewImageTour(BaseReviewImage):
+    """Модель для хранения изображения отзыва, связанного с конкретным отзывом."""
+
+    review = models.ForeignKey(
+        ReviewTour,  # Связь с моделью ReviewHotel (отзыв)
+        on_delete=models.CASCADE,
+        related_name="review_images",  # Все изображения этого отзыва
+        verbose_name="Фотографии отзывов тура",
+        help_text="Тур, к которому привязано изображение отзыва.",
+    )
 
 class DateTour(models.Model):
     """Класс для модели, которая содержит

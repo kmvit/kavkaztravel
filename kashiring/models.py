@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from core.models import BaseContent
+from core.models import BaseContent, BaseReview, BaseReviewImage
 
 
 class Brand(BaseContent):
@@ -119,46 +119,27 @@ class Company(BaseContent):
     )
 
 
-class ReviewAuto(models.Model):
+class ReviewAuto(BaseReview):
     """Класс для модели, который содержит оценки и отзывы о местах общественного питания.
 
     Эта модель используется для хранения отзывов и рейтингов, оставленных пользователями на
     определенный местах общественного питания. Каждый отзыв включает оценку, комментарий, изображение и дату создания.
     """
 
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        default=1,
-        verbose_name="Владелец отзыва",
-        help_text="Пользователь, оставивший отзыв.",
-    )
-    rating = models.PositiveIntegerField(
-        blank=True,
-        null=True,
-        verbose_name="Оценка тура",
-        choices=list(zip(range(1, 6), range(1, 6))),
-        help_text="Оценка тура от 1 до 5, где 1 - плохо, а 5 - отлично.",
-    )
-    comment = models.TextField(
-        verbose_name="Комментарий",
-        help_text="Текстовый комментарий к туру. Пользователь может оставить свой отзыв.",
-    )
-    date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата отзыва",
-        help_text="Дата и время создания отзыва.",
-    )
     auto = models.ForeignKey(
         Auto,
         on_delete=models.CASCADE,
         related_name="auto",
         verbose_name="Машина",
     )
-    image = models.ImageField(
-        upload_to="content_images/",
-        blank=True,
-        null=True,
-        verbose_name="Изображение отзыва",
-        help_text="Опциональное изображение, которое можно прикрепить к отзыву.",
+
+class ReviewImageAuto(BaseReviewImage):
+    """Модель для хранения изображения отзыва, связанного с конкретным отзывом."""
+
+    review = models.ForeignKey(
+        ReviewAuto,  # Связь с моделью ReviewHotel (отзыв)
+        on_delete=models.CASCADE,
+        related_name="review_images",  # Все изображения этого отзыва
+        verbose_name="Отзыв о машине",
+        help_text="Машина, к которому привязано изображение отзыва.",
     )

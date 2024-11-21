@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 from rest_framework import serializers
-from .models import Entertainment, ReviewEntertainment
+from .models import Entertainment, ReviewEntertainment, ReviewImageEntertainment
 
 
 class EntertainmentSerializer(serializers.ModelSerializer):
@@ -24,27 +24,23 @@ class EntertainmentSerializer(serializers.ModelSerializer):
             return round(entertainment_with_rating.average_rating, 2)
 
 
-class ReviewEntertainmentSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели оценок и отзывов о развлечениях или местах отдыха.
-
-    Этот класс преобразует экземпляры модели ReviewEntertainment
-    """
-
+class ReviewImageEntertainmentSerializer(serializers.ModelSerializer):
+    """Сериализатор для изображения отзыва о гостинице"""
+    
     class Meta:
-        model = ReviewEntertainment
-        fields = ["id", "entertainment", "rating", "comment", "image"]
+        model = ReviewImageEntertainment
+        fields = ['id', 'image']
 
 
-class ReviewEntertainmentGetSerializer(serializers.ModelSerializer):
+class ReviewEntertainmentSerializer(serializers.ModelSerializer):
     """Сериализатор для модели оценок и отзывов о развлечениях или местах отдыха.
 
     Этот класс преобразует экземпляры модели ReviewEntertainment
     в JSON и обратно, а также валидирует входные данные.
     """
 
-    owner = serializers.StringRelatedField(read_only=True)
-    entertainment = EntertainmentSerializer()
+    review_images = ReviewImageEntertainmentSerializer(many=True, required=False)
 
     class Meta:
         model = ReviewEntertainment
-        fields = ["id", "entertainment", "image", "owner", "rating", "comment", "date"]
+        fields = ["id", "entertainment", "owner", "rating", "comment", "date", "review_images"]

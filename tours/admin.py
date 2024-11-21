@@ -5,6 +5,7 @@ from .models import (
     Geo,
     Guide,
     Order,
+    ReviewImageTour,
     ReviewTour,
     Tag,
     Tour,
@@ -19,4 +20,5 @@ admin.site.register(DateTour)
 admin.site.register(Tag)
 admin.site.register(Order)
 admin.site.register(Geo)
+admin.site.register(ReviewImageTour)
 admin.site.register(ReviewTour)

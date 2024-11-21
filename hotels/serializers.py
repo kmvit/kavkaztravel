@@ -4,6 +4,7 @@ from django.db.models import Avg
 from .models import (
     Hotel,
     ReviewHotel,
+    ReviewImageHotel,
     Tag,
     HotelImage,
     RoomImage,
@@ -129,27 +130,20 @@ class HotelSerializer(serializers.ModelSerializer):
             return round(hotel_with_rating.average_rating, 2)
 
 
+class ReviewImageHotelSerializer(serializers.ModelSerializer):
+    """Сериализатор для изображения отзыва о гостинице"""
+    
+    class Meta:
+        model = ReviewImageHotel
+        fields = ['id', 'image']
+
+
 class ReviewHotelSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели оценок и отзывов о гостиницах.
-
-    Этот класс преобразует экземпляры модели ReviewAuto
-    """
-
-    class Meta:
-        model = ReviewHotel
-        fields = ["id", "hotel", "rating", "comment", "image"]
-
-
-class ReviewHotelGetSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели оценок и отзывов о гостиницах.
-
-    Этот класс преобразует экземпляры модели ReviewAuto
-    в JSON и обратно, а также валидирует входные данные.
-    """
-
-    owner = serializers.StringRelatedField(read_only=True)
-    hotel = HotelSerializer()
+    """Сериализатор для отзыва о гостинице с вложенными изображениями"""
+    
+    review_images = ReviewImageHotelSerializer(many=True, required=False)
 
     class Meta:
         model = ReviewHotel
-        fields = ["id", "hotel", "image", "owner", "rating", "comment", "date"]
+        fields = ['id', 'hotel', 'owner', 'rating', 'comment', 'date', 'review_images']
+

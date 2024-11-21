@@ -1,8 +1,7 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from django.db.models import Avg
 
-from .models import Restaurant, ReviewRestaurant
+from .models import Restaurant, ReviewImageRestaurant, ReviewRestaurant
 
 
 class RestaurantSerializer(serializers.ModelSerializer):
@@ -40,27 +39,19 @@ class RestaurantSerializer(serializers.ModelSerializer):
         return 0
 
 
+class ReviewImageRestaurantSerializer(serializers.ModelSerializer):
+    """Сериализатор для изображения отзыва о гостинице"""
+    
+    class Meta:
+        model = ReviewImageRestaurant
+        fields = ['id', 'image']
+
+
 class ReviewRestaurantSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели оценок и отзывов тура.
-
-    Этот класс преобразует экземпляры модели ReviewRestaurant
-    """
-
-    class Meta:
-        model = ReviewRestaurant
-        fields = ["id", "restaurant", "rating", "comment", "image"]
-
-
-class ReviewRestaurantGetSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели оценок и отзывов тура.
-
-    Этот класс преобразует экземпляры модели ReviewRestaurant
-    в JSON и обратно, а также валидирует входные данные.
-    """
-
-    owner = serializers.StringRelatedField(read_only=True)
-    restaurant = RestaurantSerializer()
+    """Сериализатор для отзыва о гостинице с вложенными изображениями"""
+    
+    review_images = ReviewImageRestaurantSerializer(many=True, required=False)
 
     class Meta:
         model = ReviewRestaurant
-        fields = ["id", "restaurant", "image", "owner", "rating", "comment", "date"]
+        fields = ['id', 'restaurant', 'owner', 'rating', 'comment', 'date', 'review_images']

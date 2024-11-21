@@ -8,6 +8,7 @@ from .models import (
     Geo,
     Guide,
     Order,
+    ReviewImageTour,
     ReviewTour,
     Tag,
     Tour,
@@ -174,27 +175,23 @@ class OrderGetSerializer(OrderSerializer):
     tour = TourGETSerializer()
 
 
-class ReviewTourSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели оценок и отзывов тура.
 
-    Этот класс преобразует экземпляры модели ReviewTour
-    """
-
+class ReviewImageTourSerializer(serializers.ModelSerializer):
+    """Сериализатор для изображения отзыва о турах."""
+    
     class Meta:
-        model = ReviewTour
-        fields = ["id", "tour", "rating", "comment", "image"]
+        model = ReviewImageTour
+        fields = ['id', 'image']
 
 
-class ReviewTourGetSerializer(serializers.ModelSerializer):
+class ReviewTourSerializer(serializers.ModelSerializer):
     """Сериализатор для модели оценок и отзывов тура.
 
     Этот класс преобразует экземпляры модели ReviewTour
     в JSON и обратно, а также валидирует входные данные.
     """
-
-    owner = serializers.StringRelatedField(read_only=True)
-    tour = TourGETSerializer()
+    review_images = ReviewImageTourSerializer(many=True, required=False)
 
     class Meta:
         model = ReviewTour
-        fields = ["id", "tour", "image", "owner", "rating", "comment", "date"]
+        fields = ["id", "tour", 'owner', 'rating', 'comment', 'date', 'review_images']

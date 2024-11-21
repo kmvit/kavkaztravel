@@ -1,10 +1,9 @@
 from Kavkaztome.permissions import IsOwnerOnly
 from rest_framework import viewsets
-from .models import Brand, Model, ReviewAuto, Year, Color, BodyType, Auto, Company
+from .models import Brand, Model, ReviewAuto, ReviewImageAuto, Year, Color, BodyType, Auto, Company
 from .serializers import (
     BrandSerializer,
     ModelSerializer,
-    ReviewAutoGetSerializer,
     ReviewAutoSerializer,
     YearSerializer,
     ColorSerializer,
@@ -148,32 +147,54 @@ class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
 
+from rest_framework import viewsets, status
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
 
 class ReviewAutoViewSet(viewsets.ModelViewSet):
     """Класс для модели, который содержит оценки и отзывы."""
 
     queryset = ReviewAuto.objects.all()
     permission_classes = (IsOwnerOnly,)
+    parser_classes = (MultiPartParser, FormParser)  # Для обработки изображений
+    serializer_class = ReviewAutoSerializer
 
-    def get_serializer_class(self):
-        if self.action in ("list", "retrieve"):
-            return ReviewAutoGetSerializer
-        return ReviewAutoSerializer
+    def create(self, request, *args, **kwargs):
+        # Создание отзыва
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            # Сохраняем отзыв
+            review = serializer.save()
 
-    def perform_create(self, serializer):
-        """Переопределяем метод perform_create для создания нового отзыва."""
+            # Если есть изображения, сохраняем их
+            review_images = request.FILES.getlist('review_images')
+            if review_images:
+                for image in review_images:
+                    ReviewImageAuto.objects.create(review=review, image=image)
 
-        auto_id = self.request.data.get("auto")
-        restaurant = get_object_or_404(Auto, id=auto_id)
-        serializer.save(tour=restaurant, owner=self.request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def perform_update(self, serializer):
-        """Переопределяем метод perform_update для обновления отзыва."""
-        # Получаем ID тура из запроса или текущего объекта
-        auto_id = self.request.data.get("auto", self.get_object().auto.id)
+    def update(self, request, *args, **kwargs):
+        # Получаем отзыв для обновления
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
 
-        # Используем get_object_or_404 для получения тура
-        auto = get_object_or_404(Auto, id=auto_id)
+        # Обновление отзыва
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if serializer.is_valid():
+            # Сохраняем обновленный отзыв
+            review = serializer.save()
 
-        # Сохраняем отзыв с обновленным туром
-        serializer.save(auto=auto, owner=self.request.user)
+            # Обработка изображений:
+            review_images = request.FILES.getlist('review_images')
+            if review_images:
+                # Удаляем старые изображения
+                review.review_images.all().delete()
+
+                # Добавляем новые изображения
+                for image in review_images:
+                    ReviewImageAuto.objects.create(review=review, image=image)
+
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

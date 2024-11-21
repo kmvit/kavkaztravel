@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from django.db.models import Avg
-from .models import Brand, Model, ReviewAuto, Year, Color, BodyType, Auto, Company
+from .models import Brand, Model, ReviewAuto, ReviewImageAuto, Year, Color, BodyType, Auto, Company
 
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -125,7 +125,7 @@ class AutoGETSerializer(serializers.ModelSerializer):
         """Вычисляет и возвращает рейтинг тура на основе отзывов, если их нет - возвращает 0."""
         # Получаем тур с аннотированным средним рейтингом
         auto_with_rating = get_object_or_404(
-            Auto.objects.annotate(average_rating=Avg("auto_rating")), id=obj.id
+            Auto.objects.annotate(average_rating=Avg("auto__rating")), id=obj.id
         )
         # Если есть отзывы, возвращаем средний рейтинг
         if auto_with_rating.average_rating is not None:
@@ -178,27 +178,22 @@ class CompanySerializer(serializers.ModelSerializer):
         fields = ("name",)
 
 
+class ReviewAutoHotelSerializer(serializers.ModelSerializer):
+    """Сериализатор для изображения отзыва о машинах."""
+    
+    class Meta:
+        model = ReviewImageAuto
+        fields = ['id', 'image']
+        
+
+
 class ReviewAutoSerializer(serializers.ModelSerializer):
     """Сериализатор для модели оценок и отзывов машин для каширинга.
 
     Этот класс преобразует экземпляры модели ReviewAuto
     """
-
+    review_images = ReviewAutoHotelSerializer(many=True, required=False)
     class Meta:
         model = ReviewAuto
-        fields = ["id", "auto", "rating", "comment", "image"]
+        fields = ['id', 'auto', 'owner', 'rating', 'comment', 'date', 'review_images']
 
-
-class ReviewAutoGetSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели оценок и отзывов машин для каширинга.
-
-    Этот класс преобразует экземпляры модели ReviewAuto
-    в JSON и обратно, а также валидирует входные данные.
-    """
-
-    owner = serializers.StringRelatedField(read_only=True)
-    auto = AutoSerializer()
-
-    class Meta:
-        model = ReviewAuto
-        fields = ["id", "auto", "image", "owner", "rating", "comment", "date"]

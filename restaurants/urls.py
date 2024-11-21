@@ -1,6 +1,6 @@
 from rest_framework.routers import DefaultRouter
 
-from .serializers import ReviewRestaurantGetSerializer
+
 from .views import RestaurantViewSet, ReviewRestaurantViewSet
 
 app_name = "restaurants"

@@ -3,7 +3,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 
 from Kavkaztome import settings
-from core.models import BaseContent
+from core.models import BaseContent, BaseReview, BaseReviewImage
 from regions.models import Region
 
 
@@ -201,46 +201,28 @@ class RoomPrice(models.Model):
         )
 
 
-class ReviewHotel(models.Model):
+class ReviewHotel(BaseReview):
     """Класс для модели, который содержит оценки и отзывы о гости.
 
     Эта модель используется для хранения отзывов и рейтингов, оставленных пользователями о гостиницах
     определенный местах общественного питания. Каждый отзыв включает оценку, комментарий, изображение и дату создания.
     """
 
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        default=1,
-        verbose_name="Владелец отзыва",
-        help_text="Пользователь, оставивший отзыв.",
-    )
-    rating = models.PositiveIntegerField(
-        blank=True,
-        null=True,
-        verbose_name="Оценка тура",
-        choices=list(zip(range(1, 6), range(1, 6))),
-        help_text="Оценка тура от 1 до 5, где 1 - плохо, а 5 - отлично.",
-    )
-    comment = models.TextField(
-        verbose_name="Комментарий",
-        help_text="Текстовый комментарий к туру. Пользователь может оставить свой отзыв.",
-    )
-    date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата отзыва",
-        help_text="Дата и время создания отзыва.",
-    )
     hotel = models.ForeignKey(
         Hotel,
         on_delete=models.CASCADE,
         related_name="hotel",
         verbose_name="Гостиница",
     )
-    image = models.ImageField(
-        upload_to="content_images/",
-        blank=True,
-        null=True,
-        verbose_name="Изображение отзыва",
-        help_text="Опциональное изображение, которое можно прикрепить к отзыву.",
+  
+
+class ReviewImageHotel(BaseReviewImage):
+    """Модель для хранения изображения отзыва, связанного с конкретным отзывом."""
+    
+    review = models.ForeignKey(
+        ReviewHotel,  # Связь с моделью ReviewHotel (отзыв)
+        on_delete=models.CASCADE,
+        related_name="review_images",  # Все изображения этого отзыва
+        verbose_name="Отзыв",
+        help_text="Отзыв, к которому привязано изображение.",
     )

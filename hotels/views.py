@@ -1,7 +1,6 @@
-from django.shortcuts import get_object_or_404
-from Kavkaztome.permissions import IsOwnerOnly
-from rest_framework import viewsets, permissions
 
+from rest_framework import viewsets
+from Kavkaztome.permissions import IsOwnerOnly
 from .filters import HotelFilter
 from .models import (
     Hotel,
@@ -14,7 +13,7 @@ from .models import (
 )
 from .serializers import (
     HotelSerializer,
-    ReviewHotelGetSerializer,
+   
     ReviewHotelSerializer,
     RoomSerializer,
     RoomImageSerializer,
@@ -112,33 +111,55 @@ class AmenityViewSet(viewsets.ModelViewSet):
 
     queryset = Amenity.objects.all()
     serializer_class = AmenitySerializer
-
+# views.py
+from rest_framework import viewsets, status
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from .models import ReviewHotel, ReviewImageHotel
+from .serializers import ReviewHotelSerializer
 
 class ReviewHotelViewSet(viewsets.ModelViewSet):
-    """Класс для модели, который содержит оценки и отзывы."""
-
     queryset = ReviewHotel.objects.all()
+    serializer_class = ReviewHotelSerializer
+    parser_classes = (MultiPartParser, FormParser)  # Для обработки изображений
     permission_classes = (IsOwnerOnly,)
+    
+    def create(self, request, *args, **kwargs):
+        # Создание отзыва
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            # Сохраняем отзыв
+            review = serializer.save()
 
-    def get_serializer_class(self):
-        if self.action in ("list", "retrieve"):
-            return ReviewHotelGetSerializer
-        return ReviewHotelSerializer
+            # Если есть изображения, сохраняем их
+            review_images = request.FILES.getlist('review_images')
+            if review_images:
+                for image in review_images:
+                    ReviewImageHotel.objects.create(review=review, image=image)
 
-    def perform_create(self, serializer):
-        """Переопределяем метод perform_create для создания нового отзыва."""
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        hotel_id = self.request.data.get("hotel")
-        hotel = get_object_or_404(Hotel, id=hotel_id)
-        serializer.save(hotelr=hotel, owner=self.request.user)
+    def update(self, request, *args, **kwargs):
+        # Получаем отзыв для обновления
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
 
-    def perform_update(self, serializer):
-        """Переопределяем метод perform_update для обновления отзыва."""
-        # Получаем ID тура из запроса или текущего объекта
-        hotel_id = self.request.data.get("hotel", self.get_object().hotel.id)
+        # Обновление отзыва
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if serializer.is_valid():
+            # Сохраняем обновленный отзыв
+            review = serializer.save()
 
-        # Используем get_object_or_404 для получения тура
-        hotel = get_object_or_404(Hotel, id=hotel_id)
+            # Обработка изображений:
+            review_images = request.FILES.getlist('review_images')
+            if review_images:
+                # Удаляем старые изображения
+                review.review_images.all().delete()
 
-        # Сохраняем отзыв с обновленным туром
-        serializer.save(hotel=hotel, owner=self.request.user)
+                # Добавляем новые изображения
+                for image in review_images:
+                    ReviewImageHotel.objects.create(review=review, image=image)
+
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -4,6 +4,7 @@ from .filter import TourFilter
 from rest_framework import viewsets
 from .models import (
     DateTour,
+    ReviewImageTour,
     ReviewTour,
     GalleryTour,
     Geo,
@@ -20,7 +21,6 @@ from .serializers import (
     GuideSerializer,
     OrderGetSerializer,
     OrderSerializer,
-    ReviewTourGetSerializer,
     ReviewTourSerializer,
     TagSerializer,
     TourGETSerializer,
@@ -166,32 +166,54 @@ class OrderViewSet(viewsets.ModelViewSet):
             return OrderGetSerializer
         return OrderSerializer
 
+from rest_framework import viewsets, status
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
 
 class ReviewTourViewSet(viewsets.ModelViewSet):
     """Класс для модели, который содержит оценки и отзывы."""
 
     queryset = ReviewTour.objects.all()
+    serializer_class = ReviewTourSerializer
+    parser_classes = (MultiPartParser, FormParser)  # Для обработки изображений
     permission_classes = (IsOwnerOnly,)
+    
+    def create(self, request, *args, **kwargs):
+        # Создание отзыва
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            # Сохраняем отзыв
+            review = serializer.save()
 
-    def get_serializer_class(self):
-        if self.action in ("list", "retrieve"):
-            return ReviewTourGetSerializer
-        return ReviewTourSerializer
+            # Если есть изображения, сохраняем их
+            review_images = request.FILES.getlist('review_images')
+            if review_images:
+                for image in review_images:
+                    ReviewImageTour.objects.create(review=review, image=image)
 
-    def perform_create(self, serializer):
-        """Переопределяем метод perform_create для создания нового отзыва."""
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        tour_id = self.request.data.get("tour")
-        tour = get_object_or_404(Tour, id=tour_id)
-        serializer.save(tour=tour, owner=self.request.user)
+    def update(self, request, *args, **kwargs):
+        # Получаем отзыв для обновления
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
 
-    def perform_update(self, serializer):
-        """Переопределяем метод perform_update для обновления отзыва."""
-        # Получаем ID тура из запроса или текущего объекта
-        tour_id = self.request.data.get("tour", self.get_object().tour.id)
+        # Обновление отзыва
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if serializer.is_valid():
+            # Сохраняем обновленный отзыв
+            review = serializer.save()
 
-        # Используем get_object_or_404 для получения тура
-        tour = get_object_or_404(Tour, id=tour_id)
+            # Обработка изображений:
+            review_images = request.FILES.getlist('review_images')
+            if review_images:
+                # Удаляем старые изображения
+                review.review_images.all().delete()
 
-        # Сохраняем отзыв с обновленным туром
-        serializer.save(tour=tour, owner=self.request.user)
+                # Добавляем новые изображения
+                for image in review_images:
+                    ReviewImageTour.objects.create(review=review, image=image)
+
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
