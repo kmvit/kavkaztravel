@@ -1,6 +1,20 @@
+from rest_framework import viewsets, status
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+
 from Kavkaztome.permissions import IsOwnerOnly
-from rest_framework import viewsets
-from .models import Brand, Model, ReviewAuto, ReviewImageAuto, Year, Color, BodyType, Auto, Company
+from .models import (
+    Brand,
+    Model,
+    ReviewAuto,
+    ReviewImageAuto,
+    Year,
+    Color,
+    BodyType,
+    Auto,
+    Company,
+)
 from .serializers import (
     BrandSerializer,
     ModelSerializer,
@@ -13,10 +27,6 @@ from .serializers import (
     CompanyAutoSerializer,
     CompanySerializer,
 )
-from django.shortcuts import get_object_or_404
-
-from rest_framework import status
-from rest_framework.response import Response
 
 
 class BrandViewSet(viewsets.ModelViewSet):
@@ -147,9 +157,6 @@ class CompanyViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
 
-from rest_framework import viewsets, status
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.response import Response
 
 class ReviewAutoViewSet(viewsets.ModelViewSet):
     """Класс для модели, который содержит оценки и отзывы."""

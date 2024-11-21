@@ -6,12 +6,12 @@ from rest_framework.routers import DefaultRouter
 # Create your views here.
 
 router = DefaultRouter()
-router.register(r"blog", BlogViewSet)
+router.register(r"", BlogViewSet)
 
 
 urlpatterns = [
     path(
-        "blog/<slug:slug>/",
+        "/<slug:slug>/",
         BlogViewSet.as_view({"get": "retrieve"}),
         name="blog-detail",
     )

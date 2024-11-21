@@ -1,10 +1,14 @@
+from rest_framework import viewsets, status
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import viewsets
 from Kavkaztome.permissions import IsOwnerOnly
 from .filters import HotelFilter
 from .models import (
     Hotel,
     ReviewHotel,
+    ReviewImageHotel,
     Room,
     RoomImage,
     MealPlan,
@@ -13,7 +17,6 @@ from .models import (
 )
 from .serializers import (
     HotelSerializer,
-   
     ReviewHotelSerializer,
     RoomSerializer,
     RoomImageSerializer,
@@ -21,7 +24,6 @@ from .serializers import (
     AccommodationTypeSerializer,
     AmenitySerializer,
 )
-from django_filters.rest_framework import DjangoFilterBackend
 
 
 class HotelViewSet(viewsets.ModelViewSet):
@@ -112,11 +114,7 @@ class AmenityViewSet(viewsets.ModelViewSet):
     queryset = Amenity.objects.all()
     serializer_class = AmenitySerializer
 # views.py
-from rest_framework import viewsets, status
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.response import Response
-from .models import ReviewHotel, ReviewImageHotel
-from .serializers import ReviewHotelSerializer
+
 
 class ReviewHotelViewSet(viewsets.ModelViewSet):
     queryset = ReviewHotel.objects.all()

@@ -6,7 +6,7 @@ from .views import RestaurantViewSet, ReviewRestaurantViewSet
 app_name = "restaurants"
 
 router = DefaultRouter()
-router.register(r"restaurants", RestaurantViewSet)
 router.register(r"review", ReviewRestaurantViewSet)
+router.register(r"", RestaurantViewSet)
 
 urlpatterns = router.urls

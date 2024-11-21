@@ -1,11 +1,14 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
 
 from Kavkaztome.permissions import IsOwnerOnly
-from .models import Restaurant, ReviewImageRestaurant, ReviewRestaurant
+from .models import Restaurant, ReviewRestaurant, ReviewImageRestaurant
 from .serializers import (
     RestaurantSerializer,
     ReviewRestaurantSerializer,
 )
+
 
 
 class RestaurantViewSet(viewsets.ModelViewSet):
@@ -20,10 +23,6 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     queryset = Restaurant.objects.all()
     serializer_class = RestaurantSerializer
     permission_classes = (IsOwnerOnly,)
-
-from rest_framework import viewsets, status
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.response import Response
 
 
 class ReviewRestaurantViewSet(viewsets.ModelViewSet):

@@ -1,7 +1,11 @@
-from Kavkaztome.permissions import IsOwnerOnly
+from rest_framework import viewsets, status
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 
+from Kavkaztome.permissions import IsOwnerOnly
 from .filter import TourFilter
-from rest_framework import viewsets
 from .models import (
     DateTour,
     ReviewImageTour,
@@ -27,10 +31,7 @@ from .serializers import (
     TourOperatorSerializer,
     TourSerializer,
 )
-from django.shortcuts import get_object_or_404
-from rest_framework.response import Response
-from rest_framework import status
-from django_filters.rest_framework import DjangoFilterBackend
+
 
 
 class GuideViewSet(viewsets.ModelViewSet):
@@ -166,9 +167,6 @@ class OrderViewSet(viewsets.ModelViewSet):
             return OrderGetSerializer
         return OrderSerializer
 
-from rest_framework import viewsets, status
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.response import Response
 
 class ReviewTourViewSet(viewsets.ModelViewSet):
     """Класс для модели, который содержит оценки и отзывы."""

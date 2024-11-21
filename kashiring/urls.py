@@ -20,11 +20,11 @@ router.register(r"models", ModelViewSet, basename="model")
 router.register(r"years", YearViewSet, basename="year")
 router.register(r"colors", ColorViewSet, basename="color")
 router.register(r"bodytypes", BodyTypeViewSet, basename="bodytype")
-router.register(r"autos", AutoViewSet, basename="auto")
 router.register(r"company_autos", CompanyAutoViewSet, basename="company_autos")
 router.register(r"company", CompanyViewSet, basename="company")
 router.register(r"review", ReviewAutoViewSet, basename="review")
+router.register(r"", AutoViewSet, basename="auto")
 
-urlpatterns = [
-    path("", include(router.urls)),
-]
+
+
+urlpatterns = router.urls

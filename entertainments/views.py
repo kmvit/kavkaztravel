@@ -1,11 +1,14 @@
+from rest_framework import viewsets, status
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
 
 from Kavkaztome.permissions import IsOwnerOnly
-from rest_framework import viewsets
 from .models import Entertainment, ReviewEntertainment, ReviewImageEntertainment
 from .serializers import (
     EntertainmentSerializer,
-    ReviewEntertainmentSerializer,
+    ReviewEntertainmentSerializer
 )
+
 
 
 class EntertainmentViewSet(viewsets.ModelViewSet):
@@ -13,10 +16,7 @@ class EntertainmentViewSet(viewsets.ModelViewSet):
     serializer_class = EntertainmentSerializer
     permission_classes = (IsOwnerOnly,)
 
-from rest_framework import viewsets, status
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.response import Response
-class ReviewEntertainmentViewSet(viewsets.ModelViewSet):
+class EntertainmentReviewViewSet(viewsets.ModelViewSet):   
     """Класс для модели, который содержит оценки и отзывы."""
 
     queryset = ReviewEntertainment.objects.all()
