@@ -33,7 +33,6 @@ from .serializers import (
 )
 
 
-
 class GuideViewSet(viewsets.ModelViewSet):
     """
     ViewSet для управления объектами модели Guide.
@@ -175,7 +174,7 @@ class ReviewTourViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewTourSerializer
     parser_classes = (MultiPartParser, FormParser)  # Для обработки изображений
     permission_classes = (IsOwnerOnly,)
-    
+
     def create(self, request, *args, **kwargs):
         # Создание отзыва
         serializer = self.get_serializer(data=request.data)
@@ -184,7 +183,7 @@ class ReviewTourViewSet(viewsets.ModelViewSet):
             review = serializer.save()
 
             # Если есть изображения, сохраняем их
-            review_images = request.FILES.getlist('review_images')
+            review_images = request.FILES.getlist("review_images")
             if review_images:
                 for image in review_images:
                     ReviewImageTour.objects.create(review=review, image=image)
@@ -194,7 +193,7 @@ class ReviewTourViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         # Получаем отзыв для обновления
-        partial = kwargs.pop('partial', False)
+        partial = kwargs.pop("partial", False)
         instance = self.get_object()
 
         # Обновление отзыва
@@ -204,7 +203,7 @@ class ReviewTourViewSet(viewsets.ModelViewSet):
             review = serializer.save()
 
             # Обработка изображений:
-            review_images = request.FILES.getlist('review_images')
+            review_images = request.FILES.getlist("review_images")
             if review_images:
                 # Удаляем старые изображения
                 review.review_images.all().delete()

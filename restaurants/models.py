@@ -54,9 +54,9 @@ class ReviewImageRestaurant(BaseReviewImage):
     """Модель для хранения изображения отзыва, связанного с конкретным отзывом."""
 
     review = models.ForeignKey(
-        ReviewRestaurant,  # Связь с моделью ReviewHotel (отзыв)
+        ReviewRestaurant,
         on_delete=models.CASCADE,
-        related_name="review_images",  # Все изображения этого отзыва
+        related_name="review_images",
         verbose_name="Место общественного питания",
         help_text="Место общественного питания, к которому привязано изображение отзыва.",
     )

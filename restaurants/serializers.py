@@ -40,7 +40,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
 
 
 class ReviewImageRestaurantSerializer(serializers.ModelSerializer):
-    """Сериализатор для изображения отзыва о гостинице"""
+    """Сериализатор для изображения отзыва о местах общественного питания."""
     
     class Meta:
         model = ReviewImageRestaurant
@@ -48,7 +48,10 @@ class ReviewImageRestaurantSerializer(serializers.ModelSerializer):
 
 
 class ReviewRestaurantSerializer(serializers.ModelSerializer):
-    """Сериализатор для отзыва о гостинице с вложенными изображениями"""
+    """
+    Сериализатор для отзыва о местах общественного питания
+    с вложенными изображениями.
+    """
     
     review_images = ReviewImageRestaurantSerializer(many=True, required=False)
 

@@ -89,7 +89,7 @@ class ReviewTour(BaseReview):
     """Класс для модели, который содержит оценки и отзывы о туре.
 
     Эта модель используется для хранения отзывов и рейтингов, оставленных пользователями на
-    определенный тур. Каждый отзыв включает оценку, комментарий, изображение и дату создания.
+    определенный тур. Каждый отзыв включает оценку, комментарий и дату создания.
     """
 
     tour = models.ForeignKey(
@@ -99,19 +99,19 @@ class ReviewTour(BaseReview):
         verbose_name="tour",
         help_text="Тур, к которому относится этот отзыв.",
     )
-    
 
 
 class ReviewImageTour(BaseReviewImage):
     """Модель для хранения изображения отзыва, связанного с конкретным отзывом."""
 
     review = models.ForeignKey(
-        ReviewTour,  # Связь с моделью ReviewHotel (отзыв)
+        ReviewTour,
         on_delete=models.CASCADE,
-        related_name="review_images",  # Все изображения этого отзыва
+        related_name="review_images",
         verbose_name="Фотографии отзывов тура",
         help_text="Тур, к которому привязано изображение отзыва.",
     )
+
 
 class DateTour(models.Model):
     """Класс для модели, которая содержит

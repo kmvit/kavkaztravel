@@ -1,7 +1,17 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from django.db.models import Avg
-from .models import Brand, Model, ReviewAuto, ReviewImageAuto, Year, Color, BodyType, Auto, Company
+from .models import (
+    Brand,
+    Model,
+    ReviewAuto,
+    ReviewImageAuto,
+    Year,
+    Color,
+    BodyType,
+    Auto,
+    Company,
+)
 
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -178,13 +188,12 @@ class CompanySerializer(serializers.ModelSerializer):
         fields = ("name",)
 
 
-class ReviewAutoHotelSerializer(serializers.ModelSerializer):
+class ReviewImageAutoSerializer(serializers.ModelSerializer):
     """Сериализатор для изображения отзыва о машинах."""
-    
+
     class Meta:
         model = ReviewImageAuto
-        fields = ['id', 'image']
-        
+        fields = ["id", "image"]
 
 
 class ReviewAutoSerializer(serializers.ModelSerializer):
@@ -192,8 +201,9 @@ class ReviewAutoSerializer(serializers.ModelSerializer):
 
     Этот класс преобразует экземпляры модели ReviewAuto
     """
-    review_images = ReviewAutoHotelSerializer(many=True, required=False)
+
+    review_images = ReviewImageAutoSerializer(many=True, required=False)
+
     class Meta:
         model = ReviewAuto
-        fields = ['id', 'auto', 'owner', 'rating', 'comment', 'date', 'review_images']
-
+        fields = ["id", "auto", "owner", "rating", "comment", "date", "review_images"]

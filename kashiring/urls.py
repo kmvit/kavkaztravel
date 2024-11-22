@@ -13,7 +13,7 @@ from .views import (
 )
 
 app_name = "kashiring"
-# Создаем роутер и регистрируем в нем наши viewsets
+
 router = DefaultRouter()
 router.register(r"brands", BrandViewSet, basename="brand")
 router.register(r"models", ModelViewSet, basename="model")
@@ -24,7 +24,6 @@ router.register(r"company_autos", CompanyAutoViewSet, basename="company_autos")
 router.register(r"company", CompanyViewSet, basename="company")
 router.register(r"review", ReviewAutoViewSet, basename="review")
 router.register(r"", AutoViewSet, basename="auto")
-
 
 
 urlpatterns = router.urls

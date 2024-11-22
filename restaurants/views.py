@@ -26,7 +26,8 @@ class RestaurantViewSet(viewsets.ModelViewSet):
 
 
 class ReviewRestaurantViewSet(viewsets.ModelViewSet):
-    """Класс для модели, который содержит оценки и отзывы."""
+    """Класс для модели, который содержит оценки и отзывы 
+    о местах общественного питания."""
 
     queryset = ReviewRestaurant.objects.all()
     serializer_class = ReviewRestaurantSerializer

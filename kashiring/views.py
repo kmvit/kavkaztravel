@@ -174,7 +174,7 @@ class ReviewAutoViewSet(viewsets.ModelViewSet):
             review = serializer.save()
 
             # Если есть изображения, сохраняем их
-            review_images = request.FILES.getlist('review_images')
+            review_images = request.FILES.getlist("review_images")
             if review_images:
                 for image in review_images:
                     ReviewImageAuto.objects.create(review=review, image=image)
@@ -184,7 +184,7 @@ class ReviewAutoViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         # Получаем отзыв для обновления
-        partial = kwargs.pop('partial', False)
+        partial = kwargs.pop("partial", False)
         instance = self.get_object()
 
         # Обновление отзыва
@@ -194,7 +194,7 @@ class ReviewAutoViewSet(viewsets.ModelViewSet):
             review = serializer.save()
 
             # Обработка изображений:
-            review_images = request.FILES.getlist('review_images')
+            review_images = request.FILES.getlist("review_images")
             if review_images:
                 # Удаляем старые изображения
                 review.review_images.all().delete()

@@ -202,7 +202,7 @@ class RoomPrice(models.Model):
 
 
 class ReviewHotel(BaseReview):
-    """Класс для модели, который содержит оценки и отзывы о гости.
+    """Класс для модели, который содержит оценки и отзывы о гостинице.
 
     Эта модель используется для хранения отзывов и рейтингов, оставленных пользователями о гостиницах
     определенный местах общественного питания. Каждый отзыв включает оценку, комментарий, изображение и дату создания.
@@ -214,11 +214,11 @@ class ReviewHotel(BaseReview):
         related_name="hotel",
         verbose_name="Гостиница",
     )
-  
+
 
 class ReviewImageHotel(BaseReviewImage):
     """Модель для хранения изображения отзыва, связанного с конкретным отзывом."""
-    
+
     review = models.ForeignKey(
         ReviewHotel,  # Связь с моделью ReviewHotel (отзыв)
         on_delete=models.CASCADE,

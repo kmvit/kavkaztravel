@@ -175,13 +175,12 @@ class OrderGetSerializer(OrderSerializer):
     tour = TourGETSerializer()
 
 
-
 class ReviewImageTourSerializer(serializers.ModelSerializer):
     """Сериализатор для изображения отзыва о турах."""
-    
+
     class Meta:
         model = ReviewImageTour
-        fields = ['id', 'image']
+        fields = ["id", "image"]
 
 
 class ReviewTourSerializer(serializers.ModelSerializer):
@@ -190,8 +189,9 @@ class ReviewTourSerializer(serializers.ModelSerializer):
     Этот класс преобразует экземпляры модели ReviewTour
     в JSON и обратно, а также валидирует входные данные.
     """
+
     review_images = ReviewImageTourSerializer(many=True, required=False)
 
     class Meta:
         model = ReviewTour
-        fields = ["id", "tour", 'owner', 'rating', 'comment', 'date', 'review_images']
+        fields = ["id", "tour", "owner", "rating", "comment", "date", "review_images"]

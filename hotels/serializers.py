@@ -132,18 +132,17 @@ class HotelSerializer(serializers.ModelSerializer):
 
 class ReviewImageHotelSerializer(serializers.ModelSerializer):
     """Сериализатор для изображения отзыва о гостинице"""
-    
+
     class Meta:
         model = ReviewImageHotel
-        fields = ['id', 'image']
+        fields = ["id", "image"]
 
 
 class ReviewHotelSerializer(serializers.ModelSerializer):
     """Сериализатор для отзыва о гостинице с вложенными изображениями"""
-    
+
     review_images = ReviewImageHotelSerializer(many=True, required=False)
 
     class Meta:
         model = ReviewHotel
-        fields = ['id', 'hotel', 'owner', 'rating', 'comment', 'date', 'review_images']
-
+        fields = ["id", "hotel", "owner", "rating", "comment", "date", "review_images"]
