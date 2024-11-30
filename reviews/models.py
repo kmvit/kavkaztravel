@@ -17,7 +17,9 @@ class Review(models.Model):
     )
     date = models.DateTimeField(auto_now_add=True, verbose_name="Дата отзыва")
     text = models.TextField(verbose_name="Текст отзыва", blank=True, null=True)
-    rating = models.IntegerField(verbose_name="Оценка", null=True, blank=True)  # Для тех сущностей, где есть рейтинг
+    rating = models.IntegerField(
+        verbose_name="Оценка", null=True, blank=True
+    )  # Для тех сущностей, где есть рейтинг
     content_type = models.ForeignKey(
         ContentType, on_delete=models.CASCADE, verbose_name="Тип сущности"
     )
@@ -28,7 +30,7 @@ class Review(models.Model):
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
         unique_together = ("owner", "content_type", "object_id")
-        
+
 
 class ReviewPhoto(models.Model):
     review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name="photos")
@@ -38,4 +40,3 @@ class ReviewPhoto(models.Model):
     class Meta:
         verbose_name = "Фотография отзыва"
         verbose_name_plural = "Фотографии отзывов"
-
