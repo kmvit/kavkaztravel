@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Review(models.Model):
@@ -18,8 +19,14 @@ class Review(models.Model):
     date = models.DateTimeField(auto_now_add=True, verbose_name="Дата отзыва")
     text = models.TextField(verbose_name="Текст отзыва", blank=True, null=True)
     rating = models.IntegerField(
-        verbose_name="Оценка", null=True, blank=True
-    )  # Для тех сущностей, где есть рейтинг
+        verbose_name="Оценка", 
+        null=True, 
+        blank=True,
+        validators=[
+            MinValueValidator(1),  # минимальная оценка
+            MaxValueValidator(10),  # максимальная оценка
+        ]
+    )
     content_type = models.ForeignKey(
         ContentType, on_delete=models.CASCADE, verbose_name="Тип сущности"
     )

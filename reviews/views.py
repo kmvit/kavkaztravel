@@ -79,7 +79,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """
         content_type = request.query_params.get("content_type")
         object_id = request.query_params.get("object_id")
-        print(content_type, object_id)
         # Проверка наличия обязательных параметров
         if not content_type or not object_id:
             return Response(
@@ -89,9 +88,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         try:
             # Получаем ContentType по названию модели
             content_type_instance = ContentType.objects.get(model=content_type)
-            print(
-                content_type_instance,
-            )
         except ContentType.DoesNotExist:
             return Response({"detail": "Content type not found."}, status=400)
         except ValueError:

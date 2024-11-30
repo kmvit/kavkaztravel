@@ -39,15 +39,3 @@ class ReviewSerializer(serializers.ModelSerializer):
         Получение названия модели для поля content_type.
         """
         return obj.content_type.model  # Возвращаем название модели как строку
-
-
-class ReviewPostSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для отзыва, который включает вложенные фотографии.
-    """
-
-    photos = ReviewPhotoSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Review
-        fields = ["id", "text", "rating", "content_type", "object_id", "photos"]
