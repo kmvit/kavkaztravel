@@ -30,8 +30,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
             # Если есть изображения, сохраняем их
             review_images = request.FILES.getlist("photos")
             if review_images:
-                for image in review_images:
-                    ReviewPhoto.objects.create(review=review, image=image)
+                review_photos = [
+                    ReviewPhoto(review=review, image=image) for image in review_images
+                ]
+                ReviewPhoto.objects.bulk_create(review_photos)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
