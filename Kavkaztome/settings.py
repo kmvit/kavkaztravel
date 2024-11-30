@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     "hotels",
     "restaurants",
     "tours",
-    "attractions",
     "entertainments",
     "reviews",
     "drf_spectacular",

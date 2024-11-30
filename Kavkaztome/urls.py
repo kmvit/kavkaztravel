@@ -28,7 +28,6 @@ urlpatterns = [
     path("api/v1/restaurants/", include("restaurants.urls")),
     path("api/v1/tours/", include("tours.urls")),
     path("api/v1/kashiring/", include("kashiring.urls")),
-    path("api/v1/attractions/", include("attractions.urls")),
     path("api/v1/entertainments/", include("entertainments.urls")),
     path("api/v1/users/", include("users.urls")),
     path("api/v1/reviews/", include("reviews.urls")),
