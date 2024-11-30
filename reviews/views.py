@@ -14,7 +14,7 @@ from .serializers import ReviewSerializer
 class ReviewViewSet(viewsets.ModelViewSet):
     """Класс для модели, который содержит оценки и отзывы."""
 
-    queryset = Review.objects.all().prefetch_related('photos')
+    queryset = Review.objects.prefetch_related('photos').all()
     permission_classes = (IsOwnerOnly,)
     parser_classes = (MultiPartParser, FormParser)  # Для обработки изображений
     serializer_class = ReviewSerializer
