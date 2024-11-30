@@ -14,23 +14,11 @@ from .serializers import ReviewSerializer
 class ReviewViewSet(viewsets.ModelViewSet):
     """Класс для модели, который содержит оценки и отзывы."""
 
-    queryset = Review.objects.all()
+    queryset = Review.objects.all()  #
     permission_classes = (IsOwnerOnly,)
     parser_classes = (MultiPartParser, FormParser)  # Для обработки изображений
     serializer_class = ReviewSerializer
 
-    def get_queryset(self):
-        """
-        Фильтруем отзывы по объекту или пользователю, если переданы параметры.
-        """
-        queryset = Review.objects.all()
-        content_type = self.request.query_params.get("content_type")
-        object_id = self.request.query_params.get("object_id")
-        if content_type and object_id:
-            queryset = queryset.filter(
-                content_type__model=content_type, object_id=object_id
-            )
-        return queryset
 
     def create(self, request, *args, **kwargs):
         # Создание отзыва
@@ -103,5 +91,4 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
         # Сериализуем все отзывы
         serializer = ReviewSerializer(reviews, many=True)
-        print(serializer.data)
         return Response(serializer.data)
