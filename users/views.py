@@ -11,7 +11,7 @@ from tours.models import Guide, TourOperator
 from tours.serializers import GuideSerializer, TourOperatorSerializer
 from .models import CustomUser, SMSVerification
 from .serializers import CustomUserSerializer, SMSVerificationSerializer
-from .sms_service import send_verification_sms
+from .service import send_verification_sms
 
 
 
@@ -190,3 +190,147 @@ class VerifyCodeAPIView(APIView):
                 {"error": "Invalid verification code"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+# views.py
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from django.core.mail import send_mail
+from .models import Notification
+from .serializers import NotificationSerializer
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    """
+    Вьюсет для работы с уведомлениями пользователей.
+    """
+    permission_classes = [IsAuthenticated]   # Доступ только для авторизованных пользователей
+    serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        """
+        Получаем только уведомления для текущего пользователя.
+        """
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        """
+        Создаем уведомление для текущего пользователя и отправляем email.
+        """
+        # Получаем данные для создания уведомления (можно передать их через сериализатор)
+        user = self.request.data.get('user')  # Получатель уведомления (например, из данных запроса)
+        
+        # Проверяем, что указанный получатель существует
+        if not user:
+            return Response({'detail': 'Получатель не указан.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Получаем пользователя по ID (или другим параметрам)
+            user = CustomUser.objects.get(id=user)
+            print(user, self.request.user)
+        except CustomUser.DoesNotExist:
+            return Response({'detail': 'Пользователь не найден.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Указываем отправителя как текущего пользователя
+        notification = serializer.save(user=user, sender=self.request.user)
+
+    #
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+    
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Обновление уведомления (например, пометить как прочитанное).
+        Позволяет только получателю уведомления пометить его как прочитанное.
+        """
+        instance = self.get_object()
+        
+        # Проверяем, что текущий пользователь является получателем уведомления
+        if request.user != instance.user:
+            return Response(
+                {'detail': 'У вас нет прав на обновление этого уведомления.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        print(instance.user)
+        # Помечаем уведомление как прочитанное
+        instance.is_read = True
+        instance.save()
+        return Response(
+            {'detail': 'Уведомление помечено как прочитанное.'},
+            status=status.HTTP_200_OK
+    )
+from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
+from .models import Booking
+from .serializers import BookingSerializer
+from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+
+class BookingViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for managing bookings.
+    """
+    serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]  # Ensure only authenticated users can access the endpoint
+
+    def get_queryset(self):
+        """
+        This view returns a list of all the bookings for the currently authenticated user.
+        """
+        user = self.request.user
+        return Booking.objects.filter(user=user)  # Filter bookings for the current authenticated user
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Retrieve a specific booking by model_name (e.g., 'tour', 'hotel') and object_id.
+        """
+        model_name = kwargs.get('model_name')
+        object_id = kwargs.get('object_id')
+
+        try:
+            # Get the ContentType object based on the model_name
+            content_type = ContentType.objects.get(model=model_name)
+
+            # Fetch the booking related to the model and ID
+            booking = Booking.objects.get(content_type=content_type, object_id=object_id, user=request.user)
+            
+            # Serialize and return the booking
+            serializer = self.get_serializer(booking)
+            return Response(serializer.data)
+        
+        except ContentType.DoesNotExist:
+            raise NotFound(f"Content type with the model name '{model_name}' not found.")
+        except Booking.DoesNotExist:
+            raise NotFound(f"Booking for {model_name} with ID {object_id} not found for this user.")
+
+    def perform_create(self, serializer):
+        # Ensure that the user is authenticated and set the user field
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        """
+        Overridden to ensure the booking belongs to the authenticated user.
+        """
+        # Retrieve the booking instance being updated
+        instance = self.get_object()
+
+        # Ensure that the authenticated user is the owner of the booking
+        if instance.user != self.request.user:
+            raise NotFound("You can only update your own bookings.")
+
+        # Proceed with saving the updated booking
+        serializer.save()
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete a booking for the authenticated user.
+        """
+        # Ensure the booking belongs to the current user
+        instance = self.get_object()
+        if instance.user != request.user:
+            raise NotFound("You can only delete your own bookings.")
+        
+        # Call the default destroy method to handle the deletion
+        return super().destroy(request, *args, **kwargs)

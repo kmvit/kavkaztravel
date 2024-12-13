@@ -79,3 +79,15 @@ def send_verification_sms(phone_number):
     except Exception as e:
         print(f"Ошибка при отправке SMS или сохранении в базе: {e}")
         raise
+
+
+from django.core.mail import send_mail
+
+def send_notification_email(user, message):
+    send_mail(
+        'Новое уведомление',  # Тема письма
+        message,  # Текст уведомления
+        'from@example.com',  # Адрес отправителя
+        [user.email],  # Адрес получателя
+        fail_silently=False,
+    )
