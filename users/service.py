@@ -6,6 +6,8 @@ from datetime import timedelta
 from django.utils import timezone
 from django.conf import settings
 
+from .tasks import send_email_task
+
 from .models import SMSVerification
 
 
@@ -79,15 +81,62 @@ def send_verification_sms(phone_number):
     except Exception as e:
         print(f"Ошибка при отправке SMS или сохранении в базе: {e}")
         raise
-
-
+import logging
+import requests
 from django.core.mail import send_mail
 
-def send_notification_email(user, message):
-    send_mail(
-        'Новое уведомление',  # Тема письма
-        message,  # Текст уведомления
-        'from@example.com',  # Адрес отправителя
-        [user.email],  # Адрес получателя
-        fail_silently=False,
-    )
+
+logger = logging.getLogger(__name__)
+
+def send_notification(notification, channel_type):
+    """
+    Отправка уведомлений через выбранный канал с обработкой ошибок.
+    """
+    try:
+        if channel_type == 'email':
+            print(1)
+            send_email_notification(notification)
+            print(2)
+            logger.info(f"Уведомление для пользователя {notification.user.username} отправлено по email.")
+            return True
+        elif channel_type == 'rest_api':
+            send_rest_api_notification(notification)
+            logger.info(f"Уведомление для пользователя {notification.user.username} отправлено через REST API.")
+            return True
+        else:
+            logger.error(f"Неизвестный канал уведомлений: {channel_type}")
+            return False
+    except Exception as e:
+        logger.error(f"Ошибка при отправке уведомления через {channel_type} для пользователя {notification.user.username}: {e}")
+        return False
+
+def send_email_notification(notification):
+    """
+    Отправка уведомления по email через Celery.
+    """
+    subject = f"Уведомление для {notification.user.username}"
+    message = notification.message
+    recipient_email = notification.user.email
+    print(3)
+    # Отправка email через Celery задачу
+    send_email_task.delay(subject, message, [recipient_email])
+    print(4)
+
+def send_rest_api_notification(notification):
+    """
+    Отправка уведомления через REST API.
+    """
+    api_url = "http://example.com/api/notifications"  # Пример API
+    data = {
+        'user_id': notification.user.id,
+        'message': notification.message,
+        'created_at': notification.created_at,
+    }
+
+    try:
+        response = requests.post(api_url, json=data)
+        if response.status_code != 200:
+            raise Exception(f"Ошибка отправки через REST API: {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Ошибка при отправке через REST API: {e}")
+        raise e

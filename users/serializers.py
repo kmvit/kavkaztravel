@@ -44,15 +44,6 @@ class BookingSerializer(serializers.ModelSerializer):
         return data
 
 
-
-
-
-
-
-
-
-
-
 class SMSVerificationSerializer(serializers.ModelSerializer):
     """
     
@@ -72,11 +63,26 @@ class SMSVerificationSerializer(serializers.ModelSerializer):
             "expires_at",
         ]
 
+from rest_framework import serializers
+from .models import Notification
+
 class NotificationSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели уведомлений.
-    """
+  
 
     class Meta:
         model = Notification
-        fields = ['id', 'message', 'is_read', 'created_at', 'user', 'sender']
+        fields = ['id', 'user', 'sender', 'message', 'is_read', 'created_at']
+        
+
+from rest_framework import serializers
+from .models import UserNotificationChannel
+
+class UserNotificationChannelSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для модели UserNotificationChannel.
+    """
+    class Meta:
+        model = UserNotificationChannel
+        fields = ['id', 'user', 'channel_type']
+
+

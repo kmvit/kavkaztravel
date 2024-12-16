@@ -5,8 +5,9 @@ from .views import (
     NotificationViewSet,
     OwnerObjectsViewSet,
     SendVerificationCodeAPIView,
+    UserNotificationChannelViewSet,
     VerifyCodeAPIView,
-    BookingViewSet
+    BookingViewSet,
 )
 
 app_name = "users"
@@ -17,6 +18,9 @@ router.register(r"owner_objects", OwnerObjectsViewSet, basename="owner_objects")
 router.register(r"cabinet", OwnerObjectsViewSet, basename="cabinet")
 router.register(r'notifications', NotificationViewSet, basename='notification')
 router.register(r'bookings', BookingViewSet, basename='booking')
+router.register(r'notification_channels', UserNotificationChannelViewSet)
+
+
 urlpatterns = [
     path("", include(router.urls)),
     path("auth/", include("djoser.urls")),
@@ -28,8 +32,5 @@ urlpatterns = [
     ),
     path("verify_code/", VerifyCodeAPIView.as_view(), name="verify_code"),
     path('bookings/<str:model_name>/<int:object_id>/', BookingViewSet.as_view({'get': 'retrieve'}), name='booking-retrieve'),
-   
-    
-  
 ]
 

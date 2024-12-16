@@ -4,6 +4,10 @@ from django.db import models
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from phonenumber_field.validators import validate_phonenumber
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
+
 
 class CustomUser(AbstractUser):
 
@@ -60,12 +64,6 @@ class SMSVerification(models.Model):
         """Проверка, не истек ли срок действия кода."""
         return timezone.now() > self.expires_at
 
-
-from django.db import models
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
-from django.conf import settings
 
 class Booking(models.Model):
     """
@@ -127,6 +125,33 @@ class Booking(models.Model):
         if existing_booking and existing_booking != self:
             raise ValidationError(f"Для объекта с ID {self.object_id} и типом {self.content_type} уже существует бронирование.")
 
+
+class UserNotificationChannel(models.Model):
+    """
+    Модель для связи пользователя с каналами уведомлений.
+    Каждый пользователь может иметь только один канал уведомлений.
+    """
+    CHANNEL_CHOICES = [
+        ('email', 'Email'),
+        ('rest_api', 'REST API'),
+    ]
+    
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notification_channels')
+    channel_type = models.CharField(
+        max_length=10,
+        choices=CHANNEL_CHOICES,
+        default='email',  # По умолчанию email
+        verbose_name="Канал уведомлений"
+    )
+
+    def __str__(self):
+        return f"{self.user.username} - {self.channel_type.capitalize()}"
+
+    class Meta:
+        verbose_name = "Канал уведомлений пользователя"
+        verbose_name_plural = "Каналы уведомлений пользователей"
+
+
 class Notification(models.Model):
     """
     Модель для хранения уведомлений.
@@ -142,3 +167,5 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        verbose_name = "Уведомление"
+        verbose_name_plural = "Уведомления"
