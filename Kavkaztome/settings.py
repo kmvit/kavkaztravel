@@ -59,6 +59,8 @@ INSTALLED_APPS = [
     "blog",
     "kashiring",
     "sms",
+    "phonenumber_field",
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -204,16 +206,22 @@ SIMPLE_JWT = {
 DJOSER = {
     "USER_ID_FIELD": "username",
     "LOGIN_FIELD": "email",
-    "SEND_ACTIVATION_EMAIL": True,
+    "SEND_ACTIVATION_EMAIL": False,
     "ACTIVATION_URL": "activate/{uid}/{token}",
     "SERIALIZERS": {},
 }
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-SITE_NAME = "SaaSitive"
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'from@example.com'
 
 
 #Настройки для авторизации через телефон смс
 # Настройки для SMS.py
 SMS_API_KEY = os.environ.get("SMS_API_KEY")
 SMS_API_URL = 'https://api.smsprovider.com/send_sms'
+
+CELERY_BROKER_URL = 'amqp://guest:guest@localhost//'
+CELERY_RESULT_BACKEND = 'rpc://'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'  # Можно указать вашу временную зону

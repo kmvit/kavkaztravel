@@ -1,22 +1,42 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from phonenumber_field.modelfields import PhoneNumberField
+from phonenumber_field.validators import validate_phonenumber
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
+
 
 class CustomUser(AbstractUser):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ("username",)
 
-    USER_TYPE_CHOICES = (("regular", "Regular"), ("owner", "Owner"), ("guide", "Guide"))
+   # Конкретизация типа владельцев
+    USER_TYPE_CHOICES = (
+        ("regular", "Regular"),  # Обычный пользователь
+        ("restaurant_owner", "Restaurant Owner"),  # Владелец ресторана
+        ("hotel_owner", "Hotel Owner"),  # Владелец отеля
+        ("carsharing_owner", "Carsharing Owner"),  # Владелец каршеринга
+        ("tour_operator", "Tour Operator"),  # Туроператор
+        ("guide", "Guide"),  # Гид
+    )
     user_type = models.CharField(
-        max_length=10, choices=USER_TYPE_CHOICES, default="regular"
+        max_length=25, choices=USER_TYPE_CHOICES, default="regular"
     )
     email = models.EmailField(unique=True)
+    phone_number = PhoneNumberField(
+        blank=True,
+        validators=[validate_phonenumber],
+        verbose_name="Номер телефона",
+        help_text="Номер телефона, актуальный формат: +Х XXXXXXXXXX",
+    )
     bio = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.username
-
 
 
 
@@ -44,3 +64,108 @@ class SMSVerification(models.Model):
         """Проверка, не истек ли срок действия кода."""
         return timezone.now() > self.expires_at
 
+
+class Booking(models.Model):
+    """
+    Модель для бронирования объектов (туров, жилья или кашеринга).
+    """
+    
+    BOOKING_STATUS_CHOICES = (
+        ('archived', 'Архив'),
+        ('active', 'Активно'),
+    )
+
+    PAYMENT_STATUS_CHOICES = (
+        ('paid', 'Оплачено'),
+        ('unpaid', 'Неоплачено'),
+    )
+    
+    # Список допустимых моделей
+    VALID_CONTENT_MODELS = ['tour', 'hotel', 'auto', 'guide']
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="booking", verbose_name="Получатель")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    status = models.CharField(
+        max_length=8,  # изменено с 10 на 8
+        choices=BOOKING_STATUS_CHOICES,
+        default='active',
+        verbose_name="Статус брони"
+    )
+    payment_status = models.CharField(
+        max_length=6,  # изменено с 10 на 6
+        choices=PAYMENT_STATUS_CHOICES,
+        default='unpaid',
+        verbose_name="Статус оплаты"
+    )
+    booking_date = models.DateTimeField(verbose_name="Дата брони")
+
+    # Поля для связи с разными моделями (Generic Relation)
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        verbose_name="Тип объекта",
+        limit_choices_to={
+            'model__in': ['tour', 'hotel', 'auto', 'guide']
+        }
+    )
+    object_id = models.PositiveIntegerField(verbose_name="ID объекта")
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    class Meta:
+        verbose_name = "Бронирование"
+        verbose_name_plural = "Бронирования"
+        unique_together = ['content_type', 'object_id']
+
+    def __str__(self):
+        return f"Бронирование {self.pk} ({self.status})"
+
+    def clean(self):
+        # Проверяем, существует ли уже бронирование для того же объекта
+        existing_booking = Booking.objects.filter(content_type=self.content_type, object_id=self.object_id).first()
+        if existing_booking and existing_booking != self:
+            raise ValidationError(f"Для объекта с ID {self.object_id} и типом {self.content_type} уже существует бронирование.")
+
+
+class UserNotificationChannel(models.Model):
+    """
+    Модель для связи пользователя с каналами уведомлений.
+    Каждый пользователь может иметь только один канал уведомлений.
+    """
+    CHANNEL_CHOICES = [
+        ('email', 'Email'),
+        ('rest_api', 'REST API'),
+    ]
+    
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notification_channels')
+    channel_type = models.CharField(
+        max_length=10,
+        choices=CHANNEL_CHOICES,
+        default='email',  # По умолчанию email
+        verbose_name="Канал уведомлений"
+    )
+
+    def __str__(self):
+        return f"{self.user.username} - {self.channel_type.capitalize()}"
+
+    class Meta:
+        verbose_name = "Канал уведомлений пользователя"
+        verbose_name_plural = "Каналы уведомлений пользователей"
+
+
+class Notification(models.Model):
+    """
+    Модель для хранения уведомлений.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications", verbose_name="Получатель")
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="sent_notifications", verbose_name="Отправитель")
+    message = models.CharField(max_length=255, verbose_name="Сообщение")
+    is_read = models.BooleanField(default=False, verbose_name="Прочитано")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+
+    def __str__(self):
+        return f"Уведомление для {self.user.username}: {self.message}"
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Уведомление"
+        verbose_name_plural = "Уведомления"
