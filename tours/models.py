@@ -1,18 +1,23 @@
 from django.conf import settings
 from django.db import models
-from core.models import BaseContent
+from core.models import BaseContent, BaseReview, BaseReviewImage
 from regions.models import Region
 from django.core.validators import RegexValidator
 
 
 class Guide(BaseContent):
-    """Класс для модели гид."""
+    """
+    Класс для модели гид.
+    """
 
     region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="guides")
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="guides"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="guides",
+        default=1,
     )
-    experience = models.IntegerField()  # Years of experience
+    experience = models.IntegerField()
 
 
 class TourOperator(BaseContent):
@@ -22,7 +27,10 @@ class TourOperator(BaseContent):
         Region, on_delete=models.CASCADE, related_name="touroperators"
     )
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="touroperators"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="touroperators",
+        default=1,
     )
     license_number = models.CharField(max_length=100)
 
@@ -43,9 +51,20 @@ class Tour(models.Model):
     description = models.TextField(blank=True, null=True)
     date = models.DateField(auto_now_add=True, null=True)
     slug = models.SlugField(unique=True, blank=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="tour",
+        default=1,
+    )
 
     def __str__(self):
         return self.name
+
+    def calculate_rating(self):
+        reviews = self.reviews.all()
+        total_rating = sum(review.rating for review in reviews)
+        return total_rating / reviews.count() if reviews.exists() else 0
 
 
 class Geo(models.Model):
@@ -66,19 +85,32 @@ class GalleryTour(models.Model):
     image = models.ImageField(upload_to="content_images/", blank=True, null=True)
 
 
-class EstimationTour(models.Model):
-    """Класс для модели, который содержит оценки и отзывы."""
+class ReviewTour(BaseReview):
+    """Класс для модели, который содержит оценки и отзывы о туре.
 
-    tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name="estimations")
-    estimation = models.IntegerField(
-        blank=True,
-        null=True,
-        verbose_name="Оценка тура",
-        choices=list(zip(range(1, 11), range(1, 11))),
+    Эта модель используется для хранения отзывов и рейтингов, оставленных пользователями на
+    определенный тур. Каждый отзыв включает оценку, комментарий и дату создания.
+    """
+
+    tour = models.ForeignKey(
+        Tour,
+        on_delete=models.CASCADE,
+        related_name="tour",
+        verbose_name="tour",
+        help_text="Тур, к которому относится этот отзыв.",
     )
-    feedback = models.TextField(blank=True, null=True, verbose_name="Отзыв")
-    image = models.ImageField(upload_to="content_images/", blank=True, null=True)
-    date = models.DateField(auto_now_add=True, null=True)
+
+
+class ReviewImageTour(BaseReviewImage):
+    """Модель для хранения изображения отзыва, связанного с конкретным отзывом."""
+
+    review = models.ForeignKey(
+        ReviewTour,
+        on_delete=models.CASCADE,
+        related_name="review_images",
+        verbose_name="Фотографии отзывов тура",
+        help_text="Тур, к которому привязано изображение отзыва.",
+    )
 
 
 class DateTour(models.Model):
@@ -119,6 +151,12 @@ class TourConditions(models.Model):
     cost = models.PositiveIntegerField(
         blank=True, null=True, verbose_name="Стоимость тура"
     )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="conditions",
+        default=1,
+    )
 
 
 class Order(models.Model):
@@ -139,6 +177,12 @@ class Order(models.Model):
                 message="Номер должен быть в формате +7XXXXXXXXXX",
             )
         ],
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="owner",
+        default=1,
     )
 
 

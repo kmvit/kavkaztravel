@@ -1,12 +1,17 @@
-from django.urls import path, include
+
 from rest_framework.routers import DefaultRouter
-from .views import EntertainmentViewSet
+
+from .views import EntertainmentReviewViewSet, EntertainmentViewSet
+
+app_name = "entertainments"
 
 router = DefaultRouter()
-router.register(r'entertainments', EntertainmentViewSet)
+router.register(r"review", EntertainmentReviewViewSet)
+router.register(r"", EntertainmentViewSet)
 
-app_name = 'entertainments'
+urlpatterns = router.urls
 
-urlpatterns = [
-    path('v1/', include(router.urls)),
-]
+
+
+
+

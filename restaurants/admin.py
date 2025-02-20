@@ -1,13 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import TabularInline
-from django.contrib.contenttypes.admin import GenericTabularInline
 
-from reviews.models import Review
-from .models import Restaurant, RestaurantImage
-
-
-class ReviewInline(GenericTabularInline):
-    model = Review
+from .models import Restaurant, RestaurantImage, ReviewImageRestaurant, ReviewRestaurant
 
 
 class ImageInline(TabularInline):
@@ -16,9 +10,16 @@ class ImageInline(TabularInline):
 
 
 class RestaurantAdmin(admin.ModelAdmin):
-    inlines = [ReviewInline, ImageInline]
-    list_display = ('name', 'region', 'owner')
-    search_fields = ('name', 'region__name', 'owner__username')
+    list_display = ("name", "region", "owner")
+    search_fields = ("name", "region__name", "owner__username")
 
+class ReviewRestauranAdmin(admin.ModelAdmin):
+    pass
+
+class ReviewImageRestaurantlAdmin(admin.ModelAdmin):
+    pass
 
 admin.site.register(Restaurant, RestaurantAdmin)
+admin.site.register(ReviewRestaurant, ReviewRestauranAdmin)
+
+admin.site.register(ReviewImageRestaurant, ReviewImageRestaurantlAdmin)
