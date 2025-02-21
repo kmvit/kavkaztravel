@@ -3,117 +3,88 @@ from django.db import models
 from core.models import BaseContent
 
 
-class Brand(BaseContent):
-    """Класс для брэнда машины."""
 
-    name = models.CharField(
-        max_length=100, verbose_name="Бренд машины", blank=True, null=True
-    )
-
+lass Car(models.Model):
+    """
+    Модель автомобиля для каршеринга.
+    
+    Атрибуты:
+        owner (User): Владелец автомобиля.
+        brand (str): Марка автомобиля.
+        body_type (str): Тип кузова автомобиля (выбирается из списка).
+        price_per_day (Decimal): Стоимость аренды в сутки.
+    """
+    BODY_TYPES = [
+        ('sedan', 'Sedan'),
+        ('suv', 'SUV'),
+        ('hatchback', 'Hatchback'),
+        ('crossover', 'Crossover'),
+        ('minivan', 'Minivan'),
+        ('wagon', 'Wagon'),
+    ]
+    
+    BRAND_CHOICES = [
+        ('toyota', 'Toyota'),
+        ('hyundai', 'Hyundai'),
+        ('kia', 'Kia'),
+        ('renault', 'Renault'),
+        ('nissan', 'Nissan'),
+        ('volkswagen', 'Volkswagen'),
+        ('lada', 'Lada'),
+        ('skoda', 'Skoda'),
+        ('mazda', 'Mazda'),
+        ('ford', 'Ford'),
+    ]
+    
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cars', help_text="Владелец автомобиля")
+    brand = models.CharField(max_length=100, choices=BRAND_CHOICES, help_text="Марка автомобиля")
+    body_type = models.CharField(max_length=20, choices=BODY_TYPES, help_text="Тип кузова автомобиля")
+    price_per_day = models.DecimalField(max_digits=10, decimal_places=2, help_text="Стоимость аренды в сутки")
+    
     def __str__(self):
-        return self.name
+        """Возвращает строковое представление автомобиля."""
+        return f"{self.brand}'s {self.body_type}
 
 
-class Model(BaseContent):
-    """Класс для модели машины."""
 
-    name = models.CharField(
-        max_length=100, verbose_name="Модель машины", blank=True, null=True
-    )
-
+class CarFeature(models.Model):
+    """
+    Модель характеристики автомобиля (например, кондиционер, коробка передач и т.д.).
+    
+    Атрибуты:
+        name (str): Название характеристики.
+        value (str): Значение характеристики (например, "Автоматическая" для коробки передач).
+        car (ForeignKey): Связь с конкретным автомобилем.
+    """
+  
+    FEATURE_CHOICES = [
+        ('air_conditioning', 'Кондиционер'),
+        ('automatic_transmission', 'Автоматическая коробка передач'),
+        ('manual_transmission', 'Механическая коробка передач'),
+        ('four_doors', '4 двери'),
+        ('five_doors', '5 дверей'),
+        ('large_trunk', 'Большой багажник'),
+    ]
+    
+    name = models.CharField(max_length=100, choices=FEATURE_CHOICES, help_text="Название характеристики")
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='features', help_text="Автомобиль, которому принадлежит характеристика")
+    
     def __str__(self):
-        return self.name
+        """Возвращает строковое представление характеристики."""
+        return f"{self.car.owner.username}'s {self.car.body_type} - {self.name}: {self.value}"
 
-
-class Year(BaseContent):
-    """Класс для года выпуска машины."""
-
-    name = models.CharField(max_length=50, blank=True, null=True)
-    year = models.PositiveIntegerField(
-        verbose_name="Год выпуска машины", blank=True, null=True
-    )
-
-
-class Color(BaseContent):
-    """Класс для года выпуска машины."""
-
-    name = models.CharField(
-        max_length=50, verbose_name="Цвет машины", blank=True, null=True
-    )
-
+class RentalCondition(models.Model):
+    """
+    Модель условий аренды автомобиля.
+    """
+    car = models.OneToOneField(Car, on_delete=models.CASCADE, related_name='rental_condition', help_text="Автомобиль, к которому относятся условия аренды")
+    insurance_deposit = models.DecimalField(max_digits=10, decimal_places=2, help_text="Страховой депозит")
+    required_documents = models.TextField(help_text="Необходимые документы для аренды")
+    min_driver_age = models.IntegerField(help_text="Минимальный возраст водителя")
+    min_driving_experience = models.IntegerField(help_text="Минимальный стаж вождения (в годах)")
+    rental_start_date = models.DateTimeField(help_text="Дата начала аренды")
+    rental_end_date = models.DateTimeField(help_text="Дата окончания аренды")
+    
     def __str__(self):
-        return self.name
-
-
-class BodyType(BaseContent):
-    """Класс для типа кузова машины."""
-
-    name = models.CharField(
-        max_length=100, verbose_name="Тип кузова", blank=True, null=True
-    )
-
-    def __str__(self):
-        return self.name
-
-
-class Auto(BaseContent):
-    """Класс для модели Машины."""
-
-    brand = models.ForeignKey(
-        Brand,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-    )
-    model = models.ForeignKey(
-        Model,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-    )
-    year = models.ForeignKey(
-        Year,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-    )
-    color = models.ForeignKey(
-        Color,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-    )
-    body_type = models.ForeignKey(
-        BodyType,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-    )
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="auto",
-        default=1,
-    )
-
-    def __str__(self):
-        return str(self.name)
-
-
-class Foto(models.Model):
-    """Класс для модели фото машины."""
-
-    image = models.ImageField(upload_to="content_images/", blank=True, null=True)
-    auto = models.ForeignKey(
-        Auto, on_delete=models.CASCADE, related_name="Машина", blank=True
-    )
-
-
-class Company(BaseContent):
-    """Класс для модели Компа."""
-
-    working_hours = models.TextField(blank=True, null=True)
-    auto = models.ManyToManyField(Auto, blank=True, verbose_name="машины")
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="company"
-    )
+        """Возвращает строковое представление условий аренды."""
+        return f"Условия аренды для {self.car.owner.username}'s {self.car.body_type}"
