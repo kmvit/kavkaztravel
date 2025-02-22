@@ -1,61 +1,47 @@
 from django.contrib import admin
-from .models import Brand, Model, Year, Color, BodyType, Auto, Foto, Company
+from .models import Car, CarFeature, RentalCondition, CarImage
 
 
-class BrandAdmin(admin.ModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
-    ordering = ("name",)
+class CarImageInline(admin.TabularInline):
+    """Инлайн для добавления изображений автомобиля в карточке машины."""
+    model = CarImage
+    extra = 1  # Показывать одно пустое поле для загрузки нового изображения
 
 
-class ModelAdmin(admin.ModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
-    ordering = ("name",)
+class CarFeatureInline(admin.TabularInline):
+    """Инлайн для добавления характеристик автомобиля в карточке машины."""
+    model = CarFeature
+    extra = 3  # Показывать одно пустое поле для добавления новой характеристики
 
 
-class YearAdmin(admin.ModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
-    ordering = ("name",)
+@admin.register(Car)
+class CarAdmin(admin.ModelAdmin):
+    """Админка для управления автомобилями."""
+    list_display = ('brand', 'body_type', 'price_per_day', 'owner')
+    list_filter = ('brand', 'body_type', 'price_per_day')
+    search_fields = ('brand', 'owner__username')
+    ordering = ('brand',)
+    inlines = [CarImageInline, CarFeatureInline]  # Инлайны для фото и характеристик
 
 
-class ColorAdmin(admin.ModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
-    ordering = ("name",)
+@admin.register(CarFeature)
+class CarFeatureAdmin(admin.ModelAdmin):
+    """Админка для управления характеристиками автомобилей."""
+    list_display = ('car', 'name')
+    list_filter = ('name',)
+    search_fields = ('car__brand', 'car__owner__username')
 
 
-class BodyTypeAdmin(admin.ModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
-    ordering = ("name",)
+@admin.register(RentalCondition)
+class RentalConditionAdmin(admin.ModelAdmin):
+    """Админка для управления условиями аренды автомобилей."""
+    list_display = ('car', 'insurance_deposit', 'min_driver_age', 'min_driving_experience')
+    list_filter = ('min_driver_age', 'min_driving_experience')
+    search_fields = ('car__brand', 'car__owner__username')
 
 
-class AutoAdmin(admin.ModelAdmin):
-    pass
-
-
-class FotoAdmin(admin.ModelAdmin):
-    list_display = ("image", "auto")
-    search_fields = ("auto__model__name",)
-    list_filter = ("auto",)
-    ordering = ("auto",)
-
-
-class CompanyAdmin(admin.ModelAdmin):
-    list_display = ("name", "working_hours", "owner")
-    search_fields = ("name", "working_hours", "owner__username")
-    list_filter = ("owner",)
-    ordering = ("name",)
-
-
-# Register your models here.
-admin.site.register(Brand, BrandAdmin)
-admin.site.register(Model, ModelAdmin)
-admin.site.register(Year, YearAdmin)
-admin.site.register(Color, ColorAdmin)
-admin.site.register(BodyType, BodyTypeAdmin)
-admin.site.register(Auto, AutoAdmin)
-admin.site.register(Foto, FotoAdmin)
-admin.site.register(Company, CompanyAdmin)
+@admin.register(CarImage)
+class CarImageAdmin(admin.ModelAdmin):
+    """Админка для управления изображениями автомобилей."""
+    list_display = ('car', 'image')
+    search_fields = ('car__brand', 'car__owner__username')

@@ -176,12 +176,17 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "0.0.1",
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
-    # -------- Нужно, чтобы раздавать статику для Swagger локально --------
+    
+    # Раздача статики для Swagger локально
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
-    # ---------------------------------------------------------------------
+    
+    # ✅ Исправление отображения файлов
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_COERCE_PATH_PK_SUFFIX": True,
 }
+
 
 SOCIAL_AUTH_VK_OAUTH2_KEY = os.environ.get("SOCIAL_AUTH_VK_OAUTH2_KEY")  #'51471973'
 SOCIAL_AUTH_VK_OAUTH2_SECRET = os.environ.get(
