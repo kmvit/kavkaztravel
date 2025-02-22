@@ -1,9 +1,10 @@
 from rest_framework import viewsets, mixins
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.db.models import Prefetch
 
-from .models import Car, CarImage, RentalCondition
-from .serializers import CarSerializer, CarImageSerializer, RentalConditionSerializer
+from .models import Car, CarImage, RentalCondition, CarFeature
+from .serializers import CarSerializer, CarImageSerializer, RentalConditionSerializer, CarCreateUpdateSerializer
 from .filters import CarFilter, RentalConditionFilter
 from .swagger_docs import CarSwagger, CarImageSwagger, RentalConditionSwagger
 
@@ -16,6 +17,22 @@ class CarViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = CarFilter
 
+    def get_queryset(self):
+        """
+        Оптимизированный запрос с использованием prefetch_related для подгрузки всех связанных данных:
+        - Характеристики автомобиля (features)
+        - Изображения автомобиля (images)
+        - Условия аренды автомобиля (rental_condition)
+        """
+        return Car.objects.prefetch_related(
+            Prefetch('features', queryset=CarFeature.objects.all(), to_attr='features_list'),
+            Prefetch('images', queryset=CarImage.objects.all(), to_attr='images_list'),
+        )
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return CarCreateUpdateSerializer
+        return CarSerializer
 
     @CarSwagger.car_list
     def list(self, request, *args, **kwargs):

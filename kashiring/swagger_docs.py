@@ -1,5 +1,5 @@
 from drf_spectacular.utils import extend_schema
-from .serializers import CarSerializer, CarImageSerializer, RentalConditionSerializer
+from .serializers import CarSerializer, CarImageSerializer, RentalConditionSerializer, CarCreateUpdateSerializer
 
 
 class CarSwagger:
@@ -12,12 +12,16 @@ class CarSwagger:
         responses={200: CarSerializer(many=True)}
     )
 
+    # Схема для создания нового автомобиля
     car_create = extend_schema(
         methods=["POST"],
-        summary="➕ Добавить автомобиль",
-        description="Создаёт новый автомобиль.",
-        request=CarSerializer,
-        responses={201: CarSerializer, 400: "Ошибка"}
+        summary="➕ Добавить автомобиль",  # Краткое описание
+        description="Создаёт новый автомобиль.",  # Подробное описание
+        request=CarCreateUpdateSerializer,  # Сериализатор для тела запроса
+        responses={  # Ожидаемые ответы
+            201: CarCreateUpdateSerializer,  # Успешный ответ с объектом автомобиля
+            400: "Ошибка",  # Ответ в случае ошибки
+        }
     )
 
     car_detail = extend_schema(
@@ -27,12 +31,17 @@ class CarSwagger:
         responses={200: CarSerializer, 404: "Не найдено"}
     )
 
+    # Схема для обновления или частичного обновления автомобиля
     car_update = extend_schema(
-        methods=["PUT", "PATCH"],  # ✅ Добавили PATCH
-        summary="✏️ Обновить автомобиль",
-        description="Обновляет данные автомобиля. Можно использовать `PUT` или `PATCH`.",
-        request=CarSerializer,
-        responses={200: CarSerializer, 400: "Ошибка", 404: "Не найдено"}
+        methods=["PUT", "PATCH"],  # Поддержка PUT и PATCH
+        summary="✏️ Обновить автомобиль",  # Краткое описание
+        description="Обновляет данные автомобиля. Можно использовать `PUT` или `PATCH`.",  # Подробное описание
+        request=CarCreateUpdateSerializer,  # Сериализатор для тела запроса
+        responses={  # Ожидаемые ответы
+            200: CarCreateUpdateSerializer,  # Успешный ответ с обновленными данными
+            400: "Ошибка",  # Ошибка в запросе
+            404: "Не найдено",  # Если объект не найден
+        }
     )
 
     car_delete = extend_schema(
