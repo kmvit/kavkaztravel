@@ -2,11 +2,13 @@ from rest_framework import viewsets, mixins
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Prefetch
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
-from .models import Car, CarImage, RentalCondition, CarFeature
-from .serializers import CarSerializer, CarImageSerializer, RentalConditionSerializer, CarCreateUpdateSerializer
+from .models import Car, CarImage, RentalCondition, CarFeature,  RentalDiscount
+from .serializers import CarSerializer, CarImageSerializer, RentalConditionSerializer, CarCreateUpdateSerializer, RentalSerializer,  RentalDiscountSerializer
 from .filters import CarFilter, RentalConditionFilter
-from .swagger_docs import CarSwagger, CarImageSwagger, RentalConditionSwagger
+from .swagger_docs import CarSwagger, CarImageSwagger, RentalConditionSwagger, RentalDiscountSwagger, RentalSwagger
 
 
 class CarViewSet(viewsets.ModelViewSet):
@@ -19,14 +21,15 @@ class CarViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Оптимизированный запрос с использованием prefetch_related для подгрузки всех связанных данных:
-        - Характеристики автомобиля (features)
-        - Изображения автомобиля (images)
-        - Условия аренды автомобиля (rental_condition)
+        Оптимизированный запрос с prefetch_related:
+        - Подгружаем характеристики автомобиля (features)
+        - Подгружаем изображения автомобиля (images)
+        - Подгружаем тарифный план (discount_policy)
         """
         return Car.objects.prefetch_related(
             Prefetch('features', queryset=CarFeature.objects.all(), to_attr='features_list'),
             Prefetch('images', queryset=CarImage.objects.all(), to_attr='images_list'),
+            Prefetch('discount_policy', queryset=RentalDiscount.objects.all(), to_attr='discount_policy_obj'),
         )
 
     def get_serializer_class(self):
@@ -118,3 +121,53 @@ class RentalConditionViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, m
     @RentalConditionSwagger.rental_update
     def partial_update(self, request, *args, **kwargs):  # ✅ PATCH метод
         return super().partial_update(request, *args, **kwargs)
+
+
+
+class RentalDiscountViewSet(viewsets.ModelViewSet):
+    """
+    API для управления тарифными планами (скидками на аренду).
+    """
+    queryset = RentalDiscount.objects.all()
+    serializer_class = RentalDiscountSerializer
+
+    @RentalDiscountSwagger.discount_list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @RentalDiscountSwagger.discount_create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @RentalDiscountSwagger.discount_detail
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @RentalDiscountSwagger.discount_update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @RentalDiscountSwagger.discount_update
+    def partial_update(self, request, *args, **kwargs):  # ✅ PATCH метод
+        return super().partial_update(request, *args, **kwargs)
+
+
+
+class RentalCreateView(APIView):
+    """Эндпоинт для создания аренды и возврата рассчитанной стоимости"""
+
+    @RentalSwagger.rental_create
+    def post(self, request, *args, **kwargs):
+        serializer = RentalSerializer(data=request.data)
+        if serializer.is_valid():
+            rental = serializer.save()
+            
+            # Безопасное приведение к float (или str, если вдруг возникнет проблема сериализации)
+            total_price = rental.calculate_total_price_with_discount()
+            total_price = float(total_price) if isinstance(total_price, (int, float)) else str(total_price)
+
+            return Response(
+                {"rental_id": rental.id, "total_price": total_price},
+                status=201
+            )
+        return Response(serializer.errors, status=400)

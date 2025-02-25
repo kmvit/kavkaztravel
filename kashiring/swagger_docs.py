@@ -117,3 +117,50 @@ class RentalConditionSwagger:
         request=RentalConditionSerializer,
         responses={200: RentalConditionSerializer, 400: "Ошибка", 404: "Не найдено"}
     )
+
+from drf_spectacular.utils import extend_schema
+from .serializers import RentalDiscountSerializer, RentalSerializer
+
+class RentalDiscountSwagger:
+    """Документация для API тарифных планов (скидок на аренду)."""
+
+    discount_list = extend_schema(
+        methods=["GET"],
+        summary="📜 Список тарифных планов",
+        description="Возвращает список всех тарифных планов (скидок).",
+        responses={200: RentalDiscountSerializer(many=True)}
+    )
+
+    discount_create = extend_schema(
+        methods=["POST"],
+        summary="📝 Добавить тарифный план",
+        description="Создаёт новый тарифный план (скидку).",
+        request=RentalDiscountSerializer,
+        responses={201: RentalDiscountSerializer, 400: "Ошибка"}
+    )
+
+    discount_detail = extend_schema(
+        methods=["GET"],
+        summary="🔍 Детали тарифного плана",
+        description="Получает тарифный план по ID.",
+        responses={200: RentalDiscountSerializer, 404: "Не найдено"}
+    )
+
+    discount_update = extend_schema(
+        methods=["PUT", "PATCH"],
+        summary="✏️ Обновить тарифный план",
+        description="Обновляет тарифный план. Можно использовать `PUT` или `PATCH`.",
+        request=RentalDiscountSerializer,
+        responses={200: RentalDiscountSerializer, 400: "Ошибка", 404: "Не найдено"}
+    )
+
+class RentalSwagger:
+    """Документация для API аренды."""
+
+    rental_create = extend_schema(
+            methods=["POST"],
+            summary="Создание аренды и возвращает общую стоимость аренды.",
+            description="Создаёт новую аренду и возвращает общую стоимость аренды.",
+            request=RentalSerializer(),  # ✅ Исправлено: передаём экземпляр
+            responses={201: RentalSerializer(), 400: "Ошибка"}
+        )
