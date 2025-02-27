@@ -4,64 +4,64 @@ from .models import Car, CarFeature, RentalCondition, CarImage, Rental, RentalDi
 
 class CarImageSerializer(serializers.ModelSerializer):
     """Сериализатор для изображений автомобиля."""
-    image = serializers.ImageField(use_url=True) 
+
+    image = serializers.ImageField(use_url=True)
+
     class Meta:
         model = CarImage
-        fields = ['id', 'car', 'image']
+        fields = ["id", "car", "image"]
 
 
 class CarFeatureSerializer(serializers.ModelSerializer):
     """Сериализатор для характеристик автомобиля."""
 
-
     class Meta:
         model = CarFeature
-        fields = ['id', 'car', 'name']
+        fields = ["id", "car", "name"]
+
 
 class RentalDiscountSerializer(serializers.ModelSerializer):
     """Сериализатор для отображения тарифного плана (скидок)."""
 
     class Meta:
         model = RentalDiscount
-        fields = ['name', 'discount_week', 'discount_month']
+        fields = ["name", "discount_week", "discount_month"]
 
 
 class RentalConditionSerializer(serializers.ModelSerializer):
     """Сериализатор для условий аренды автомобиля."""
-    
+
     class Meta:
         model = RentalCondition
         fields = [
-            'id',
-            'car',
-            'insurance_deposit',
-            'required_documents',
-            'min_driver_age',
-            'min_driving_experience',
-            'rental_start_date',
-            'rental_end_date'
+            "id",
+            "car",
+            "insurance_deposit",
+            "required_documents",
+            "min_driver_age",
+            "min_driving_experience",
         ]
 
 
 class CarSerializer(serializers.ModelSerializer):
     """Сериализатор для просмотра автомобилей без расчета аренды."""
-    
+
     owner = serializers.StringRelatedField(read_only=True)
     features = CarFeatureSerializer(many=True, read_only=True)
     images = CarImageSerializer(many=True, read_only=True)
-    discount_policy = RentalDiscountSerializer(read_only=True)  # Добавляем тарифный план
+    discount_policy = RentalDiscountSerializer(read_only=True)
 
     class Meta:
         model = Car
         fields = [
-            'id',
-            'owner',
-            'brand',
-            'body_type',
-            'price_per_day',
-            'features',
-            'images',
-            'discount_policy',  # Выводим тарифный план
+            "id",
+            "owner",
+            "brand",
+            "body_type",
+            "price_per_day",
+            "features",
+            "images",
+            "discount_policy",
         ]
 
 
@@ -70,7 +70,7 @@ class CarFeatureCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CarFeature
-        fields = ['name']
+        fields = ["name"]
 
 
 class CarCreateUpdateSerializer(serializers.ModelSerializer):
@@ -82,25 +82,27 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
         fields = [
-            'id',
-            'owner',
-            'brand',
-            'body_type',
-            'price_per_day',
-            'features',
-            'discount_policy',  # Поле для передачи названия тарифного плана
+            "id",
+            "owner",
+            "brand",
+            "body_type",
+            "price_per_day",
+            "features",
+            "discount_policy",  # Поле для передачи названия тарифного плана
         ]
 
     def create(self, validated_data):
         """Создаем автомобиль с характеристиками и тарифным планом по названию."""
-        
-        features_data = validated_data.pop('features', [])
-        discount_policy_name = validated_data.pop('discount_policy', None)
+
+        features_data = validated_data.pop("features", [])
+        discount_policy_name = validated_data.pop("discount_policy", None)
 
         # Получаем тарифный план по названию (если передан)
         discount_policy = None
         if discount_policy_name:
-            discount_policy = RentalDiscount.objects.filter(name=discount_policy_name).first()
+            discount_policy = RentalDiscount.objects.filter(
+                name=discount_policy_name
+            ).first()
 
         # Создаем автомобиль
         car = Car.objects.create(**validated_data, discount_policy=discount_policy)
@@ -113,18 +115,22 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """Обновляем автомобиль и его тарифный план (по названию)."""
-        
-        features_data = validated_data.pop('features', [])
-        discount_policy_name = validated_data.pop('discount_policy', None)
+
+        features_data = validated_data.pop("features", [])
+        discount_policy_name = validated_data.pop("discount_policy", None)
 
         # Обновляем автомобиль
-        instance.brand = validated_data.get('brand', instance.brand)
-        instance.body_type = validated_data.get('body_type', instance.body_type)
-        instance.price_per_day = validated_data.get('price_per_day', instance.price_per_day)
+        instance.brand = validated_data.get("brand", instance.brand)
+        instance.body_type = validated_data.get("body_type", instance.body_type)
+        instance.price_per_day = validated_data.get(
+            "price_per_day", instance.price_per_day
+        )
 
         # Обновляем тарифный план (если передан)
         if discount_policy_name:
-            instance.discount_policy = RentalDiscount.objects.filter(name=discount_policy_name).first()
+            instance.discount_policy = RentalDiscount.objects.filter(
+                name=discount_policy_name
+            ).first()
 
         instance.save()
 
@@ -133,6 +139,7 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
             CarFeature.objects.update_or_create(car=instance, **feature_data)
 
         return instance
+
 
 class RentalDiscountSerializer(serializers.ModelSerializer):
     """
@@ -146,7 +153,7 @@ class RentalDiscountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RentalDiscount
-        fields = ['id', 'name', 'discount_week', 'discount_month']
+        fields = ["id", "name", "discount_week", "discount_month"]
 
 
 class RentalSerializer(serializers.ModelSerializer):
@@ -154,8 +161,16 @@ class RentalSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Rental
-        fields = ['id', 'user', 'car', 'pickup_datetime', 'return_datetime', 'return_location', 'total_price', 'daily_price']
+        fields = [
+            "id",
+            "user",
+            "car",
+            "pickup_datetime",
+            "return_datetime",
+            "return_location",
+            "total_price",
+            "daily_price",
+        ]
 
     def get_total_price(self, obj):
         return obj.calculate_total_price_with_discount()
-

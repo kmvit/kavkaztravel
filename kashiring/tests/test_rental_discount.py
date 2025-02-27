@@ -1,6 +1,7 @@
 import pytest
 from kashiring.models import RentalDiscount
 
+
 @pytest.mark.django_db
 def test_get_discounts(api_client, rental_discount):
     """Тест получения списка скидок."""
@@ -21,7 +22,7 @@ def test_create_discount(api_client):
     payload = {
         "name": "New Discount",
         "discount_week": "7.50",
-        "discount_month": "15.00"
+        "discount_month": "15.00",
     }
 
     response = api_client.post(url, payload, format="json")
@@ -56,11 +57,11 @@ def test_delete_discount(api_client, rental_discount):
 @pytest.mark.parametrize(
     "days, expected_discount",
     [
-        (1, 0),       # Меньше 7 дней → скидки нет
-        (7, 0.05),    # От 7 дней → 5%
-        (30, 0.10),   # От 30 дней → 10%
+        (1, 0),  # Меньше 7 дней → скидки нет
+        (7, 0.05),  # От 7 дней → 5%
+        (30, 0.10),  # От 30 дней → 10%
         (100, 0.10),  # Дольше 30 дней → 10%
-    ]
+    ],
 )
 def test_get_discount(rental_discount, days, expected_discount):
     """Тест метода get_discount."""

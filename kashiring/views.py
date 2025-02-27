@@ -5,10 +5,24 @@ from django.db.models import Prefetch
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import Car, CarImage, RentalCondition, CarFeature,  RentalDiscount
-from .serializers import CarSerializer, CarImageSerializer, RentalConditionSerializer, CarCreateUpdateSerializer, RentalSerializer,  RentalDiscountSerializer
+from .models import Car, CarImage, RentalCondition, CarFeature, RentalDiscount
+from .serializers import (
+    CarSerializer,
+    CarImageSerializer,
+    RentalConditionSerializer,
+    CarCreateUpdateSerializer,
+    RentalSerializer,
+    RentalDiscountSerializer,
+)
 from .filters import CarFilter, RentalConditionFilter
-from .swagger_docs import CarSwagger, CarImageSwagger, RentalConditionSwagger, RentalDiscountSwagger, RentalSwagger
+from .swagger_docs import (
+    CarSwagger,
+    CarImageSwagger,
+    RentalConditionSwagger,
+    RentalDiscountSwagger,
+    RentalSwagger,
+)
+from .permissions import IsOwnerOrReadOnly
 
 
 class CarViewSet(viewsets.ModelViewSet):
@@ -18,6 +32,7 @@ class CarViewSet(viewsets.ModelViewSet):
     serializer_class = CarSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = CarFilter
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
         """
@@ -27,13 +42,19 @@ class CarViewSet(viewsets.ModelViewSet):
         - Подгружаем тарифный план (discount_policy)
         """
         return Car.objects.prefetch_related(
-            Prefetch('features', queryset=CarFeature.objects.all(), to_attr='features_list'),
-            Prefetch('images', queryset=CarImage.objects.all(), to_attr='images_list'),
-            Prefetch('discount_policy', queryset=RentalDiscount.objects.all(), to_attr='discount_policy_obj'),
+            Prefetch(
+                "features", queryset=CarFeature.objects.all(), to_attr="features_list"
+            ),
+            Prefetch("images", queryset=CarImage.objects.all(), to_attr="images_list"),
+            Prefetch(
+                "discount_policy",
+                queryset=RentalDiscount.objects.all(),
+                to_attr="discount_policy_obj",
+            ),
         )
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
+        if self.action in ["create", "update", "partial_update"]:
             return CarCreateUpdateSerializer
         return CarSerializer
 
@@ -54,12 +75,13 @@ class CarViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
     @CarSwagger.car_update
-    def partial_update(self, request, *args, **kwargs): 
+    def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
 
     @CarSwagger.car_delete
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+
 
 class CarImageViewSet(
     mixins.CreateModelMixin,
@@ -72,8 +94,7 @@ class CarImageViewSet(
 
     queryset = CarImage.objects.all()
     serializer_class = CarImageSerializer
-    parser_classes = [MultiPartParser, FormParser] 
-
+    parser_classes = [MultiPartParser, FormParser]
 
     @CarImageSwagger.image_list
     def list(self, request, *args, **kwargs):
@@ -92,15 +113,19 @@ class CarImageViewSet(
         return super().destroy(request, *args, **kwargs)
 
 
-class RentalConditionViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, mixins.UpdateModelMixin,
-                             mixins.ListModelMixin, mixins.RetrieveModelMixin):
+class RentalConditionViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+):
     """API для управления условиями аренды автомобилей."""
 
     queryset = RentalCondition.objects.all()
     serializer_class = RentalConditionSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = RentalConditionFilter
-
 
     @RentalConditionSwagger.rental_list
     def list(self, request, *args, **kwargs):
@@ -119,15 +144,15 @@ class RentalConditionViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin, m
         return super().update(request, *args, **kwargs)
 
     @RentalConditionSwagger.rental_update
-    def partial_update(self, request, *args, **kwargs):  # ✅ PATCH метод
+    def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
-
 
 
 class RentalDiscountViewSet(viewsets.ModelViewSet):
     """
     API для управления тарифными планами (скидками на аренду).
     """
+
     queryset = RentalDiscount.objects.all()
     serializer_class = RentalDiscountSerializer
 
@@ -148,9 +173,8 @@ class RentalDiscountViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
     @RentalDiscountSwagger.discount_update
-    def partial_update(self, request, *args, **kwargs):  # ✅ PATCH метод
+    def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
-
 
 
 class RentalCreateView(APIView):
@@ -161,13 +185,16 @@ class RentalCreateView(APIView):
         serializer = RentalSerializer(data=request.data)
         if serializer.is_valid():
             rental = serializer.save()
-            
+
             # Безопасное приведение к float (или str, если вдруг возникнет проблема сериализации)
             total_price = rental.calculate_total_price_with_discount()
-            total_price = float(total_price) if isinstance(total_price, (int, float)) else str(total_price)
+            total_price = (
+                float(total_price)
+                if isinstance(total_price, (int, float))
+                else str(total_price)
+            )
 
             return Response(
-                {"rental_id": rental.id, "total_price": total_price},
-                status=201
+                {"rental_id": rental.id, "total_price": total_price}, status=201
             )
         return Response(serializer.errors, status=400)

@@ -1,5 +1,10 @@
 from drf_spectacular.utils import extend_schema
-from .serializers import CarSerializer, CarImageSerializer, RentalConditionSerializer, CarCreateUpdateSerializer
+from .serializers import (
+    CarSerializer,
+    CarImageSerializer,
+    RentalConditionSerializer,
+    CarCreateUpdateSerializer,
+)
 
 
 class CarSwagger:
@@ -9,7 +14,7 @@ class CarSwagger:
         methods=["GET"],
         summary="📋 Список автомобилей",
         description="Возвращает список всех автомобилей.",
-        responses={200: CarSerializer(many=True)}
+        responses={200: CarSerializer(many=True)},
     )
 
     # Схема для создания нового автомобиля
@@ -21,14 +26,14 @@ class CarSwagger:
         responses={  # Ожидаемые ответы
             201: CarCreateUpdateSerializer,  # Успешный ответ с объектом автомобиля
             400: "Ошибка",  # Ответ в случае ошибки
-        }
+        },
     )
 
     car_detail = extend_schema(
         methods=["GET"],
         summary="🔍 Детали автомобиля",
         description="Получает данные об автомобиле по ID.",
-        responses={200: CarSerializer, 404: "Не найдено"}
+        responses={200: CarSerializer, 404: "Не найдено"},
     )
 
     # Схема для обновления или частичного обновления автомобиля
@@ -41,14 +46,14 @@ class CarSwagger:
             200: CarCreateUpdateSerializer,  # Успешный ответ с обновленными данными
             400: "Ошибка",  # Ошибка в запросе
             404: "Не найдено",  # Если объект не найден
-        }
+        },
     )
 
     car_delete = extend_schema(
         methods=["DELETE"],
         summary="🗑️ Удалить автомобиль",
         description="Удаляет автомобиль по ID.",
-        responses={204: None, 404: "Не найдено"}
+        responses={204: None, 404: "Не найдено"},
     )
 
 
@@ -59,7 +64,7 @@ class CarImageSwagger:
         methods=["GET"],
         summary="🖼️ Список изображений",
         description="Возвращает список всех изображений автомобилей.",
-        responses={200: CarImageSerializer(many=True)}
+        responses={200: CarImageSerializer(many=True)},
     )
 
     image_create = extend_schema(
@@ -67,21 +72,21 @@ class CarImageSwagger:
         summary="📷 Добавить изображение",
         description="Загружает новое изображение автомобиля.",
         request=CarImageSerializer,
-        responses={201: CarImageSerializer, 400: "Ошибка"}
+        responses={201: CarImageSerializer, 400: "Ошибка"},
     )
 
     image_detail = extend_schema(
         methods=["GET"],
         summary="🔍 Детали изображения",
         description="Получает изображение автомобиля по ID.",
-        responses={200: CarImageSerializer, 404: "Не найдено"}
+        responses={200: CarImageSerializer, 404: "Не найдено"},
     )
 
     image_delete = extend_schema(
         methods=["DELETE"],
         summary="❌ Удалить изображение",
         description="Удаляет изображение автомобиля по ID.",
-        responses={204: None, 404: "Не найдено"}
+        responses={204: None, 404: "Не найдено"},
     )
 
 
@@ -92,7 +97,7 @@ class RentalConditionSwagger:
         methods=["GET"],
         summary="📜 Список условий аренды",
         description="Возвращает список всех условий аренды.",
-        responses={200: RentalConditionSerializer(many=True)}
+        responses={200: RentalConditionSerializer(many=True)},
     )
 
     rental_create = extend_schema(
@@ -100,14 +105,14 @@ class RentalConditionSwagger:
         summary="📝 Добавить условия аренды",
         description="Создаёт новое условие аренды.",
         request=RentalConditionSerializer,
-        responses={201: RentalConditionSerializer, 400: "Ошибка"}
+        responses={201: RentalConditionSerializer, 400: "Ошибка"},
     )
 
     rental_detail = extend_schema(
         methods=["GET"],
         summary="🔍 Детали условий аренды",
         description="Получает условия аренды по ID.",
-        responses={200: RentalConditionSerializer, 404: "Не найдено"}
+        responses={200: RentalConditionSerializer, 404: "Не найдено"},
     )
 
     rental_update = extend_schema(
@@ -115,11 +120,13 @@ class RentalConditionSwagger:
         summary="✏️ Обновить условия аренды",
         description="Обновляет условия аренды. Можно использовать `PUT` или `PATCH`.",
         request=RentalConditionSerializer,
-        responses={200: RentalConditionSerializer, 400: "Ошибка", 404: "Не найдено"}
+        responses={200: RentalConditionSerializer, 400: "Ошибка", 404: "Не найдено"},
     )
+
 
 from drf_spectacular.utils import extend_schema
 from .serializers import RentalDiscountSerializer, RentalSerializer
+
 
 class RentalDiscountSwagger:
     """Документация для API тарифных планов (скидок на аренду)."""
@@ -128,7 +135,7 @@ class RentalDiscountSwagger:
         methods=["GET"],
         summary="📜 Список тарифных планов",
         description="Возвращает список всех тарифных планов (скидок).",
-        responses={200: RentalDiscountSerializer(many=True)}
+        responses={200: RentalDiscountSerializer(many=True)},
     )
 
     discount_create = extend_schema(
@@ -136,14 +143,14 @@ class RentalDiscountSwagger:
         summary="📝 Добавить тарифный план",
         description="Создаёт новый тарифный план (скидку).",
         request=RentalDiscountSerializer,
-        responses={201: RentalDiscountSerializer, 400: "Ошибка"}
+        responses={201: RentalDiscountSerializer, 400: "Ошибка"},
     )
 
     discount_detail = extend_schema(
         methods=["GET"],
         summary="🔍 Детали тарифного плана",
         description="Получает тарифный план по ID.",
-        responses={200: RentalDiscountSerializer, 404: "Не найдено"}
+        responses={200: RentalDiscountSerializer, 404: "Не найдено"},
     )
 
     discount_update = extend_schema(
@@ -151,16 +158,17 @@ class RentalDiscountSwagger:
         summary="✏️ Обновить тарифный план",
         description="Обновляет тарифный план. Можно использовать `PUT` или `PATCH`.",
         request=RentalDiscountSerializer,
-        responses={200: RentalDiscountSerializer, 400: "Ошибка", 404: "Не найдено"}
+        responses={200: RentalDiscountSerializer, 400: "Ошибка", 404: "Не найдено"},
     )
+
 
 class RentalSwagger:
     """Документация для API аренды."""
 
     rental_create = extend_schema(
-            methods=["POST"],
-            summary="Создание аренды и возвращает общую стоимость аренды.",
-            description="Создаёт новую аренду и возвращает общую стоимость аренды.",
-            request=RentalSerializer(),  # ✅ Исправлено: передаём экземпляр
-            responses={201: RentalSerializer(), 400: "Ошибка"}
-        )
+        methods=["POST"],
+        summary="Создание аренды и возвращает общую стоимость аренды.",
+        description="Создаёт новую аренду и возвращает общую стоимость аренды.",
+        request=RentalSerializer(),  # ✅ Исправлено: передаём экземпляр
+        responses={201: RentalSerializer(), 400: "Ошибка"},
+    )

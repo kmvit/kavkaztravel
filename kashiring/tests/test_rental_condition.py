@@ -7,6 +7,7 @@ import pytest
 from django.utils import timezone
 from datetime import datetime
 
+
 @pytest.mark.django_db
 def test_get_rental_conditions(api_client, rental_condition):
     """Тест получения списка условий аренды."""
@@ -30,8 +31,12 @@ def test_create_rental_condition(api_client, car_2):
         "required_documents": "ID, Driving License",
         "min_driver_age": 25,
         "min_driving_experience": 3,
-        "rental_start_date": timezone.make_aware(datetime(2025, 2, 26, 14, 22, 59, 765000)).isoformat(),
-        "rental_end_date": timezone.make_aware(datetime(2025, 3, 5, 14, 22, 59, 765000)).isoformat(),
+        "rental_start_date": timezone.make_aware(
+            datetime(2025, 2, 26, 14, 22, 59, 765000)
+        ).isoformat(),
+        "rental_end_date": timezone.make_aware(
+            datetime(2025, 3, 5, 14, 22, 59, 765000)
+        ).isoformat(),
     }
 
     response = api_client.post(url, payload, format="json")
