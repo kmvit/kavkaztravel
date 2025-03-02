@@ -1,10 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ReviewViewSet
+from .views import ReviewViewSet, ReviewImageViewSet, RatingViewSet
 
+# Создаём роутер для автоматической генерации маршрутов
 router = DefaultRouter()
-router.register(r"rating", ReviewViewSet)
+router.register(r'car', ReviewViewSet, basename='car')  # Отзывы
+router.register(r'car-images', ReviewImageViewSet, basename='car-image')  # Изображения
 
 urlpatterns = [
-    path("", include(router.urls)),
+    path('', include(router.urls)),  # Подключаем все маршруты из роутера
 ]

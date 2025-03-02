@@ -1,41 +1,55 @@
 from rest_framework import serializers
-from .models import Review, ReviewPhoto
+from .models import Review, ReviewImage, Rating
 
-
-class ReviewPhotoSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для фотографии отзыва.
-    """
-
+class RatingSerializer(serializers.ModelSerializer):
+    """Сериализатор для оценок"""
     class Meta:
-        model = ReviewPhoto
-        fields = ["image", "caption"]
+        model = Rating
+        fields = ('id', 'criteria', 'score')
 
+class ReviewImageSerializer(serializers.ModelSerializer):
+    """Сериализатор для изображений"""
+    class Meta:
+        model = ReviewImage
+        fields = ('id', 'image')
 
-class ReviewSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для отзыва, который включает вложенные фотографии.
-    """
-
-    photos = ReviewPhotoSerializer(many=True, read_only=True)
-    content_type_name = (
-        serializers.SerializerMethodField()
-    )  # Поле для отображения названия модели
+class ReviewDetailSerializer(serializers.ModelSerializer):
+    """Сериализатор для GET-запросов (выводит всё)"""
+    ratings = RatingSerializer(many=True, read_only=True)  # Оценки (только чтение)
+    images = ReviewImageSerializer(many=True, read_only=True)  # Картинки (только чтение)
 
     class Meta:
         model = Review
-        fields = [
-            "id",
-            "text",
-            "rating",
-            "content_type",
-            "object_id",
-            "photos",
-            "content_type_name",
-        ]
+        fields = ('id', 'user', 'car', 'text', 'created_at', 'is_approved', 'ratings', 'images')
 
-    def get_content_type_name(self, obj):
-        """
-        Получение названия модели для поля content_type.
-        """
-        return obj.content_type.model  # Возвращаем название модели как строку
+class ReviewCreateUpdateSerializer(serializers.ModelSerializer):
+    """Сериализатор для POST/PUT (только отзывы и оценки)"""
+    ratings = RatingSerializer(many=True)  # Позволяет передавать оценки
+
+    class Meta:
+        model = Review
+        fields = ('id', 'user', 'car', 'text', 'ratings')
+
+    def create(self, validated_data):
+        """Создание отзыва вместе с оценками"""
+        ratings_data = validated_data.pop('ratings', [])  # Достаём оценки
+        review = Review.objects.create(**validated_data)  # Создаём отзыв
+
+        # Добавляем оценки
+        for rating in ratings_data:
+            Rating.objects.create(review=review, **rating)
+
+        return review
+
+    def update(self, instance, validated_data):
+        """Обновление отзыва и оценок"""
+        ratings_data = validated_data.pop('ratings', None)  # Достаём оценки, если есть
+        instance.text = validated_data.get('text', instance.text)
+        instance.save()
+
+        if ratings_data is not None:
+            instance.ratings.all().delete()  # Удаляем старые оценки
+            for rating in ratings_data:
+                Rating.objects.create(review=instance, **rating)
+
+        return instance

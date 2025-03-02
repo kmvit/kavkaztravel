@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from reviews.serializers import ReviewSerializer
 from .models import Region
 from hotels.serializers import HotelSerializer
 from restaurants.serializers import RestaurantSerializer
@@ -17,8 +16,6 @@ class RegionSerializer(serializers.ModelSerializer):
 
     hotels = HotelSerializer(many=True, read_only=True)
     restaurants = RestaurantSerializer(many=True, read_only=True)
-    entertainments = EntertainmentSerializer(many=True, read_only=True)
-    reviews = ReviewSerializer(many=True, read_only=True)
     rating = serializers.SerializerMethodField()
 
     class Meta:

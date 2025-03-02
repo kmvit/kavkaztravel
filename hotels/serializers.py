@@ -10,7 +10,6 @@ from .models import (
     AccommodationType,
     MealPlan,
 )
-from reviews.serializers import ReviewSerializer
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -97,7 +96,6 @@ class HotelSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.username")
     rooms = RoomSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
-    reviews = ReviewSerializer(many=True, read_only=True)
     rating = serializers.SerializerMethodField()
     images = HotelImageSerializers(many=True)
     meal_plan = MealPlanSerializer(many=True, read_only=True)

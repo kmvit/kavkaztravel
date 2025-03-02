@@ -18,7 +18,6 @@ class Restaurant(BaseContent):
         related_name="restaurants",
         default=1,
     )
-    reviews = GenericRelation(Review, related_query_name="reviews")
 
     class Meta:
         verbose_name = "Объект питания"

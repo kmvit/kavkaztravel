@@ -107,7 +107,6 @@ class Hotel(BaseContent):
         default=1,
     )
     tags = models.ManyToManyField(Tag, related_name="hotels")
-    reviews = GenericRelation(Review, related_query_name="reviews")
 
     class Meta:
         verbose_name = "Гостиница"

@@ -22,7 +22,6 @@ class Entertainment(BaseContent):
     region = models.ForeignKey(
         Region, on_delete=models.CASCADE, related_name="entertainments"
     )
-    reviews = GenericRelation(Review, related_query_name="reviews")
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=1
     )
