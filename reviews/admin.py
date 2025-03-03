@@ -18,7 +18,7 @@ class RatingInline(admin.TabularInline):
 class ReviewAdmin(admin.ModelAdmin):
     """Админка для отзывов с модерацией"""
 
-    list_display = ("user", "car", "created_at", "is_approved")  # Убрали approve_button
+    list_display = ("user", "car", "created_at", "is_approved") 
     list_filter = ("is_approved", "created_at")
     search_fields = ("user__username", "car__make", "car__model")
     actions = ["approve_reviews"]

@@ -12,7 +12,6 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         """Глобальное разрешение: чтение - всем, создание - только авторизованным"""
         if request.method in permissions.SAFE_METHODS:  # GET, HEAD, OPTIONS
             return True
-        print(request.user)
         return (
             request.user and request.user.is_authenticated
         )  # POST, PATCH, DELETE -> только авторизованные
@@ -21,5 +20,4 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         """Операции с объектом: только владелец может редактировать/удалять"""
         if request.method in permissions.SAFE_METHODS:
             return True
-        print(obj.user, request.user)
         return obj.user == request.user  # Только владелец может менять и удалять
