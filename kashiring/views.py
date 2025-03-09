@@ -62,23 +62,33 @@ class CarViewSet(viewsets.ModelViewSet):
         - Исключаются автомобили, находящиеся в аренде на текущую дату. Это достигается с помощью запроса в `Rental`, который проверяет, 
         если текущая дата (`today`) попадает в диапазон аренды (`pickup_datetime` ≤ today ≤ `return_datetime`).
         """
+
+        
         today = now()
         rented_cars = Rental.objects.filter(
             Q(return_datetime__gte=today)
         ).values_list("car_id", flat=True)
-        
-        if self.action == 'retrieve':
-            return Car.objects.filter(~Q(id__in=rented_cars)).prefetch_related(
+
+        queryset = Car.objects.filter(~Q(id__in=rented_cars)).select_related("brand")
+        brand = self.request.GET.get("brand")
+        print(brand, 123)
+        print(f"Фильтруем по бренду: {brand}")  # Логируем значение бренда
+        if brand:
+            queryset = queryset.filter(brand__name__iexact=brand)  # Фильтрация по названию бренда
+            print(queryset, 1234)
+        if self.action == "retrieve":
+            return queryset.prefetch_related(
                 Prefetch("features", queryset=CarFeature.objects.all(), to_attr="features_list"),
                 Prefetch("images", queryset=CarImage.objects.all(), to_attr="images_list"),
                 Prefetch("discount_policy", queryset=RentalDiscount.objects.all(), to_attr="discount_policy_obj"),
                 Prefetch("options", queryset=CarOption.objects.all(), to_attr="options_list"),
                 Prefetch("equipments", queryset=CarEquipment.objects.all(), to_attr="equipments_list"),
             )
-        
-        return Car.objects.filter(~Q(id__in=rented_cars)).select_related("brand").prefetch_related(
+
+        return queryset.prefetch_related(
             Prefetch("images", queryset=CarImage.objects.only("image").order_by("id"), to_attr="first_image"),
         ).only("id", "brand__name", "year_of_production", "engine_power", "drive_type", "engine_type", "price_per_day")
+
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -211,22 +221,24 @@ class RentalCreateView(APIView):
 
     @RentalSwagger.rental_create
     def post(self, request, *args, **kwargs):
+        # Сериализатор для создания аренды
         serializer = RentalSerializer(data=request.data)
+        
+        # Проверяем, что данные валидны
         if serializer.is_valid():
+            # Сохраняем аренду
             rental = serializer.save()
 
-            total_price = rental.calculate_total_price_with_discount()
-            total_price = (
-                float(total_price)
-                if isinstance(total_price, (int, float))
-                else str(total_price)
-            )
+            # Получаем рассчитанную общую стоимость аренды
+            total_price = rental.calculate_total_price()
 
+            # Возвращаем успешный ответ с id аренды и общей стоимостью
             return Response(
                 {"rental_id": rental.id, "total_price": total_price}, status=201
             )
+        
+        # В случае ошибки валидации, возвращаем ошибки
         return Response(serializer.errors, status=400)
-
 
 class CarOptionViewSet(viewsets.ModelViewSet):
     """

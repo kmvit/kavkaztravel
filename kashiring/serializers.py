@@ -1,6 +1,13 @@
 from rest_framework import serializers
-from .models import Car, CarFeature, CarImage, RentalDiscount,  Rental, RentalDiscount, RentalCondition, CarOption, CarEquipment
+from .models import Car, CarFeature, CarImage, RentalDiscount,  Rental, RentalDiscount, RentalCondition, Brand, CarOption, CarEquipment, Model
 
+
+class ModelSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели автомобиля."""
+
+    class Meta:
+        model = Model
+        fields = ("id", "name",)
 
 class CarImageSerializer(serializers.ModelSerializer):
     """Сериализатор для изображений автомобиля."""
@@ -11,6 +18,12 @@ class CarImageSerializer(serializers.ModelSerializer):
         model = CarImage
         fields = ["id", "car", "image"]
 
+class BrandSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели бренда автомобиля."""
+
+    class Meta:
+        model = Brand
+        fields = ("id", "name",)
 
 class CarFeatureSerializer(serializers.ModelSerializer):
     """Сериализатор для характеристик автомобиля."""
@@ -94,11 +107,10 @@ class RentalSerializer(serializers.ModelSerializer):
             "return_datetime",
             "return_location",
             "total_price",
-            "daily_price",
         ]
 
     def get_total_price(self, obj):
-        return obj.calculate_total_price_with_discount()
+        return obj.calculate_total_price()
 
 
 class CarSerializer(serializers.ModelSerializer):
@@ -112,6 +124,7 @@ class CarSerializer(serializers.ModelSerializer):
     features = CarFeatureSerializer(many=True, read_only=True)
     images = CarImageSerializer(many=True, read_only=True)
     discount_policy = RentalDiscountSerializer(read_only=True)
+    brand = BrandSerializer(read_only=True)
     options = CarOptionSerializer(many=True, read_only=True)
     equipments = CarEquipmentSerializer(many=True, read_only=True)
 
@@ -170,6 +183,7 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
     features = CarFeatureCreateUpdateSerializer(many=True)
     discount_policy = serializers.CharField(write_only=True, required=False)
     brand_name = serializers.CharField(write_only=True)
+    model_name = serializers.CharField(write_only=True)
     description = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
@@ -177,12 +191,17 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "owner",
-            "brand_name",  
+            "brand_name", 
+            "model_name",
+            "description",
             "body_type",
             "price_per_day",
+            "year_of_production",
+            "engine_power",
+            "drive_type",
+            "engine_type",
             "features",
             "discount_policy",
-            "description",
         )
 
     def create(self, validated_data):
@@ -191,6 +210,7 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
         features_data = validated_data.pop("features", [])
         discount_policy_name = validated_data.pop("discount_policy", None)
         brand_name = validated_data.pop("brand_name")  # Получаем название бренда
+        model_name = validated_data.pop("model_name")  # Получаем название модели
         description = validated_data.pop("description", None)  # Получаем описание
 
         # Получаем тарифный план по названию (если передан)
@@ -205,11 +225,15 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
         if not brand:
             raise serializers.ValidationError(f"Brand with name '{brand_name}' does not exist.")
 
+        # Создаем модель, если она не существует
+        model, created = Model.objects.get_or_create(name=model_name)  # Создаем или получаем модель
+
         # Создаем автомобиль
         car = Car.objects.create(
             **validated_data,
             discount_policy=discount_policy,
             brand=brand,
+            model=model,  # Привязываем модель
             description=description  # Передаем описание при создании
         )
 
@@ -225,6 +249,7 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
         features_data = validated_data.pop("features", [])
         discount_policy_name = validated_data.pop("discount_policy", None)
         brand_name = validated_data.pop("brand_name", None)  # Получаем название бренда
+        model_name = validated_data.pop("model_name", None)  # Получаем название модели
         description = validated_data.pop("description", None)  # Получаем описание
 
         # Обновляем автомобиль
@@ -245,6 +270,11 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
             if not brand:
                 raise serializers.ValidationError(f"Brand with name '{brand_name}' does not exist.")
             instance.brand = brand
+
+        # Обновляем модель, если передано новое
+        if model_name:
+            model, created = Model.objects.get_or_create(name=model_name)  # Создаем или получаем модель
+            instance.model = model
 
         # Обновляем описание, если передано новое
         if description is not None:

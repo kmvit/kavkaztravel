@@ -1,19 +1,17 @@
 from django_filters import rest_framework as filters
-from .models import Car, RentalCondition
+from .models import Car, RentalCondition, Model
 
 
 class CarFilter(filters.FilterSet):
     """
     Фильтр для автомобилей.
     Позволяет фильтровать по:
-    - Бренду (brand)
+    - Модели (model)
     - Типу кузова (body_type)
     - Диапазону цен (price_per_day)
-    - Наличию определенных характеристик (features)
-    - Наличию скидки (has_discount)
     """
 
-    brand = filters.CharFilter(field_name="brand", lookup_expr="iexact")
+    model = filters.ModelChoiceFilter(queryset=Model.objects.all(), field_name="model", label="Модель")
     body_type = filters.CharFilter(field_name="body_type", lookup_expr="iexact")
     price_per_day_min = filters.NumberFilter(
         field_name="price_per_day", lookup_expr="gte"

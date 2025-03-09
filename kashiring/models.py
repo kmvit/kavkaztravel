@@ -36,12 +36,17 @@ class Car(models.Model):
         related_name="cars",
         verbose_name="Владелец",
     )
-    model = models.ForeignKey(
-        "Model",
+    brand = models.ForeignKey(
+        "Brand",
         on_delete=models.CASCADE,
         related_name="cars",
         verbose_name="Марка",
     )
+    model = models.ForeignKey(
+        "Model",
+        on_delete=models.CASCADE,
+        related_name="cars_model",
+        verbose_name="Модель")
     description = models.TextField(
         blank=True,
         null=True,
@@ -93,10 +98,31 @@ class Model(models.Model):
 
     class Meta:
         verbose_name = "Модель машины"
-        verbose_name_plural = "Модель машины"
+        verbose_name_plural = "Модели машин"
 
     def __str__(self):
         return self.name
+
+
+class Brand(models.Model):
+    """
+    Модель бренда автомобиля (например, Toyota, Hyundai и т.д.).
+    """
+
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        verbose_name="Марка",
+        help_text="Название бренда автомобиля",
+    )
+
+    class Meta:
+        verbose_name = "Марка автомобиля"
+        verbose_name_plural = "Марки автомобилей"
+
+    def __str__(self):
+        return self.name
+
 
 
 class CarFeature(models.Model):
@@ -280,9 +306,6 @@ class Rental(models.Model):
     car = models.ForeignKey(Car, on_delete=models.CASCADE, verbose_name="Автомобиль")
     pickup_datetime = models.DateTimeField(verbose_name="Дата и время получения")
     return_datetime = models.DateTimeField(verbose_name="Дата и время возврата")
-    daily_price = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name="Цена за день"
-    )
     return_location = models.CharField(
         max_length=255, blank=True, null=True, verbose_name="Место возврата"
     )
@@ -298,11 +321,15 @@ class Rental(models.Model):
         if not self.pickup_datetime or not self.return_datetime:
             return None  # Если даты не заданы, возвращаем None
 
+        # Расчет длительности аренды
         duration = self.return_datetime - self.pickup_datetime
-        days = max(duration.days, 1)  # Минимально 1 день
-
+        days = max(duration.days, 1)  # Минимум 1 день аренды
+        # Получаем цену за день аренды
         daily_price = self.car.price_per_day
+
+        # Применяем скидки, если есть
         discount = self.car.discount_policy.get_discount(days) if self.car.discount_policy else 0
+        # Общая стоимость аренды с учетом скидки
         total_price = daily_price * days * (1 - discount)
 
         return round(total_price, 2)  # Округляем до двух знаков после запятой

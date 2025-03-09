@@ -8,7 +8,9 @@ from .models import (
     CarImage,
     Rental,
     RentalDiscount,
-    Model, 
+    Model,
+    Brand
+    
 )
 
 
@@ -47,10 +49,10 @@ class RentalDiscountAdmin(admin.ModelAdmin):
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
     """Админка для автомобилей."""
-    list_display = ("id",  "body_type", "price_per_day", "owner", "discount_policy")
-    list_filter = ( "body_type", "discount_policy")
-    search_fields = ( "owner__username",)
-
+    list_display = ("id", "brand", "body_type", "price_per_day", "owner", "discount_policy")
+    list_filter = ("brand", "body_type", "discount_policy")
+    search_fields = ("brand__name", "owner__username")
+    ordering = ("brand",)
     inlines = [CarImageInline, CarFeatureInline, CarOptionInline, CarEquipmentInline]
 
 
@@ -59,7 +61,7 @@ class CarFeatureAdmin(admin.ModelAdmin):
     """Админка для управления характеристиками автомобилей."""
     list_display = ("car", "name")
     list_filter = ("name",)
-    search_fields = ( "car__owner__username",)
+    search_fields = ("car__brand__name", "car__owner__username")
 
 
 @admin.register(CarOption)
@@ -67,7 +69,7 @@ class CarOptionAdmin(admin.ModelAdmin):
     """Админка для управления опциями автомобилей."""
     list_display = ("car", "name", "price")
     list_filter = ("name",)
-    search_fields = ( "car__owner__username",)
+    search_fields = ("car__brand__name", "car__owner__username")
 
 
 @admin.register(CarEquipment)
@@ -114,5 +116,10 @@ class RentalAdmin(admin.ModelAdmin):
 
 @admin.register(Model)
 class ModelAdmin(admin.ModelAdmin):
+    list_display = ("name",)
+    search_fields = ("name",)
+
+@admin.register(Brand)
+class BrandAdmin(admin.ModelAdmin):
     list_display = ("name",)
     search_fields = ("name",)
