@@ -4,6 +4,10 @@ from .serializers import (
     CarImageSerializer,
     RentalConditionSerializer,
     CarCreateUpdateSerializer,
+    CarOptionSerializer, 
+    CarEquipmentSerializer, 
+    RentalDiscountSerializer, 
+    RentalSerializer
 )
 
 
@@ -20,7 +24,7 @@ class CarSwagger:
     # Схема для создания нового автомобиля
     car_create = extend_schema(
         methods=["POST"],
-        summary="➕ Добавить автомобиль",  # Краткое описание
+        summary="Добавить автомобиль",  # Краткое описание
         description="Создаёт новый автомобиль.",  # Подробное описание
         request=CarCreateUpdateSerializer,  # Сериализатор для тела запроса
         responses={  # Ожидаемые ответы
@@ -116,16 +120,12 @@ class RentalConditionSwagger:
     )
 
     rental_update = extend_schema(
-        methods=["PUT", "PATCH"],  # ✅ Добавили PATCH
+        methods=["PUT", "PATCH"], 
         summary="✏️ Обновить условия аренды",
         description="Обновляет условия аренды. Можно использовать `PUT` или `PATCH`.",
         request=RentalConditionSerializer,
         responses={200: RentalConditionSerializer, 400: "Ошибка", 404: "Не найдено"},
     )
-
-
-from drf_spectacular.utils import extend_schema
-from .serializers import RentalDiscountSerializer, RentalSerializer
 
 
 class RentalDiscountSwagger:
@@ -169,6 +169,90 @@ class RentalSwagger:
         methods=["POST"],
         summary="Создание аренды и возвращает общую стоимость аренды.",
         description="Создаёт новую аренду и возвращает общую стоимость аренды.",
-        request=RentalSerializer(),  # ✅ Исправлено: передаём экземпляр
+        request=RentalSerializer(),
         responses={201: RentalSerializer(), 400: "Ошибка"},
+    )
+
+from drf_spectacular.utils import extend_schema
+
+class CarOptionSwagger:
+    list = extend_schema(
+        methods=['GET'],
+        summary="Список опций автомобилей",
+        description="Получить список всех дополнительных опций автомобилей",
+        responses={200: CarOptionSerializer(many=True)},
+    )
+    create = extend_schema(
+        methods=['POST'],
+        summary="Создание опции автомобиля",
+        description="Создать новую дополнительную опцию",
+        request=CarOptionSerializer,
+        responses={201: CarOptionSerializer},
+    )
+    retrieve = extend_schema(
+        methods=['GET'],
+        summary="Получение информации об опции автомобиля",
+        description="Получить информацию о конкретной дополнительной опции",
+        responses={200: CarOptionSerializer},
+    )
+    update = extend_schema(
+        methods=['PUT'],
+        summary="Обновление опции автомобиля",
+        description="Обновить информацию о дополнительной опции",
+        request=CarOptionSerializer,
+        responses={200: CarOptionSerializer},
+    )
+    partial_update = extend_schema(
+        methods=['PATCH'],
+        summary="Частичное обновление опции автомобиля",
+        description="Частичное обновление информации о дополнительной опции",
+        request=CarOptionSerializer,
+        responses={200: CarOptionSerializer},
+    )
+    destroy = extend_schema(
+        methods=['DELETE'],
+        summary="Удаление опции автомобиля",
+        description="Удалить дополнительную опцию",
+        responses={204: 'No Content'},
+    )
+
+class CarEquipmentSwagger:
+    list = extend_schema(
+        methods=['GET'],
+        summary="Список комплектаций автомобилей",
+        description="Получить список всех комплектаций автомобилей",
+        responses={200: CarEquipmentSerializer(many=True)},
+    )
+    create = extend_schema(
+        methods=['POST'],
+        summary="Создание комплектации автомобиля",
+        description="Создать новую комплектацию автомобиля",
+        request=CarEquipmentSerializer,
+        responses={201: CarEquipmentSerializer},
+    )
+    retrieve = extend_schema(
+        methods=['GET'],
+        summary="Получение информации о комплектации автомобиля",
+        description="Получить информацию о конкретной комплектации автомобиля",
+        responses={200: CarEquipmentSerializer},
+    )
+    update = extend_schema(
+        methods=['PUT'],
+        summary="Обновление комплектации автомобиля",
+        description="Обновить информацию о комплектации автомобиля",
+        request=CarEquipmentSerializer,
+        responses={200: CarEquipmentSerializer},
+    )
+    partial_update = extend_schema(
+        methods=['PATCH'],
+        summary="Частичное обновление комплектации автомобиля",
+        description="Частичное обновление информации о комплектации автомобиля",
+        request=CarEquipmentSerializer,
+        responses={200: CarEquipmentSerializer},
+    )
+    destroy = extend_schema(
+        methods=['DELETE'],
+        summary="Удаление комплектации автомобиля",
+        description="Удалить комплектацию автомобиля",
+        responses={204: 'No Content'},
     )

@@ -4,31 +4,38 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Prefetch
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.utils.timezone import now
+from django.db.models import Q
 
-from .models import Car, CarImage, RentalCondition, CarFeature, RentalDiscount
+from .models import Car, CarImage, RentalCondition, CarFeature, RentalDiscount, CarOption, CarEquipment
 from .serializers import (
+    Rental,
     CarSerializer,
+    CarListSerializer,
     CarImageSerializer,
     RentalConditionSerializer,
     CarCreateUpdateSerializer,
     RentalSerializer,
     RentalDiscountSerializer,
 )
-from .filters import CarFilter, RentalConditionFilter
 from .swagger_docs import (
     CarSwagger,
     CarImageSwagger,
     RentalConditionSwagger,
     RentalDiscountSwagger,
     RentalSwagger,
+    CarOptionSerializer, 
+    CarEquipmentSerializer,
+    CarOptionSwagger, 
+    CarEquipmentSwagger
 )
 from .permissions import IsOwnerOrReadOnly
+from .filters import CarFilter
 
 
 class CarViewSet(viewsets.ModelViewSet):
     """API для управления автомобилями."""
 
-    queryset = Car.objects.all()
     serializer_class = CarSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = CarFilter
@@ -36,27 +43,50 @@ class CarViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Оптимизированный запрос с prefetch_related:
-        - Подгружаем характеристики автомобиля (features)
-        - Подгружаем изображения автомобиля (images)
-        - Подгружаем тарифный план (discount_policy)
+        API для управления автомобилями.
+        
+        Метод get_queryset оптимизирован для различных действий API:
+        
+        - В режиме 'retrieve' (получение одного автомобиля) загружаются все связанные данные:
+        - Особенности автомобиля (`CarFeature`), доступные через `features_list`.
+        - Изображения автомобиля (`CarImage`), доступные через `images_list`.
+        - Политики скидок (`RentalDiscount`), доступные через `discount_policy_obj`.
+        - Опции автомобиля (`CarOption`), доступные через `options_list`.
+        - Оборудование (`CarEquipment`), доступное через `equipments_list`.
+        
+        - В режиме 'list' (получение списка автомобилей) загружаются минимально необходимые данные:
+        - Связанный бренд автомобиля (`brand`) загружается через `select_related`.
+        - Первое изображение (`CarImage`) сортируется по `id` и доступно через `first_image`.
+        - Загружаются только ключевые поля: `id`, `brand__name`, `year_of_production`, `engine_power`, `drive_type`, `engine_type`, `price_per_day`.
+        
+        - Исключаются автомобили, находящиеся в аренде на текущую дату. Это достигается с помощью запроса в `Rental`, который проверяет, 
+        если текущая дата (`today`) попадает в диапазон аренды (`pickup_datetime` ≤ today ≤ `return_datetime`).
         """
-        return Car.objects.prefetch_related(
-            Prefetch(
-                "features", queryset=CarFeature.objects.all(), to_attr="features_list"
-            ),
-            Prefetch("images", queryset=CarImage.objects.all(), to_attr="images_list"),
-            Prefetch(
-                "discount_policy",
-                queryset=RentalDiscount.objects.all(),
-                to_attr="discount_policy_obj",
-            ),
-        )
+        today = now()
+        rented_cars = Rental.objects.filter(
+            Q(return_datetime__gte=today)
+        ).values_list("car_id", flat=True)
+        
+        if self.action == 'retrieve':
+            return Car.objects.filter(~Q(id__in=rented_cars)).prefetch_related(
+                Prefetch("features", queryset=CarFeature.objects.all(), to_attr="features_list"),
+                Prefetch("images", queryset=CarImage.objects.all(), to_attr="images_list"),
+                Prefetch("discount_policy", queryset=RentalDiscount.objects.all(), to_attr="discount_policy_obj"),
+                Prefetch("options", queryset=CarOption.objects.all(), to_attr="options_list"),
+                Prefetch("equipments", queryset=CarEquipment.objects.all(), to_attr="equipments_list"),
+            )
+        
+        return Car.objects.filter(~Q(id__in=rented_cars)).select_related("brand").prefetch_related(
+            Prefetch("images", queryset=CarImage.objects.only("image").order_by("id"), to_attr="first_image"),
+        ).only("id", "brand__name", "year_of_production", "engine_power", "drive_type", "engine_type", "price_per_day")
 
     def get_serializer_class(self):
-        if self.action in ["create", "update", "partial_update"]:
+        if self.action == "list":
+            return CarListSerializer
+        elif self.action in ["create", "update", "partial_update"]:
             return CarCreateUpdateSerializer
         return CarSerializer
+
 
     @CarSwagger.car_list
     def list(self, request, *args, **kwargs):
@@ -124,8 +154,7 @@ class RentalConditionViewSet(
 
     queryset = RentalCondition.objects.all()
     serializer_class = RentalConditionSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = RentalConditionFilter
+
 
     @RentalConditionSwagger.rental_list
     def list(self, request, *args, **kwargs):
@@ -186,7 +215,6 @@ class RentalCreateView(APIView):
         if serializer.is_valid():
             rental = serializer.save()
 
-            # Безопасное приведение к float (или str, если вдруг возникнет проблема сериализации)
             total_price = rental.calculate_total_price_with_discount()
             total_price = (
                 float(total_price)
@@ -198,3 +226,85 @@ class RentalCreateView(APIView):
                 {"rental_id": rental.id, "total_price": total_price}, status=201
             )
         return Response(serializer.errors, status=400)
+
+
+class CarOptionViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint для управления дополнительными опциями автомобилей.
+    """
+    queryset = CarOption.objects.all()
+    serializer_class = CarOptionSerializer
+
+
+class CarEquipmentViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint для управления комплектациями автомобилей.
+    """
+    queryset = CarEquipment.objects.all()
+    serializer_class = CarEquipmentSerializer
+
+
+class CarOptionViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint для управления дополнительными опциями автомобилей.
+    """
+
+    queryset = CarOption.objects.all()
+    serializer_class = CarOptionSerializer
+
+    @CarOptionSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @CarOptionSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @CarOptionSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @CarOptionSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @CarOptionSwagger.partial_update
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+    @CarOptionSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+
+class CarEquipmentViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint для управления комплектациями автомобилей.
+    """
+
+    queryset = CarEquipment.objects.all()
+    serializer_class = CarEquipmentSerializer
+
+    @CarEquipmentSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @CarEquipmentSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @CarEquipmentSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @CarEquipmentSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @CarEquipmentSwagger.partial_update
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+    @CarEquipmentSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)

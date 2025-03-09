@@ -2,9 +2,217 @@ from django.conf import settings
 from django.db import models
 
 
-from django.db import models
-from django.conf import settings
 
+class Car(models.Model):
+    """
+    Модель автомобиля для каршеринга.
+    """
+
+    BODY_TYPES = [
+        ("sedan", "Седан"),
+        ("suv", "Внедорожник"),
+        ("hatchback", "Хэтчбек"),
+        ("crossover", "Кроссовер"),
+        ("minivan", "Минивэн"),
+        ("wagon", "Универсал"),
+    ]
+
+    DRIVE_TYPES = [
+        ("fwd", "Передний привод"),
+        ("rwd", "Задний привод"),
+        ("awd", "Полный привод"),
+    ]
+
+    ENGINE_TYPES = [
+        ("petrol", "Бензиновый"),
+        ("diesel", "Дизельный"),
+        ("electric", "Электрический"),
+        ("hybrid", "Гибридный"),
+    ]
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="cars",
+        verbose_name="Владелец",
+    )
+    brand = models.ForeignKey(
+        "Brand",
+        on_delete=models.CASCADE,
+        related_name="cars",
+        verbose_name="Марка",
+    )
+    description = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Описание автомобиля",
+        help_text="Описание автомобиля (необязательное поле)"
+    )
+    body_type = models.CharField(
+        max_length=20, choices=BODY_TYPES, verbose_name="Тип кузова"
+    )
+    year_of_production = models.PositiveIntegerField(
+        verbose_name="Год выпуска",
+        help_text="Год выпуска автомобиля"
+    )
+    engine_power = models.PositiveIntegerField(
+        verbose_name="Мощность двигателя (л.с.)",
+        help_text="Мощность двигателя в лошадиных силах"
+    )
+    drive_type = models.CharField(
+        max_length=10, choices=DRIVE_TYPES, verbose_name="Привод"
+    )
+    engine_type = models.CharField(
+        max_length=10, choices=ENGINE_TYPES, verbose_name="Тип двигателя"
+    )
+    price_per_day = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name="Цена за день"
+    )
+    discount_policy = models.ForeignKey(
+        "RentalDiscount",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="rental_cars",
+        verbose_name="Политика скидок",
+    )
+
+
+    class Meta:
+        verbose_name = "Автомобиль"
+        verbose_name_plural = "Автомобили"
+
+
+class Model(models.Model):
+    """Класс для модели машины."""
+
+    name = models.CharField(
+        max_length=100, verbose_name="Модель машины", blank=True, null=True
+    )
+
+
+    class Meta:
+        verbose_name = "Модель машины"
+        verbose_name_plural = "Модель машины"
+
+    def __str__(self):
+        return self.name
+
+
+class Brand(models.Model):
+    """
+    Модель бренда автомобиля (например, Toyota, Hyundai и т.д.).
+    """
+
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        verbose_name="Марка",
+        help_text="Название бренда автомобиля",
+    )
+
+    class Meta:
+        verbose_name = "Марка автомобиля"
+        verbose_name_plural = "Марки автомобилей"
+
+    def __str__(self):
+        return self.name
+
+
+
+class CarFeature(models.Model):
+    """
+    Модель характеристик автомобиля. Каждая характеристика может быть привязана к автомобилю и иметь описание.
+    """
+
+    car = models.ForeignKey(
+        Car,
+        on_delete=models.CASCADE,
+        related_name="features",
+        verbose_name="Автомобиль",
+    )
+    name = models.CharField(
+        max_length=255,
+        verbose_name="Название характеристики",
+        help_text="Название характеристики, например: мощность двигателя, тип коробки передач и т.д."
+    )
+    description = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Описание характеристики",
+        help_text="Описание характеристики автомобиля (необязательное поле)"
+    )
+
+    class Meta:
+        verbose_name = "Характеристика автомобиля"
+        verbose_name_plural = "Характеристики автомобилей"
+        unique_together = ("car", "name")  # Гарантирует, что одна характеристика будет уникальной для каждого автомобиля.
+
+    def __str__(self):
+        return f"{self.car} - {self.name}"
+
+
+class CarImage(models.Model):
+    """
+    Модель изображений автомобилей.
+    """
+
+    car = models.ForeignKey(
+        Car, on_delete=models.CASCADE, related_name="images", verbose_name="Автомобиль"
+    )
+    image = models.ImageField(upload_to="car_images/", verbose_name="Изображение")
+
+    class Meta:
+        verbose_name = "Изображение автомобиля"
+        verbose_name_plural = "Изображения автомобилей"
+
+    def __str__(self):
+        return f"Фото {self.car}"
+
+class CarOption(models.Model):
+    """
+    Дополнительные опции автомобиля.
+    """
+    car = models.ForeignKey(
+        Car,
+        on_delete=models.CASCADE,
+        related_name="options",
+        verbose_name="Автомобиль"
+    )
+    name = models.CharField(
+        max_length=100,
+        verbose_name="Название опции"
+    )
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Стоимость опции"
+    )
+
+    class Meta:
+        verbose_name = "Дополнительная опция"
+        verbose_name_plural = "Дополнительные опции"
+
+class CarEquipment(models.Model):
+    """
+    Комплектация автомобиля.
+    """
+    car = models.ForeignKey(
+        Car,
+        on_delete=models.CASCADE,
+        related_name="equipments",
+        verbose_name="Автомобиль"
+    )
+    name = models.CharField(
+        max_length=100,
+        verbose_name="Название комплектации"
+    )
+
+    class Meta:
+        verbose_name = "Комплектация"
+        verbose_name_plural = "Комплектации"
 
 class RentalDiscount(models.Model):
     """
@@ -36,135 +244,13 @@ class RentalDiscount(models.Model):
         Возвращает соответствующую скидку в зависимости от количества дней аренды.
         """
         if days >= 30:
-            return self.discount_month / 100  # Преобразуем в коэффициент
+            return self.discount_month / 100
         elif days >= 7:
             return self.discount_week / 100
-        return 0  # Без скидки
+        return 0 
 
     def __str__(self):
         return self.name
-
-
-class Car(models.Model):
-    """
-    Модель автомобиля для каршеринга.
-    """
-
-    BODY_TYPES = [
-        ("sedan", "Седан"),
-        ("suv", "Внедорожник"),
-        ("hatchback", "Хэтчбек"),
-        ("crossover", "Кроссовер"),
-        ("minivan", "Минивэн"),
-        ("wagon", "Универсал"),
-    ]
-
-    BRAND_CHOICES = [
-        ("toyota", "Toyota"),
-        ("hyundai", "Hyundai"),
-        ("kia", "Kia"),
-        ("renault", "Renault"),
-        ("nissan", "Nissan"),
-        ("volkswagen", "Volkswagen"),
-        ("lada", "Lada"),
-        ("skoda", "Skoda"),
-        ("mazda", "Mazda"),
-        ("ford", "Ford"),
-    ]
-
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="cars",
-        verbose_name="Владелец",
-    )
-    brand = models.CharField(
-        max_length=100, choices=BRAND_CHOICES, verbose_name="Марка"
-    )
-    body_type = models.CharField(
-        max_length=20, choices=BODY_TYPES, verbose_name="Тип кузова"
-    )
-    price_per_day = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name="Цена за день"
-    )
-    discount_policy = models.ForeignKey(
-        RentalDiscount,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="rental_cars",
-        verbose_name="Политика скидок",
-    )
-
-    def calculate_rental_price(self, days: int) -> float:
-        """
-        Рассчитывает стоимость аренды в зависимости от количества дней и скидок.
-        """
-        discount = (
-            self.discount_policy.get_discount(days) if self.discount_policy else 0
-        )
-        print(discount, 1)
-        daily_price = self.price_per_day * (1 - discount)
-        print(daily_price, 2)
-        return round(daily_price * days, 2)
-
-    class Meta:
-        verbose_name = "Автомобиль"
-        verbose_name_plural = "Автомобили"
-
-
-class CarFeature(models.Model):
-    """
-    Модель характеристики автомобиля (например, кондиционер, коробка передач и т.д.).
-    """
-
-    FEATURE_CHOICES = [
-        ("air_conditioning", "Кондиционер"),
-        ("automatic_transmission", "Автоматическая коробка передач"),
-        ("manual_transmission", "Механическая коробка передач"),
-        ("four_doors", "4 двери"),
-        ("five_doors", "5 дверей"),
-        ("large_trunk", "Большой багажник"),
-    ]
-
-    name = models.CharField(
-        max_length=100,
-        choices=FEATURE_CHOICES,
-        help_text="Название характеристики",
-        verbose_name="Характеристика",
-    )
-    car = models.ForeignKey(
-        Car,
-        on_delete=models.CASCADE,
-        related_name="features",
-        help_text="Автомобиль, которому принадлежит характеристика",
-        verbose_name="Автомобиль",
-    )
-
-    class Meta:
-        verbose_name = "Характеристика автомобиля"
-        verbose_name_plural = "Характеристики автомобилей"
-
-    def __str__(self):
-        return f"{self.car} - {self.get_name_display()}"
-
-
-class CarImage(models.Model):
-    """
-    Модель изображений автомобилей.
-    """
-
-    car = models.ForeignKey(
-        Car, on_delete=models.CASCADE, related_name="images", verbose_name="Автомобиль"
-    )
-    image = models.ImageField(upload_to="car_images/", verbose_name="Изображение")
-
-    class Meta:
-        verbose_name = "Изображение автомобиля"
-        verbose_name_plural = "Изображения автомобилей"
-
-    def __str__(self):
-        return f"Фото {self.car}"
 
 
 class RentalCondition(models.Model):
@@ -226,13 +312,18 @@ class Rental(models.Model):
         verbose_name = "Аренда"
         verbose_name_plural = "Аренды"
 
-    def calculate_total_price_with_discount(self):
-        """Метод для расчета общей стоимости аренды с учетом скидок."""
+    def calculate_total_price(self):
+        """ 
+        Рассчитывает общую стоимость аренды с учетом скидок.
+        """
         if not self.pickup_datetime or not self.return_datetime:
             return None  # Если даты не заданы, возвращаем None
 
         duration = self.return_datetime - self.pickup_datetime
-        print(duration)
         days = max(duration.days, 1)  # Минимально 1 день
-        print(days)
-        return self.car.calculate_rental_price(days)
+
+        daily_price = self.car.price_per_day
+        discount = self.car.discount_policy.get_discount(days) if self.car.discount_policy else 0
+        total_price = daily_price * days * (1 - discount)
+
+        return round(total_price, 2)  # Округляем до двух знаков после запятой
