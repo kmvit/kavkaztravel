@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Car, CarFeature, CarImage, RentalDiscount,  Rental, RentalDiscount, RentalCondition, Brand, CarOption, CarEquipment
+from .models import Car, CarFeature, CarImage, RentalDiscount,  Rental, RentalDiscount, RentalCondition, CarOption, CarEquipment
 
 
 class CarImageSerializer(serializers.ModelSerializer):
@@ -11,12 +11,6 @@ class CarImageSerializer(serializers.ModelSerializer):
         model = CarImage
         fields = ["id", "car", "image"]
 
-class BrandSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели бренда автомобиля."""
-
-    class Meta:
-        model = Brand
-        fields = ("id", "name",)
 
 class CarFeatureSerializer(serializers.ModelSerializer):
     """Сериализатор для характеристик автомобиля."""
@@ -118,7 +112,6 @@ class CarSerializer(serializers.ModelSerializer):
     features = CarFeatureSerializer(many=True, read_only=True)
     images = CarImageSerializer(many=True, read_only=True)
     discount_policy = RentalDiscountSerializer(read_only=True)
-    brand = BrandSerializer(read_only=True)
     options = CarOptionSerializer(many=True, read_only=True)
     equipments = CarEquipmentSerializer(many=True, read_only=True)
 

@@ -36,8 +36,8 @@ class Car(models.Model):
         related_name="cars",
         verbose_name="Владелец",
     )
-    brand = models.ForeignKey(
-        "Brand",
+    model = models.ForeignKey(
+        "Model",
         on_delete=models.CASCADE,
         related_name="cars",
         verbose_name="Марка",
@@ -97,27 +97,6 @@ class Model(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class Brand(models.Model):
-    """
-    Модель бренда автомобиля (например, Toyota, Hyundai и т.д.).
-    """
-
-    name = models.CharField(
-        max_length=100,
-        unique=True,
-        verbose_name="Марка",
-        help_text="Название бренда автомобиля",
-    )
-
-    class Meta:
-        verbose_name = "Марка автомобиля"
-        verbose_name_plural = "Марки автомобилей"
-
-    def __str__(self):
-        return self.name
-
 
 
 class CarFeature(models.Model):
