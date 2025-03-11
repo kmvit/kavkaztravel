@@ -55,7 +55,6 @@ def model_rio(db, brand_kia):
 def model_camry(db, brand_toyota):
     return Model.objects.create(name="Camry")
 
-
 @pytest.fixture
 def car_option_1(car_1):
     """Фикстура для дополнительной опции автомобиля."""
@@ -74,7 +73,6 @@ def car_equipment_1(car_1):
         name="Premium Sound System"
     )
     return equipment
-
 
 @pytest.fixture
 def car_1(db, user, rental_discount, model_rio, brand_kia):
@@ -110,6 +108,9 @@ def car_2(db, user, model_camry, brand_toyota):
         price_per_day=6100,
         discount_policy=None,
     )
+
+
+
 
 
 @pytest.fixture
@@ -297,67 +298,3 @@ def rental_payload_more_than_30_days(car_1, rental_discount):
         "return_location": "Some location"
     }
 
-
-@pytest.fixture
-def rental_payload_less_than_7_days_no_discount(car_1, rental_discount_none):
-    """Фикстура для аренды меньше 7 дней без скидки."""
-    pickup_datetime = datetime.utcnow()
-    return {
-        "car": car_1.id,
-        "discount_policy": rental_discount_none.id,
-        "pickup_datetime": pickup_datetime.isoformat(),
-        "return_datetime": (pickup_datetime + timedelta(days=5)).isoformat(),
-        "return_location": "Some location"
-    }
-
-
-@pytest.fixture
-def rental_payload_7_days_no_discount(car_1, rental_discount_none):
-    """Фикстура для аренды на 7 дней без скидки."""
-    pickup_datetime = datetime.utcnow()
-    return {
-        "car": car_1.id,
-        "discount_policy": rental_discount_none.id,
-        "pickup_datetime": pickup_datetime.isoformat(),
-        "return_datetime": (pickup_datetime + timedelta(days=7)).isoformat(),
-        "return_location": "Some location"
-    }
-
-
-@pytest.fixture
-def rental_payload_between_7_and_30_days_no_discount(car_1, rental_discount_none):
-    """Фикстура для аренды между 7 и 30 днями без скидки."""
-    pickup_datetime = datetime.utcnow()
-    return {
-        "car": car_1.id,
-        "discount_policy": rental_discount_none.id,
-        "pickup_datetime": pickup_datetime.isoformat(),
-        "return_datetime": (pickup_datetime + timedelta(days=15)).isoformat(),
-        "return_location": "Some location"
-    }
-
-
-@pytest.fixture
-def rental_payload_30_days_no_discount(car_1, rental_discount_none):
-    """Фикстура для аренды на 30 дней без скидки."""
-    pickup_datetime = datetime.utcnow()
-    return {
-        "car": car_1.id,
-        "discount_policy": rental_discount_none.id,
-        "pickup_datetime": pickup_datetime.isoformat(),
-        "return_datetime": (pickup_datetime + timedelta(days=30)).isoformat(),
-        "return_location": "Some location"
-    }
-
-
-@pytest.fixture
-def rental_payload_more_than_30_days_no_discount(car_1, rental_discount_none):
-    """Фикстура для аренды больше 30 дней без скидки."""
-    pickup_datetime = datetime.utcnow()
-    return {
-        "car": car_1.id,
-        "discount_policy": rental_discount_none.id,
-        "pickup_datetime": pickup_datetime.isoformat(),
-        "return_datetime": (pickup_datetime + timedelta(days=45)).isoformat(),
-        "return_location": "Some location"
-    }
