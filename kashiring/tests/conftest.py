@@ -172,11 +172,6 @@ def rental_condition(db, car_1):
         min_driving_experience=2,
     )
 
-
-import pytest
-from datetime import datetime, timedelta
-
-
 @pytest.fixture
 def rental_payload_less_than_7_days(car_1, user):
     """Фикстура для аренды на меньше чем 7 дней."""
