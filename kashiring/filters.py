@@ -11,7 +11,9 @@ class CarFilter(filters.FilterSet):
     - Диапазону цен (price_per_day)
     """
 
-    model = filters.ModelChoiceFilter(queryset=Model.objects.all(), field_name="model", label="Модель")
+    model = filters.ModelChoiceFilter(
+        queryset=Model.objects.all(), field_name="model", label="Модель"
+    )
     body_type = filters.CharFilter(field_name="body_type", lookup_expr="iexact")
     price_per_day_min = filters.NumberFilter(
         field_name="price_per_day", lookup_expr="gte"
@@ -25,4 +27,3 @@ class CarFilter(filters.FilterSet):
     insurance_deposit_max = filters.NumberFilter(
         field_name="insurance_deposit", lookup_expr="lte"
     )
-

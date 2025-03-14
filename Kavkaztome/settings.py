@@ -178,12 +178,11 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
     
-    # Раздача статики для Swagger локально
+
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
-    
-    # ✅ Исправление отображения файлов
+ 
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_COERCE_PATH_PK_SUFFIX": True,
 }

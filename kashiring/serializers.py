@@ -1,5 +1,16 @@
 from rest_framework import serializers
-from .models import Car, CarFeature, CarImage, RentalDiscount,  Rental, RentalDiscount, RentalCondition, Brand, CarOption, CarEquipment, Model
+from .models import (
+    Car,
+    CarFeature,
+    CarImage,
+    RentalDiscount,
+    Rental,
+    RentalCondition,
+    Brand,
+    CarOption,
+    CarEquipment,
+    Model,
+)
 
 
 class ModelSerializer(serializers.ModelSerializer):
@@ -7,7 +18,11 @@ class ModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Model
-        fields = ("id", "name",)
+        fields = (
+            "id",
+            "name",
+        )
+
 
 class CarImageSerializer(serializers.ModelSerializer):
     """Сериализатор для изображений автомобиля."""
@@ -18,17 +33,21 @@ class CarImageSerializer(serializers.ModelSerializer):
         model = CarImage
         fields = ["id", "car", "image"]
 
+
 class BrandSerializer(serializers.ModelSerializer):
     """Сериализатор для модели бренда автомобиля."""
 
     class Meta:
         model = Brand
-        fields = ("id", "name",)
+        fields = (
+            "id",
+            "name",
+        )
+
 
 class CarFeatureSerializer(serializers.ModelSerializer):
     """Сериализатор для характеристик автомобиля."""
 
-    # Поле для необязательного описания
     description = serializers.CharField(
         required=False,
         allow_blank=True,
@@ -36,7 +55,7 @@ class CarFeatureSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CarFeature
-        fields = ["id", "car", "name", "description"] 
+        fields = ["id", "car", "name", "description"]
 
 
 class CarFeatureCreateUpdateSerializer(serializers.ModelSerializer):
@@ -46,29 +65,63 @@ class CarFeatureCreateUpdateSerializer(serializers.ModelSerializer):
         model = CarFeature
         fields = ["name"]
 
+
 class CarOptionSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для дополнительной опции автомобиля.
-    """
-    car = serializers.PrimaryKeyRelatedField(read_only=True)
-    price = serializers.DecimalField(required=False, allow_null=True, max_digits=10,
-        decimal_places=2)
+    car = serializers.PrimaryKeyRelatedField(queryset=Car.objects.all(), required=True)
 
     class Meta:
         model = CarOption
-        fields = ['id', 'car', 'name', 'price']
+        fields = ["id", "car", "name", "price"]
+
+    def create(self, validated_data):
+        """
+        Метод для создания нового объекта CarOption.
+        Мы извлекаем ID автомобиля из переданных данных и связываем его с создаваемым объектом.
+        """
+        car = validated_data.get("car")
+        name = validated_data.get("name")
+        price = validated_data.get("price")
+
+        car_option = CarOption.objects.create(car=car, name=name, price=price)
+        return car_option
+
+    def update(self, instance, validated_data):
+        """
+        Метод для обновления существующего объекта CarOption.
+        """
+        instance.car = validated_data.get("car", instance.car)
+        instance.name = validated_data.get("name", instance.name)
+        instance.price = validated_data.get("price", instance.price)
+        instance.save()
+        return instance
+
 
 class CarEquipmentSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для комплектации автомобиля.
-    """
-    car = serializers.PrimaryKeyRelatedField(read_only=True)
+    car = serializers.PrimaryKeyRelatedField(queryset=Car.objects.all(), required=True)
 
     class Meta:
         model = CarEquipment
-        fields = ['id', 'car', 'name']
+        fields = ["id", "car", "name"]
 
+    def create(self, validated_data):
+        """
+        Метод для создания нового объекта CarEquipment.
+        Мы извлекаем ID автомобиля из переданных данных и связываем его с создаваемым объектом.
+        """
+        car = validated_data.get("car")
+        name = validated_data.get("name")
 
+        car_equipment = CarEquipment.objects.create(car=car, name=name)
+        return car_equipment
+
+    def update(self, instance, validated_data):
+        """
+        Метод для обновления существующего объекта CarEquipment.
+        """
+        instance.car = validated_data.get("car", instance.car)
+        instance.name = validated_data.get("name", instance.name)
+        instance.save()
+        return instance
 
 
 class RentalDiscountSerializer(serializers.ModelSerializer):
@@ -117,7 +170,7 @@ class CarSerializer(serializers.ModelSerializer):
     """
     Сериализатор для просмотра автомобилей без расчета аренды.
     Реализуеться метод retrive
-    
+
     """
 
     owner = serializers.StringRelatedField(read_only=True)
@@ -127,7 +180,6 @@ class CarSerializer(serializers.ModelSerializer):
     brand = BrandSerializer(read_only=True)
     options = CarOptionSerializer(many=True, read_only=True)
     equipments = CarEquipmentSerializer(many=True, read_only=True)
-
 
     class Meta:
         model = Car
@@ -191,7 +243,7 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "owner",
-            "brand_name", 
+            "brand_name",
             "model_name",
             "description",
             "body_type",
@@ -209,9 +261,9 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
 
         features_data = validated_data.pop("features", [])
         discount_policy_name = validated_data.pop("discount_policy", None)
-        brand_name = validated_data.pop("brand_name")  # Получаем название бренда
-        model_name = validated_data.pop("model_name")  # Получаем название модели
-        description = validated_data.pop("description", None)  # Получаем описание
+        brand_name = validated_data.pop("brand_name")
+        model_name = validated_data.pop("model_name")
+        description = validated_data.pop("description", None)
 
         # Получаем тарифный план по названию (если передан)
         discount_policy = None
@@ -221,20 +273,17 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
             ).first()
 
         # Получаем бренд по названию
-        brand = Brand.objects.filter(name=brand_name).first()
-        if not brand:
-            raise serializers.ValidationError(f"Brand with name '{brand_name}' does not exist.")
-
+        brand, _ = Brand.objects.get_or_create(name=brand_name)
         # Создаем модель, если она не существует
-        model, created = Model.objects.get_or_create(name=model_name)  # Создаем или получаем модель
+        model, created = Model.objects.get_or_create(name=model_name)
 
         # Создаем автомобиль
         car = Car.objects.create(
             **validated_data,
             discount_policy=discount_policy,
             brand=brand,
-            model=model,  # Привязываем модель
-            description=description  # Передаем описание при создании
+            model=model,
+            description=description,  # Передаем описание при создании
         )
 
         # Создаем характеристики
@@ -248,41 +297,39 @@ class CarCreateUpdateSerializer(serializers.ModelSerializer):
 
         features_data = validated_data.pop("features", [])
         discount_policy_name = validated_data.pop("discount_policy", None)
-        brand_name = validated_data.pop("brand_name", None)  # Получаем название бренда
-        model_name = validated_data.pop("model_name", None)  # Получаем название модели
-        description = validated_data.pop("description", None)  # Получаем описание
+        brand_name = validated_data.pop("brand_name", None)
+        model_name = validated_data.pop("model_name", None)
+        description = validated_data.pop("description", None)
 
-        # Обновляем автомобиль
         instance.body_type = validated_data.get("body_type", instance.body_type)
         instance.price_per_day = validated_data.get(
             "price_per_day", instance.price_per_day
         )
 
-        # Обновляем тарифный план (если передан)
         if discount_policy_name:
             instance.discount_policy = RentalDiscount.objects.filter(
                 name=discount_policy_name
             ).first()
 
-        # Обновляем бренд, если передан новый
         if brand_name:
             brand = Brand.objects.filter(name=brand_name).first()
             if not brand:
-                raise serializers.ValidationError(f"Brand with name '{brand_name}' does not exist.")
+                raise serializers.ValidationError(
+                    f"Brand with name '{brand_name}' does not exist."
+                )
             instance.brand = brand
 
-        # Обновляем модель, если передано новое
         if model_name:
-            model, created = Model.objects.get_or_create(name=model_name)  # Создаем или получаем модель
+            model, created = Model.objects.get_or_create(
+                name=model_name
+            )  # Создаем или получаем модель
             instance.model = model
 
-        # Обновляем описание, если передано новое
         if description is not None:
             instance.description = description
 
         instance.save()
 
-        # Обновляем характеристики
         for feature_data in features_data:
             CarFeature.objects.update_or_create(car=instance, **feature_data)
 

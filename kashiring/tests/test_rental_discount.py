@@ -5,7 +5,7 @@ from kashiring.models import RentalDiscount
 @pytest.mark.django_db
 def test_get_discounts(api_client, rental_discount):
     """Тест получения списка скидок."""
-    url = "/api/v1/kashiring/discounts/"  # Прямая ссылка
+    url = "/api/v1/kashiring/discounts/"
     response = api_client.get(url)
 
     assert response.status_code == 200
@@ -18,7 +18,7 @@ def test_get_discounts(api_client, rental_discount):
 @pytest.mark.django_db
 def test_create_discount(api_client):
     """Тест создания новой скидки."""
-    url = "/api/v1/kashiring/discounts/"  # Прямая ссылка
+    url = "/api/v1/kashiring/discounts/"
     payload = {
         "name": "New Discount",
         "discount_week": "7.50",
@@ -34,7 +34,7 @@ def test_create_discount(api_client):
 @pytest.mark.django_db
 def test_update_discount(api_client, rental_discount):
     """Тест обновления скидки."""
-    url = f"/api/v1/kashiring/discounts/{rental_discount.id}/"  # Прямая ссылка
+    url = f"/api/v1/kashiring/discounts/{rental_discount.id}/"
     payload = {"discount_week": "8.00"}
 
     response = api_client.patch(url, payload, format="json")
@@ -46,7 +46,7 @@ def test_update_discount(api_client, rental_discount):
 @pytest.mark.django_db
 def test_delete_discount(api_client, rental_discount):
     """Тест удаления скидки."""
-    url = f"/api/v1/kashiring/discounts/{rental_discount.id}/"  # Прямая ссылка
+    url = f"/api/v1/kashiring/discounts/{rental_discount.id}/"
     response = api_client.delete(url)
 
     assert response.status_code == 204

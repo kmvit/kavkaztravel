@@ -6,6 +6,7 @@ from PIL import Image
 from kashiring.models import CarImage
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
+
 @pytest.mark.django_db
 def test_create_car_image(api_client, user, car_1):
     """Тестируем создание изображения для автомобиля"""
@@ -18,13 +19,15 @@ def test_create_car_image(api_client, user, car_1):
     image.seek(0)
 
     # Преобразуем в InMemoryUploadedFile для корректной отправки
-    image_file = InMemoryUploadedFile(image, None, "image.jpg", "image/jpeg", image.tell(), None)
+    image_file = InMemoryUploadedFile(
+        image, None, "image.jpg", "image/jpeg", image.tell(), None
+    )
 
     # Отправляем запрос для создания изображения
     response = api_client.post(
-        "/api/v1/kashiring/car-images/", 
+        "/api/v1/kashiring/car-images/",
         {"car": car_1.id, "image": image_file},
-        format="multipart"
+        format="multipart",
     )
 
     # Проверяем, что ответ успешный и изображение создано
@@ -32,6 +35,7 @@ def test_create_car_image(api_client, user, car_1):
     assert "id" in response.data
     assert response.data["car"] == car_1.id
     assert "image" in response.data
+
 
 @pytest.mark.django_db
 def test_list_car_images(api_client, user, car_1, car_1_images):
@@ -75,4 +79,3 @@ def test_delete_car_image(api_client, user, car_1, car_1_images):
     # Проверяем, что изображение удалено
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert CarImage.objects.count() == len(car_1_images) - 1
-

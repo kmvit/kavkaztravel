@@ -21,7 +21,7 @@ router.register(
 )
 router.register(r"discounts", RentalDiscountViewSet, basename="rentaldiscount")
 router.register(r"car-options", CarOptionViewSet, basename="car-option")
-router.register(r"car-equipment", CarEquipmentViewSet, basename="car-equipment")  
+router.register(r"car-equipment", CarEquipmentViewSet, basename="car-equipment")
 
 urlpatterns = [
     path("", include(router.urls)),

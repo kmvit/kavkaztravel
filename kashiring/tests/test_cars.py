@@ -2,23 +2,19 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
+from rest_framework import status
 from kashiring.models import Car, CarFeature, CarImage, RentalDiscount
 
 
-
-
-
-
-
 @pytest.mark.django_db
-def test_create_car(api_client, user, rental_discount, model_camry, brand_toyota):
+def test_create_car(api_client, owner, rental_discount, model_camry, brand_toyota):
     """Тест создания автомобиля через API."""
-    api_client.force_authenticate(user=user)
+    api_client.force_authenticate(user=owner)
 
     url = "/api/v1/kashiring/cars/"
     payload = {
-        "owner": user.id,
-        "brand_name": brand_toyota.name, 
+        "owner": owner.id,
+        "brand_name": brand_toyota.name,
         "model_name": model_camry.name,
         "body_type": "sedan",
         "year_of_production": 2023,
@@ -31,13 +27,13 @@ def test_create_car(api_client, user, rental_discount, model_camry, brand_toyota
     }
 
     response = api_client.post(url, payload, format="json")
-    print(response.data, 124)
+
     assert response.status_code == 201
 
     data = response.json()
-    print(data, 123)
-    assert data["engine_type"] == 'petrol'
-    assert data["year_of_production"] ==2023
+
+    assert data["engine_type"] == "petrol"
+    assert data["year_of_production"] == 2023
     assert "air_conditioning" in [feature["name"] for feature in data["features"]]
 
     # Проводим фильтрацию по бренду и проверяем, что созданный автомобиль есть в результатах
@@ -50,18 +46,19 @@ def test_create_car(api_client, user, rental_discount, model_camry, brand_toyota
     # Получаем список автомобилей и проверяем, что наш созданный автомобиль присутствует
     filtered_cars = filter_response.json()
     assert len(filtered_cars) == 1  # Должен быть только один автомобиль в ответе
-    assert filtered_cars[0]["id"] == car.id  # Проверяем, что этот автомобиль — тот, который мы создали
+    assert (
+        filtered_cars[0]["id"] == car.id
+    )  # Проверяем, что этот автомобиль — тот, который мы создали
+
 
 @pytest.mark.django_db
-def test_update_car(api_client, user, car_1, model_camry):
+def test_update_car(api_client, owner, car_1, model_camry):
     """Тест обновления автомобиля через API."""
-    api_client.force_authenticate(user=user)
+    api_client.force_authenticate(user=owner)
 
     url = f"/api/v1/kashiring/cars/{car_1.id}/"
 
-    payload = {
-        "price_per_day": "500.00"
-    }
+    payload = {"price_per_day": "500.00"}
 
     response = api_client.patch(url, payload, format="json")
     assert response.status_code == 200
@@ -71,15 +68,14 @@ def test_update_car(api_client, user, car_1, model_camry):
 
 
 @pytest.mark.django_db
-def test_delete_car(api_client, user, car_1):
+def test_delete_car(api_client, owner, car_1):
     """Тест удаления автомобиля через API."""
-    api_client.force_authenticate(user=user)
+    api_client.force_authenticate(user=owner)
 
     url = f"/api/v1/kashiring/cars/{car_1.id}/"
 
     response = api_client.delete(url)
     assert response.status_code == 204
-
 
 
 @pytest.mark.django_db
@@ -91,7 +87,7 @@ def test_filter_cars_by_body_type(api_client, car_1, car_2):
     assert response.status_code == 200
     data = response.json()
 
-    assert len(data) == 2 
+    assert len(data) == 2
 
 
 @pytest.mark.django_db
@@ -108,21 +104,43 @@ def test_filter_cars_by_price_range(api_client, car_1, car_2):
 
 
 @pytest.mark.django_db
-def test_anonymous_user_cannot_edit_car(api_client, car_1):
-    """Неавторизованный пользователь не может редактировать машину."""
+def test_car_edit_permissions(api_client, car_1, owner, user):
+    """Тест проверяет, что только владелец машины может редактировать описание машины."""
+
     url = f"/api/v1/kashiring/cars/{car_1.id}/"
-    data = {"brand": "Honda"}  # Пробуем изменить бренд
+    data = {"description": "Комфортный седан"}  # Пробуем изменить описание машины
 
+    # 1. Неавторизованный пользователь не может редактировать описание машины
     response = api_client.patch(url, data, format="json")
-
     assert response.status_code == status.HTTP_401_UNAUTHORIZED  # Ожидаем 401 ошибку
     car_1.refresh_from_db()
-    assert car_1.brand != "Honda"  # Убеждаемся, что данные не изменились
+    assert car_1.description == "Не совсем комфортый седан"  # Данные не изменились
+
+    # 2. Авторизованный пользователь, не являющийся владельцем, не может редактировать описание машины
+    api_client.force_authenticate(user=user)  # Авторизуем другого пользователя
+    response = api_client.patch(url, data, format="json")
+
+    # Ожидаем ошибку 403 Forbidden, если пользователь не является владельцем
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    car_1.refresh_from_db()
+    assert car_1.description == "Не совсем комфортый седан"  # Данные не изменились
+
+    # 3. Владелец машины может редактировать описание
+    api_client.force_authenticate(user=owner)  # Авторизуем владельца машины
+    response = api_client.patch(url, data, format="json")
+    assert response.status_code == status.HTTP_200_OK  # Ожидаем успешный ответ
+
+    # Проверяем, что описание было изменено
+    car_1.refresh_from_db()  # Обновляем объект
+    assert (
+        car_1.description == "Комфортный седан"
+    )  # Убеждаемся, что описание изменилось
+
 
 @pytest.mark.django_db
-def test_list_cars(api_client, user, car_1, car_2):
+def test_list_cars(api_client, owner, car_1, car_2):
     """Тест для получения списка автомобилей (метод list)."""
-    api_client.force_authenticate(user=user)
+    api_client.force_authenticate(user=owner)
 
     # URL для получения списка автомобилей
     url = "/api/v1/kashiring/cars/"
@@ -151,12 +169,18 @@ def test_list_cars(api_client, user, car_1, car_2):
         assert "first_image" in car_data  # Должно быть поле для первого изображения
 
 
-
-
 @pytest.mark.django_db
-def test_retrieve_car(api_client, user, car_1, car_1_images, car_1_features, car_option_1, car_equipment_1):
+def test_retrieve_car(
+    api_client,
+    owner,
+    car_1,
+    car_1_images,
+    car_1_features,
+    car_option_1,
+    car_equipment_1,
+):
     """Тест для получения информации о конкретном автомобиле (метод retrieve)."""
-    api_client.force_authenticate(user=user)
+    api_client.force_authenticate(user=owner)
 
     # URL для получения информации о конкретном автомобиле
     url = f"/api/v1/kashiring/cars/{car_1.id}/"
@@ -185,15 +209,21 @@ def test_retrieve_car(api_client, user, car_1, car_1_images, car_1_features, car
 
     # Проверяем, что поля содержат правильные данные
     assert data["id"] == car_1.id
-    assert data["owner"] == str(car_1.owner)  # Проверяем владельца, это должно быть строковое представление
+    assert data["owner"] == str(
+        car_1.owner
+    )  # Проверяем владельца, это должно быть строковое представление
     assert data["brand"]["name"] == car_1.brand.name  # Проверяем название бренда
     assert data["body_type"] == car_1.body_type  # Проверяем тип кузова
-    assert float(data["price_per_day"]) == car_1.price_per_day  # Проверяем цену за день с приведение к float
+    assert (
+        float(data["price_per_day"]) == car_1.price_per_day
+    )  # Проверяем цену за день с приведение к float
 
     # Проверяем характеристики автомобиля
     features_data = [feature["name"] for feature in data["features"]]
     for feature in car_1.features.all():
-        assert feature.name in features_data  # Проверяем, что все характеристики автомобиля присутствуют
+        assert (
+            feature.name in features_data
+        )  # Проверяем, что все характеристики автомобиля присутствуют
 
     # Проверяем изображения автомобиля
     if car_1.images.exists():
@@ -206,11 +236,15 @@ def test_retrieve_car(api_client, user, car_1, car_1_images, car_1_features, car
             image_path = image.image.url.replace(settings.MEDIA_URL, "")
             # Формируем полный URL с префиксом
             full_image_url = f"http://testserver{settings.MEDIA_URL}{image_path}"
-            assert full_image_url in image_urls  # Проверяем, что полный URL изображения присутствует
+            assert (
+                full_image_url in image_urls
+            )  # Проверяем, что полный URL изображения присутствует
 
     # Проверяем скидочную политику
     if car_1.discount_policy:
-        assert data["discount_policy"]["name"] == car_1.discount_policy.name  # Проверяем название политики скидки
+        assert (
+            data["discount_policy"]["name"] == car_1.discount_policy.name
+        )  # Проверяем название политики скидки
     else:
         assert data["discount_policy"] is None  # Если нет скидки, то должно быть None
 
@@ -224,4 +258,6 @@ def test_retrieve_car(api_client, user, car_1, car_1_images, car_1_features, car
 
     # Проверяем комплектации автомобиля
     equipments_data = [equipment["name"] for equipment in data["equipments"]]
-    assert car_equipment_1.name in equipments_data  # Проверяем, что комплектация присутствует
+    assert (
+        car_equipment_1.name in equipments_data
+    )  # Проверяем, что комплектация присутствует
