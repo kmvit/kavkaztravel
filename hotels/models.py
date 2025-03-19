@@ -5,7 +5,6 @@ from django.db import models
 from Kavkaztome import settings
 from core.models import BaseContent
 from regions.models import Region
-from reviews.models import Review
 
 class Tag(models.Model):
     """

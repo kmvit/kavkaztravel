@@ -3,8 +3,18 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
 from django.core.files.uploadedfile import SimpleUploadedFile
-from reviews.models import Review, ReviewImage, Rating
-from kashiring.models import Auto, Brand, Model, Year, Color, BodyType
+from reviews.models import CarReview, CarReviewImage, CarRating
+from kashiring.models import (
+    Car,
+    CarFeature,
+    CarImage,
+    RentalDiscount,
+    RentalCondition,
+    Brand,
+    Model,
+    CarOption,
+    CarEquipment,
+)
 from io import BytesIO
 from PIL import Image
 
@@ -60,37 +70,163 @@ def auth_client(api_client, test_user):
     return client
 
 
-@pytest.fixture
-def test_auto(db, test_user):
-    """Создаём тестовый автомобиль"""
-    brand = Brand.objects.create(name="Toyota")
-    model = Model.objects.create(name="Camry")
-    year = Year.objects.create(year=2020)
-    color = Color.objects.create(name="Черный")
-    body_type = BodyType.objects.create(name="Седан")
 
-    return Auto.objects.create(
-        brand=brand,
-        model=model,
-        year=year,
-        color=color,
-        body_type=body_type,
-        owner=test_user,
+@pytest.fixture
+def api_client():
+    """Фикстура для API клиента."""
+    return APIClient()
+
+
+# Фикстура для владельца машины
+@pytest.fixture
+def owner(db):
+    """Фикстура для пользователя-владельца."""
+    User = get_user_model()
+    return User.objects.create_user(
+        username="owner_user", password="password123", email="owner@example.com"
+    )
+
+
+# Фикстура для арендатора (не владельца)
+@pytest.fixture
+def user(db):
+    """Фикстура для пользователя, не являющегося владельцем машины."""
+    User = get_user_model()
+    return User.objects.create_user(
+        username="renter_user", password="password123", email="renter@example.com"
     )
 
 
 @pytest.fixture
-def test_review(db, test_user, test_auto):
-    review = Review.objects.create(
-        user=test_user, car=test_auto, text="Тестовый отзыв", is_approved=True
+def rental_discount(db):
+    """Фикстура для создания тестовой скидки (неделя + месяц)."""
+    return RentalDiscount.objects.create(
+        name="123", discount_week=5.00, discount_month=10.00
     )
-    review.save()
-    return review
+
+
+@pytest.fixture
+def rental_discount_none(db):
+    """Фикстура для аренды без скидки."""
+    return RentalDiscount.objects.create(
+        name="No Discount", discount_week=0.00, discount_month=0.00
+    )
+
+
+@pytest.fixture
+def brand_kia(db):
+    return Brand.objects.create(name="Kia")
+
+
+@pytest.fixture
+def brand_toyota(db):
+    return Brand.objects.create(name="Toyota")
+
+
+@pytest.fixture
+def model_rio(db, brand_kia):
+    return Model.objects.create(name="Rio")
+
+
+@pytest.fixture
+def model_camry(db, brand_toyota):
+    return Model.objects.create(name="Camry")
+
+
+@pytest.fixture
+def car_option_1(car_1):
+    """Фикстура для дополнительной опции автомобиля."""
+    option = CarOption.objects.create(car=car_1, name="Leather Seats", price=500.00)
+    return option
+
+
+@pytest.fixture
+def car_equipment_1(car_1):
+    """Фикстура для комплектации автомобиля."""
+    equipment = CarEquipment.objects.create(car=car_1, name="Premium Sound System")
+    return equipment
+
+
+@pytest.fixture
+def car_1(db, owner, rental_discount, model_rio, brand_kia):
+    """Фикстура для создания первого тестового автомобиля с заданным тарифом и моделью."""
+    return Car.objects.create(
+        owner=owner,
+        brand=brand_kia,
+        model=model_rio,
+        description="Не совсем комфортый седан",
+        body_type="sedan",
+        year_of_production=2022,
+        engine_power=123,
+        drive_type="fwd",
+        engine_type="petrol",
+        price_per_day=100,
+        discount_policy=rental_discount,
+    )
+
+
+@pytest.fixture
+def car_2(db, owner, model_camry, brand_toyota):
+    """Фикстура для создания второго тестового автомобиля без скидки."""
+    return Car.objects.create(
+        owner=owner,
+        brand=brand_toyota,
+        model=model_camry,
+        description="Бизнес-седан",
+        body_type="sedan",
+        year_of_production=2021,
+        engine_power=249,
+        drive_type="fwd",
+        engine_type="petrol",
+        price_per_day=6100,
+        discount_policy=None,
+    )
+
+
+@pytest.fixture
+def car_1_features(db, car_1):
+    """Фикстура для характеристик первого автомобиля."""
+    return [
+        CarFeature.objects.create(car=car_1, name="air_conditioning"),
+        CarFeature.objects.create(car=car_1, name="four_doors"),
+    ]
+
+
+@pytest.fixture
+def car_2_features(db, car_2):
+    """Фикстура для характеристики второго автомобиля."""
+    return [
+        CarFeature.objects.create(car=car_2, name="air_conditioning"),
+    ]
+
+
+@pytest.fixture
+def car_1_images(db, car_1):
+    """Фикстура для изображений первого автомобиля."""
+    return [
+        CarImage.objects.create(car=car_1, image="car_images/endpoint.png"),
+        CarImage.objects.create(car=car_1, image="car_images/db.png"),
+    ]
+
+
+@pytest.fixture
+def car_2_images(db, car_2):
+    """Фикстура для изображений второго автомобиля (пустой список)."""
+    return []
+
+
+@pytest.fixture
+def test_review(db, test_user, car_1):
+    car_review = CarReview.objects.create(
+        user=test_user, car=car_1, text="Тестовый отзыв", is_approved=True
+    )
+    car_review.save()
+    return  car_review
 
 
 @pytest.fixture
 def test_rating(db, test_review):
-    rating = Rating.objects.create(review=test_review, criteria="cleanliness", score=5)
+    rating = CarRating.objects.create(car_review=test_review, criteria="cleanliness", score=5)
     rating.save()
     return rating
 
@@ -98,7 +234,7 @@ def test_rating(db, test_review):
 @pytest.fixture
 def test_review_image(db, test_review):
     """Создаём тестовое изображение"""
-    return ReviewImage.objects.create(review=test_review, image="test_image.jpg")
+    return CarReviewImage.objects.create(car_review=test_review, image="test_image.jpg")
 
 
 @pytest.fixture
@@ -112,12 +248,12 @@ def image_file():
 
 
 @pytest.mark.django_db
-def test_create_review(auth_client, test_auto, test_user):
+def test_create_review(auth_client, car_1, test_user):
     """Тест создания отзыва с оценками"""
 
     data = {
         "user": test_user.id,
-        "car": test_auto.id,
+        "car": car_1.id,
         "text": "Отличная машина!",
         "ratings": [{"criteria": "cleanliness", "score": 10}],
     }
@@ -125,20 +261,20 @@ def test_create_review(auth_client, test_auto, test_user):
     response = auth_client.post(BASE_URL, data, format="json")
 
     assert response.status_code == status.HTTP_201_CREATED
-    assert Review.objects.count() == 1
-    assert Review.objects.first().text == "Отличная машина!"
-    assert Review.objects.first().ratings.count() == 1
-    assert Review.objects.first().ratings.first().score == 10
+    assert CarReview.objects.count() == 1
+    assert CarReview.objects.first().text == "Отличная машина!"
+    assert CarReview.objects.first().ratings.count() == 1
+    assert CarReview.objects.first().ratings.first().score == 10
 
 
 @pytest.mark.django_db
-def test_reviews_pagination(auth_client, test_auto, test_user):
+def test_reviews_pagination(auth_client, car_1, test_user):
     """Тест списка отзывов с проверкой структуры ответа и работы пагинации"""
 
     # Создаём 7 отзывов (чтобы проверить разбиение на страницы)
     reviews = [
-        Review.objects.create(
-            user=test_user, car=test_auto, text=f"Отзыв {i}", is_approved=True
+        CarReview.objects.create(
+            user=test_user, car=car_1, text=f"Отзыв {i}", is_approved=True
         )
         for i in range(7)
     ]
@@ -221,7 +357,7 @@ def test_delete_review(auth_client, test_review):
     response = auth_client.delete(f"{BASE_URL}{test_review.id}/")
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert Review.objects.count() == 0
+    assert CarReview.objects.count() == 0
 
 
 @pytest.mark.django_db
@@ -234,12 +370,13 @@ def test_upload_image(auth_client, test_review, image_file):
     # Отправляем запрос на загрузку изображения
     response = auth_client.post(
         "/api/v1/reviews/car-images/",
-        {"review_id": test_review.id, "image": image_file},
+        {"car_review": test_review.id, "image": image_file},  # Используем "car_review" вместо "car_review_id"
+        format="multipart",  # Указываем формат для загрузки файла
     )
 
     # Проверяем, что изображение загружено
-    assert response.status_code == 201
-    assert ReviewImage.objects.filter(review=test_review).exists()
+    assert response.status_code == 201, f"Ожидался статус 201, но получен {response.status_code}. Ответ: {response.data}"
+    assert CarReviewImage.objects.filter(car_review=test_review).exists()
 
 
 @pytest.mark.django_db
@@ -248,7 +385,7 @@ def test_delete_image(auth_client, test_review_image):
     response = auth_client.delete(f"{IMAGE_URL}{test_review_image.id}/")
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert ReviewImage.objects.count() == 0
+    assert CarReviewImage.objects.count() == 0
 
 
 @pytest.mark.django_db
@@ -278,29 +415,29 @@ def test_review_permissions(auth_client, auth_other_client, test_review):
     # Владелец успешно удаляет отзыв
     response = auth_client.delete(f"{BASE_URL}{test_review.id}/")
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert Review.objects.count() == 0  # Убедимся, что отзыв удалён
+    assert CarReview.objects.count() == 0  # Убедимся, что отзыв удалён
 
 
 @pytest.mark.django_db
-def test_full_review_flow(auth_client, test_auto, test_user, image_file):
+def test_full_review_flow(auth_client, car_1, test_user, image_file):
     """Интеграционный тест: полный сценарий работы с отзывами"""
 
     # 1. Создание отзыва
     review_data = {
         "user": test_user.id,
-        "car": test_auto.id,
+        "car": car_1.id,
         "text": "Отличная машина!",
         "ratings": [{"criteria": "cleanliness", "score": 10}],
     }
 
     create_response = auth_client.post(BASE_URL, review_data, format="json")
     review_id = create_response.data["id"]
-    review = Review.objects.get(id=review_id)
+    review = CarReview.objects.get(id=review_id)
     review.is_approved = True
     review.save()
     assert create_response.status_code == status.HTTP_201_CREATED
 
-    assert Review.objects.filter(id=review_id).exists()
+    assert CarReview.objects.filter(id=review_id).exists()
 
     # 2. Получение созданного отзыва
     get_response = auth_client.get(f"{BASE_URL}{review_id}/")
@@ -310,10 +447,10 @@ def test_full_review_flow(auth_client, test_auto, test_user, image_file):
 
     # 3. Добавление изображения к отзыву
     upload_response = auth_client.post(
-        IMAGE_URL, {"review_id": review_id, "image": image_file}, format="multipart"
+        IMAGE_URL, {"car_review": review_id, "image": image_file}, format="multipart"
     )
     assert upload_response.status_code == status.HTTP_201_CREATED
-    assert ReviewImage.objects.filter(review_id=review_id).exists()
+    assert CarReviewImage.objects.filter(car_review=review_id).exists()
 
     # 4. Обновление отзыва
     update_data = {"text": "Обновленный отзыв"}
@@ -321,15 +458,15 @@ def test_full_review_flow(auth_client, test_auto, test_user, image_file):
         f"{BASE_URL}{review_id}/", update_data, format="json"
     )
     assert update_response.status_code == status.HTTP_200_OK
-    assert Review.objects.get(id=review_id).text == "Обновленный отзыв"
+    assert CarReview.objects.get(id=review_id).text == "Обновленный отзыв"
 
     # 5. Удаление отзыва
     delete_response = auth_client.delete(f"{BASE_URL}{review_id}/")
     assert delete_response.status_code == status.HTTP_204_NO_CONTENT
-    assert not Review.objects.filter(id=review_id).exists()
+    assert not CarReview.objects.filter(id=review_id).exists()
 
     # 6. Проверка удаления связанных данных
-    assert not ReviewImage.objects.filter(review_id=review_id).exists()
+    assert not CarReviewImage.objects.filter(car_review =review_id).exists()
 
 
 @pytest.mark.django_db
@@ -349,11 +486,11 @@ def test_anonymous_user_can_view_reviews(api_client, test_review):
 
 
 @pytest.mark.django_db
-def test_anonymous_user_cannot_create_review(api_client, test_auto):
+def test_anonymous_user_cannot_create_review(api_client, car_1):
     """Анонимный пользователь не может создавать отзывы"""
 
     review_data = {
-        "car": test_auto.id,
+        "car": car_1.id,
         "text": "Хорошая машина!",
         "ratings": [{"criteria": "cleanliness", "score": 8}],
     }

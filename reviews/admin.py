@@ -1,39 +1,45 @@
-from django.urls import reverse
+# reviews/admin.py
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Review, ReviewImage, Rating
+from django.urls import reverse
+from .models import CarReview, CarReviewImage, CarRating
 
 
-class ReviewImageInline(admin.TabularInline):
-    model = ReviewImage
+class CarReviewImageInline(admin.TabularInline):
+    model = CarReviewImage
     extra = 1
 
 
-class RatingInline(admin.TabularInline):
-    model = Rating
+class CarRatingInline(admin.TabularInline):
+    model = CarRating
     extra = 5
 
 
-@admin.register(Review)
-class ReviewAdmin(admin.ModelAdmin):
+@admin.register(CarReview)
+class CarReviewAdmin(admin.ModelAdmin):
     """Админка для отзывов с модерацией"""
 
     list_display = ("user", "car", "created_at", "is_approved") 
     list_filter = ("is_approved", "created_at")
     search_fields = ("user__username", "car__make", "car__model")
     actions = ["approve_reviews"]
-    inlines = [ReviewImageInline, RatingInline]
+    inlines = [CarReviewImageInline, CarRatingInline]
 
-    list_editable = ("is_approved",)  # ✅ Галочка прямо в списке!
+    list_editable = ("is_approved",)
 
     @admin.action(description="Одобрить выбранные отзывы")
     def approve_reviews(self, request, queryset):
         queryset.update(is_approved=True)
 
 
-@admin.register(ReviewImage)
+@admin.register(CarReviewImage)
 class ReviewImageAdmin(admin.ModelAdmin):
-    list_display = ("review", "image_preview")
+    list_display = ("review_link", "image_preview")  # Используем метод для отображения ссылки на отзыв
+
+    def review_link(self, obj):
+        # Возвращаем ссылку на отзыв
+        return format_html('<a href="{}">{}</a>', reverse("admin:reviews_carreview_change", args=[obj.review.id]), obj.review)
+    review_link.short_description = "Review"  # Заголовок столбца
 
     def image_preview(self, obj):
         if obj.image:
@@ -45,9 +51,15 @@ class ReviewImageAdmin(admin.ModelAdmin):
     image_preview.short_description = "Превью"
 
 
-@admin.register(Rating)
+@admin.register(CarRating)
 class RatingAdmin(admin.ModelAdmin):
-    list_display = ("review", "criteria", "score")
+    list_display = ("review_link", "criteria", "score")  # Используем метод для отображения ссылки на отзыв
+
+    def review_link(self, obj):
+        # Возвращаем ссылку на отзыв
+        return format_html('<a href="{}">{}</a>', reverse("admin:reviews_carreview_change", args=[obj.review.id]), obj.review)
+    review_link.short_description = "Review"  # Заголовок столбца
+
     list_filter = ("criteria",)
     search_fields = (
         "review__user__username",

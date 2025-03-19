@@ -4,7 +4,6 @@ from django.db import models
 from Kavkaztome import settings
 from core.models import BaseContent
 from regions.models import Region
-from reviews.models import Review
 
 
 class Restaurant(BaseContent):
@@ -26,12 +25,7 @@ class Restaurant(BaseContent):
     def __str__(self):
         return self.name
 
-    def calculate_rating(self):
-        reviews = self.reviews.all()
-        total_rating = sum(review.rating for review in reviews)
-        return total_rating / reviews.count() if reviews.exists() else 0
-
-
+   
 class RestaurantImage(models.Model):
     restaurant = models.ForeignKey(
         Restaurant, related_name="images", on_delete=models.CASCADE

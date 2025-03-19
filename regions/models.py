@@ -2,7 +2,6 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from core.models import BaseContent
 from Kavkaztome import settings
-from reviews.models import Review
 
 
 class Region(BaseContent):

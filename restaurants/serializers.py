@@ -11,12 +11,8 @@ class RestaurantSerializer(serializers.ModelSerializer):
     """
 
     owner = serializers.ReadOnlyField(source="owner.username")
-    rating = serializers.SerializerMethodField()
+   
 
     class Meta:
         model = Restaurant
         fields = "__all__"
-
-    def get_rating(self, obj):
-        """Вычисляет и возвращает рейтинг ресторана на основе отзывов."""
-        return obj.calculate_rating()
