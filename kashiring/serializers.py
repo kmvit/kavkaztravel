@@ -1,163 +1,336 @@
 from rest_framework import serializers
-from .models import Brand, Model, Year, Color, BodyType, Auto, Foto, Company
-
-
-class BrandSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели Brand.
-    
-    Обеспечивает преобразование данных бренда автомобиля в формат JSON и обратно.
-    """
-
-    class Meta:
-        model = Brand
-        fields = "__all__"
+from .models import (
+    Car,
+    CarFeature,
+    CarImage,
+    RentalDiscount,
+    Rental,
+    RentalCondition,
+    Brand,
+    CarOption,
+    CarEquipment,
+    Model,
+)
 
 
 class ModelSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели Model.
-    
-    Обеспечивает преобразование данных модели автомобиля в формат JSON и обратно.
-    """
+    """Сериализатор для модели автомобиля."""
 
     class Meta:
         model = Model
-        fields = "__all__"
+        fields = (
+            "id",
+            "name",
+        )
 
 
-class YearSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели Year.
-    
-    Представляет год выпуска автомобиля.
-    """
+class CarImageSerializer(serializers.ModelSerializer):
+    """Сериализатор для изображений автомобиля."""
 
-    class Meta:
-        model = Year
-        fields = ("year",)
-
-
-class ColorSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели Color.
-    
-    Обеспечивает преобразование данных цвета автомобиля в формат JSON и обратно.
-    """
+    image = serializers.ImageField(use_url=True)
 
     class Meta:
-        model = Color
-        fields = "__all__"
+        model = CarImage
+        fields = ["id", "car", "image"]
 
 
-class BodyTypeSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели BodyType.
-    
-    Обеспечивает преобразование данных типа кузова автомобиля в формат JSON и обратно.
-    """
+class BrandSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели бренда автомобиля."""
 
     class Meta:
-        model = BodyType
-        fields = "__all__"
+        model = Brand
+        fields = (
+            "id",
+            "name",
+        )
 
 
-class AutoSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для создания и изменения объектов модели Auto.
-    
-    Обеспечивает преобразование данных автомобиля в формат JSON и обратно.
-    Поля, связанные с брендом, моделью, годом, цветом и типом кузова, доступны только для чтения.
-    """
+class CarFeatureSerializer(serializers.ModelSerializer):
+    """Сериализатор для характеристик автомобиля."""
 
-    brand = serializers.PrimaryKeyRelatedField(read_only=True)
-    model = serializers.PrimaryKeyRelatedField(read_only=True)
-    year = serializers.PrimaryKeyRelatedField(read_only=True)
-    color = serializers.PrimaryKeyRelatedField(read_only=True)
-    body_type = serializers.PrimaryKeyRelatedField(read_only=True)
+    description = serializers.CharField(
+        required=False,
+        allow_blank=True,
+    )
 
     class Meta:
-        model = Auto
-        fields = "__all__"
+        model = CarFeature
+        fields = ["id", "car", "name", "description"]
 
-    def to_representation(self, instance):
+
+class CarFeatureCreateUpdateSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания/обновления характеристик автомобиля."""
+
+    class Meta:
+        model = CarFeature
+        fields = ["name"]
+
+
+class CarOptionSerializer(serializers.ModelSerializer):
+    car = serializers.PrimaryKeyRelatedField(queryset=Car.objects.all(), required=True)
+
+    class Meta:
+        model = CarOption
+        fields = ["id", "car", "name", "price"]
+
+    def create(self, validated_data):
         """
-        Переопределяет метод to_representation для удаления полей с null значениями.
+        Метод для создания нового объекта CarOption.
+        Мы извлекаем ID автомобиля из переданных данных и связываем его с создаваемым объектом.
         """
-        representation = super().to_representation(instance)
-        # Удаляем ключи, значения которых равны None
-        return {
-            key: value for key, value in representation.items() if value is not None
-        }
+        car = validated_data.get("car")
+        name = validated_data.get("name")
+        price = validated_data.get("price")
+
+        car_option = CarOption.objects.create(car=car, name=name, price=price)
+        return car_option
+
+    def update(self, instance, validated_data):
+        """
+        Метод для обновления существующего объекта CarOption.
+        """
+        instance.car = validated_data.get("car", instance.car)
+        instance.name = validated_data.get("name", instance.name)
+        instance.price = validated_data.get("price", instance.price)
+        instance.save()
+        return instance
 
 
-class AutoGETSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для получения данных об автомобиле.
-    
-    Включает преобразование полей, связанных с брендом и моделью, в строковые представления.
-    """
-    brand = serializers.StringRelatedField(read_only=True)
-    model = serializers.StringRelatedField(read_only=True)
-    year = YearSerializer()
-    color = serializers.StringRelatedField(read_only=True)
-    body_type = serializers.StringRelatedField(read_only=True)
+class CarEquipmentSerializer(serializers.ModelSerializer):
+    car = serializers.PrimaryKeyRelatedField(queryset=Car.objects.all(), required=True)
 
     class Meta:
-        model = Auto
-        fields = ("id", "brand", "model", "year", "color", "body_type")
+        model = CarEquipment
+        fields = ["id", "car", "name"]
 
-    def to_representation(self, instance):
+    def create(self, validated_data):
         """
-        Переопределяет метод to_representation для удаления полей с null значениями.
+        Метод для создания нового объекта CarEquipment.
+        Мы извлекаем ID автомобиля из переданных данных и связываем его с создаваемым объектом.
         """
-        representation = super().to_representation(instance)
-        # Удаляем ключи, значения которых равны None
-        return {
-            key: value for key, value in representation.items() if value is not None
-        }
+        car = validated_data.get("car")
+        name = validated_data.get("name")
+
+        car_equipment = CarEquipment.objects.create(car=car, name=name)
+        return car_equipment
+
+    def update(self, instance, validated_data):
+        """
+        Метод для обновления существующего объекта CarEquipment.
+        """
+        instance.car = validated_data.get("car", instance.car)
+        instance.name = validated_data.get("name", instance.name)
+        instance.save()
+        return instance
 
 
-class AutoMiniSerializer(serializers.ModelSerializer):
-    """
-    Мини-сериализатор для модели Auto.
-    
-    Представляет минимальный набор данных об автомобиле, включая бренд и модель.
-    """
-    brand = serializers.StringRelatedField(read_only=True)
-    model = serializers.StringRelatedField(read_only=True)
+class RentalDiscountSerializer(serializers.ModelSerializer):
+    """Сериализатор для отображения тарифного плана (скидок)."""
 
     class Meta:
-        model = Auto
+        model = RentalDiscount
+        fields = ["id", "name", "discount_week", "discount_month"]
+
+
+class RentalConditionSerializer(serializers.ModelSerializer):
+    """Сериализатор для условий аренды автомобиля."""
+
+    class Meta:
+        model = RentalCondition
+        fields = [
+            "id",
+            "car",
+            "insurance_deposit",
+            "required_documents",
+            "min_driver_age",
+            "min_driving_experience",
+        ]
+
+
+class RentalSerializer(serializers.ModelSerializer):
+    total_price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Rental
+        fields = [
+            "id",
+            "user",
+            "car",
+            "pickup_datetime",
+            "return_datetime",
+            "return_location",
+            "total_price",
+        ]
+
+    def get_total_price(self, obj):
+        return obj.calculate_total_price()
+
+
+class CarSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для просмотра автомобилей без расчета аренды.
+    Реализуеться метод retrive
+
+    """
+
+    owner = serializers.StringRelatedField(read_only=True)
+    features = CarFeatureSerializer(many=True, read_only=True)
+    images = CarImageSerializer(many=True, read_only=True)
+    discount_policy = RentalDiscountSerializer(read_only=True)
+    brand = BrandSerializer(read_only=True)
+    options = CarOptionSerializer(many=True, read_only=True)
+    equipments = CarEquipmentSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Car
+        fields = (
+            "id",
+            "owner",
+            "brand",
+            "body_type",
+            "price_per_day",
+            "features",
+            "images",
+            "discount_policy",
+            "description",
+            "options",
+            "equipments",
+        )
+
+
+class CarListSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для списка автомобилей.
+    Оптимизирован для метода list — загружает только основные данные и первое изображение.
+    """
+
+    brand = serializers.CharField(source="brand.name", read_only=True)
+    first_image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Car
         fields = (
             "id",
             "brand",
-            "model",
+            "year_of_production",
+            "engine_power",
+            "drive_type",
+            "engine_type",
+            "price_per_day",
+            "first_image",
         )
 
+    def get_first_image(self, obj):
+        """
+        Возвращает первое изображение автомобиля, если оно есть.
+        """
+        if hasattr(obj, "first_image") and obj.first_image:
+            return obj.first_image[0].image.url  # Берем URL первой картинки
+        return None
 
-class CompanyAutoSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для получения информации о компании и связанных с ней автомобилях.
-    """
 
-    auto = AutoMiniSerializer(many=True)
+class CarCreateUpdateSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания и обновления автомобиля с указанием тарифного плана (по названию)."""
+
+    features = CarFeatureCreateUpdateSerializer(many=True)
+    discount_policy = serializers.CharField(write_only=True, required=False)
+    brand_name = serializers.CharField(write_only=True)
+    model_name = serializers.CharField(write_only=True)
+    description = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
-        model = Company
+        model = Car
         fields = (
-            "name",
-            "auto",
+            "id",
+            "owner",
+            "brand_name",
+            "model_name",
+            "description",
+            "body_type",
+            "price_per_day",
+            "year_of_production",
+            "engine_power",
+            "drive_type",
+            "engine_type",
+            "features",
+            "discount_policy",
         )
 
+    def create(self, validated_data):
+        """Создаем автомобиль с характеристиками и тарифным планом по названию."""
 
-class CompanySerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели Company.
-    
-    Представляет информацию о компании, включая ее название.
-    """
+        features_data = validated_data.pop("features", [])
+        discount_policy_name = validated_data.pop("discount_policy", None)
+        brand_name = validated_data.pop("brand_name")
+        model_name = validated_data.pop("model_name")
+        description = validated_data.pop("description", None)
 
-    class Meta:
-        model = Company
-        fields = ("name",)
+        # Получаем тарифный план по названию (если передан)
+        discount_policy = None
+        if discount_policy_name:
+            discount_policy = RentalDiscount.objects.filter(
+                name=discount_policy_name
+            ).first()
+
+        # Получаем бренд по названию
+        brand, _ = Brand.objects.get_or_create(name=brand_name)
+        # Создаем модель, если она не существует
+        model, created = Model.objects.get_or_create(name=model_name)
+
+        # Создаем автомобиль
+        car = Car.objects.create(
+            **validated_data,
+            discount_policy=discount_policy,
+            brand=brand,
+            model=model,
+            description=description,  # Передаем описание при создании
+        )
+
+        # Создаем характеристики
+        for feature_data in features_data:
+            CarFeature.objects.create(car=car, **feature_data)
+
+        return car
+
+    def update(self, instance, validated_data):
+        """Обновляем автомобиль и его тарифный план (по названию)."""
+
+        features_data = validated_data.pop("features", [])
+        discount_policy_name = validated_data.pop("discount_policy", None)
+        brand_name = validated_data.pop("brand_name", None)
+        model_name = validated_data.pop("model_name", None)
+        description = validated_data.pop("description", None)
+
+        instance.body_type = validated_data.get("body_type", instance.body_type)
+        instance.price_per_day = validated_data.get(
+            "price_per_day", instance.price_per_day
+        )
+
+        if discount_policy_name:
+            instance.discount_policy = RentalDiscount.objects.filter(
+                name=discount_policy_name
+            ).first()
+
+        if brand_name:
+            brand = Brand.objects.filter(name=brand_name).first()
+            if not brand:
+                raise serializers.ValidationError(
+                    f"Brand with name '{brand_name}' does not exist."
+                )
+            instance.brand = brand
+
+        if model_name:
+            model, created = Model.objects.get_or_create(
+                name=model_name
+            )  # Создаем или получаем модель
+            instance.model = model
+
+        if description is not None:
+            instance.description = description
+
+        instance.save()
+
+        for feature_data in features_data:
+            CarFeature.objects.update_or_create(car=instance, **feature_data)
+
+        return instance

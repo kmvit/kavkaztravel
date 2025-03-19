@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "django_filters",
+    'celery',
     "djoser",
     "core",
     "users",
@@ -57,7 +58,7 @@ INSTALLED_APPS = [
     "social_django",
     "rest_framework_social_oauth2",
     "blog",
-    "kashiring",
+    'kashiring',
     "sms",
     "phonenumber_field",
     'django_celery_results',
@@ -177,15 +178,15 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
     
-    # Раздача статики для Swagger локально
+
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
-    
-    # ✅ Исправление отображения файлов
+ 
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_COERCE_PATH_PK_SUFFIX": True,
 }
+
 
 SOCIAL_AUTH_VK_OAUTH2_KEY = os.environ.get("SOCIAL_AUTH_VK_OAUTH2_KEY")  #'51471973'
 SOCIAL_AUTH_VK_OAUTH2_SECRET = os.environ.get(
