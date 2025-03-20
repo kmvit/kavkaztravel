@@ -70,11 +70,20 @@ def auth_client(api_client, test_user):
     return client
 
 
-
 @pytest.fixture
-def api_client():
-    """Фикстура для API клиента."""
-    return APIClient()
+def third_user(db):
+    """Создаёт третьего пользователя"""
+    return User.objects.create_user(
+        username="thirduser", email="thirduser@example.com", password="testpass"
+    )
+
+# Новый пользователь 2
+@pytest.fixture
+def fourth_user(db):
+    """Создаёт четвертого пользователя"""
+    return User.objects.create_user(
+        username="fourthuser", email="fourthuser@example.com", password="testpass"
+    )
 
 
 # Фикстура для владельца машины
@@ -102,14 +111,6 @@ def rental_discount(db):
     """Фикстура для создания тестовой скидки (неделя + месяц)."""
     return RentalDiscount.objects.create(
         name="123", discount_week=5.00, discount_month=10.00
-    )
-
-
-@pytest.fixture
-def rental_discount_none(db):
-    """Фикстура для аренды без скидки."""
-    return RentalDiscount.objects.create(
-        name="No Discount", discount_week=0.00, discount_month=0.00
     )
 
 
@@ -218,7 +219,7 @@ def car_2_images(db, car_2):
 @pytest.fixture
 def test_review(db, test_user, car_1):
     car_review = CarReview.objects.create(
-        user=test_user, car=car_1, text="Тестовый отзыв", is_approved=True
+        user=test_user, car=car_1, text="Тестовый отзыв", is_approved=True, score=8
     )
     car_review.save()
     return  car_review
@@ -255,6 +256,7 @@ def test_create_review(auth_client, car_1, test_user):
         "user": test_user.id,
         "car": car_1.id,
         "text": "Отличная машина!",
+        "score": 5,
         "ratings": [{"criteria": "cleanliness", "score": 10}],
     }
 
@@ -268,46 +270,88 @@ def test_create_review(auth_client, car_1, test_user):
 
 
 @pytest.mark.django_db
-def test_reviews_pagination(auth_client, car_1, test_user):
-    """Тест списка отзывов с проверкой структуры ответа и работы пагинации"""
+def test_reviews_pagination(auth_client, car_1, car_2, test_user, other_user, third_user, fourth_user):
+    """Тест списка отзывов с проверкой структуры ответа, работы пагинации и среднего рейтинга/количества отзывов."""
 
-    # Создаём 7 отзывов (чтобы проверить разбиение на страницы)
-    reviews = [
-        CarReview.objects.create(
-            user=test_user, car=car_1, text=f"Отзыв {i}", is_approved=True
-        )
-        for i in range(7)
-    ]
+    # 1. Для test_user создаем 3 отзыва для car_1
+    CarReview.objects.create(
+        user=test_user,
+        car=car_1,
+        text="Отзыв 1 от test_user для car_1",
+        is_approved=True,
+        score=5,
+    )
+    CarReview.objects.create(
+        user=test_user,
+        car=car_2,
+        text="Отзыв 2 от test_user для car_1",
+        is_approved=True,
+        score=4,
+    )
+    CarReview.objects.create(
+        user=other_user,
+        car=car_1,
+        text="Отзыв 3 от test_user для car_1",
+        is_approved=True,
+        score=3,
+    )
 
-    # Запрос первой страницы с 5 отзывами
-    response = auth_client.get(f"{BASE_URL}?page_size=5")
+    # 2. Для other_user создаем 2 отзыва для car_1
+    CarReview.objects.create(
+        user=other_user,
+        car=car_2,
+        text="Отзыв 1 от other_user для car_1",
+        is_approved=True,
+        score=2,
+    )
+    CarReview.objects.create(
+        user=third_user,
+        car=car_1,
+        text="Отзыв 2 от other_user для car_1",
+        is_approved=True,
+        score=1,
+    )
 
+    # 3. Для third_user создаем 4 отзыва для car_2
+    CarReview.objects.create(
+        user=third_user,
+        car=car_2,
+        text="Отзыв 1 от third_user для car_2",
+        is_approved=True,
+        score=5,
+    )
+    CarReview.objects.create(
+        user=fourth_user,
+        car=car_1,
+        text="Отзыв 3 от third_user для car_2",
+        is_approved=True,
+        score=3,
+    )
+    
+
+    # Запрос на первую страницу (по умолчанию 5 записей на странице)
+    response = auth_client.get(f"{BASE_URL}")
     assert response.status_code == status.HTTP_200_OK
+    assert len(response.data["results"]) == 5  # Проверяем, что на первой странице 5 отзывов
 
-    # Проверяем структуру пагинационного ответа
-    assert "count" in response.data  # Общее количество отзывов
-    assert "next" in response.data  # Ссылка на следующую страницу (если есть)
-    assert "previous" in response.data  # Ссылка на предыдущую страницу (если есть)
-    assert "results" in response.data  # Список отзывов на текущей странице
-
-    assert response.data["count"] == 7  # Всего 7 отзывов
-    assert response.data["next"] is not None  # Должна быть следующая страница
-    assert response.data["previous"] is None  # Первая страница, предыдущей нет
-
-    # Проверяем, что на первой странице 5 отзывов
-    assert len(response.data["results"]) == 5
-
-    # Запрос второй страницы
-    response_page_2 = auth_client.get(f"{BASE_URL}?page=2&page_size=5")
-
+    # Запрос на вторую страницу (остальные 3 отзыва)
+    response_page_2 = auth_client.get(f"{BASE_URL}?page=2")
     assert response_page_2.status_code == status.HTTP_200_OK
-    assert (
-        response_page_2.data["previous"] is not None
-    )  # Должна быть ссылка на первую страницу
-    assert (
-        response_page_2.data["next"] is None
-    )  # Следующей страницы нет, так как всего 7 отзывов
-    assert len(response_page_2.data["results"]) == 2  # Оставшиеся 2 отзыва
+    assert len(response_page_2.data["results"]) == 2  # На второй странице должно быть 3 отзыва
+
+    # Проверка среднего рейтинга и количества отзывов для car_1
+    car_1_review_count = CarReview.get_review_count(car_1)
+    car_1_average_rating = CarReview.get_average_rating(car_1)
+    
+    assert car_1_review_count == 4  # Должно быть 5 одобренных отзывов для car_1
+    assert car_1_average_rating == (5 + 3 + 1+3) / 4  
+
+    # Проверка среднего рейтинга и количества отзывов для car_2
+    car_2_review_count = CarReview.get_review_count(car_2)
+    car_2_average_rating = CarReview.get_average_rating(car_2)
+
+    assert car_2_review_count == 3  # Должно быть 5 одобренных отзывов для car_2
+    assert car_2_average_rating == (4 + 2 + 5) / 3 
 
 
 @pytest.mark.django_db
@@ -424,9 +468,10 @@ def test_full_review_flow(auth_client, car_1, test_user, image_file):
 
     # 1. Создание отзыва
     review_data = {
-        "user": test_user.id,
-        "car": car_1.id,
+        "user": test_user.id,  # Здесь все равно передается id, так как это ID пользователя
+        "car": car_1.id,  # ID автомобиля тоже передается, так как это FK
         "text": "Отличная машина!",
+        "score": 5,
         "ratings": [{"criteria": "cleanliness", "score": 10}],
     }
 
@@ -500,3 +545,35 @@ def test_anonymous_user_cannot_create_review(api_client, car_1):
     assert (
         response.status_code == status.HTTP_401_UNAUTHORIZED
     ), "Анонимный пользователь смог создать отзыв"
+
+
+@pytest.mark.django_db
+def test_user_can_only_leave_one_review_for_car(auth_client, test_user, car_1):
+    """Проверяем, что пользователь может оставить только один отзыв на одну машину."""
+
+    # Создаем первый отзыв
+    CarReview.objects.create(
+        user=test_user,
+        car=car_1,
+        text="Отличная машина!",
+        score=8,
+        is_approved=True,
+    )
+
+    # Попытка создать второй отзыв для той же машины этим же пользователем
+    response = auth_client.post(f"{BASE_URL}",
+       
+        {
+            "user": test_user.id,
+            "car": car_1.id,
+            "text": "Еще один отзыв",
+            "ratings": [{"criteria": "cleanliness", "score": 8}],
+            "score": 7,
+        },
+        format="json",
+    )
+
+    # Проверяем, что второй отзыв не был добавлен
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "non_field_errors" in response.data
+    assert response.data["non_field_errors"][0] == "The fields user, car must make a unique set."

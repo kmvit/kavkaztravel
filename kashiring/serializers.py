@@ -11,7 +11,7 @@ from .models import (
     CarEquipment,
     Model,
 )
-
+from reviews.models import Car, CarReview 
 
 class ModelSerializer(serializers.ModelSerializer):
     """Сериализатор для модели автомобиля."""
@@ -180,6 +180,8 @@ class CarSerializer(serializers.ModelSerializer):
     brand = BrandSerializer(read_only=True)
     options = CarOptionSerializer(many=True, read_only=True)
     equipments = CarEquipmentSerializer(many=True, read_only=True)
+    average_rating = serializers.SerializerMethodField()  
+    review_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Car
@@ -195,7 +197,23 @@ class CarSerializer(serializers.ModelSerializer):
             "description",
             "options",
             "equipments",
+            "average_rating",
+            "review_count",  
         )
+
+    def get_average_rating(self, obj):
+        """
+        Возвращает средний рейтинг автомобиля.
+        Использует метод get_average_rating из модели CarReview.
+        """
+        return CarReview.get_average_rating(obj)
+
+    def get_review_count(self, obj):
+        """
+        Возвращает количество отзывов для автомобиля.
+        Использует метод get_review_count из модели CarReview.
+        """
+        return CarReview.get_review_count(obj)
 
 
 class CarListSerializer(serializers.ModelSerializer):
@@ -206,6 +224,8 @@ class CarListSerializer(serializers.ModelSerializer):
 
     brand = serializers.CharField(source="brand.name", read_only=True)
     first_image = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()  
+    review_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Car
@@ -218,6 +238,8 @@ class CarListSerializer(serializers.ModelSerializer):
             "engine_type",
             "price_per_day",
             "first_image",
+            "average_rating",
+            "review_count",  
         )
 
     def get_first_image(self, obj):
@@ -228,6 +250,19 @@ class CarListSerializer(serializers.ModelSerializer):
             return obj.first_image[0].image.url  # Берем URL первой картинки
         return None
 
+    def get_average_rating(self, obj):
+        """
+        Возвращает средний рейтинг автомобиля.
+        Использует метод get_average_rating из модели CarReview.
+        """
+        return CarReview.get_average_rating(obj)
+
+    def get_review_count(self, obj):
+        """
+        Возвращает количество отзывов для автомобиля.
+        Использует метод get_review_count из модели CarReview.
+        """
+        return CarReview.get_review_count(obj)
 
 class CarCreateUpdateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания и обновления автомобиля с указанием тарифного плана (по названию)."""

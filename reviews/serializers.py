@@ -12,12 +12,12 @@ class CarRatingSerializer(serializers.ModelSerializer):
 
 class CarReviewImageSerializer(serializers.ModelSerializer):
     """Сериализатор для оценок картинок автомобиля."""
-    car_review = serializers.IntegerField(write_only=True)  # Передаем ID, а не объект
-    image = serializers.ImageField()  # Обозначаем поле для файла
+    car_review = serializers.IntegerField(write_only=True)
+    image = serializers.ImageField()
 
     class Meta:
         model = CarReviewImage
-        fields = ["id", "car_review", "image"]  # Убираем "review", оставляем только ID
+        fields = ["id", "car_review", "image"]
 
     def validate_review_id(self, value):
         """Проверяем, существует ли отзыв с таким ID"""
@@ -38,6 +38,8 @@ class CarReviewDetailSerializer(serializers.ModelSerializer):
     images = CarReviewImageSerializer(
         many=True, read_only=True, source="car_images"
     )  # Картинки (только чтение)
+    average_rating = serializers.SerializerMethodField()  # Поле для среднего рейтинга
+    review_count = serializers.SerializerMethodField()   # Поле для количества отзывов
 
     class Meta:
         model = CarReview
@@ -50,7 +52,26 @@ class CarReviewDetailSerializer(serializers.ModelSerializer):
             "is_approved",
             "ratings",
             "images",
+            "score",
+            'average_rating',
+            'review_count',
         )
+    
+    def get_average_rating(self, obj):
+        """
+        Возвращает средний рейтинг автомобиля.
+        Использует метод get_average_rating из модели CarReview.
+        Вместо объекта CarReview передаем объект Car.
+        """
+        return CarReview.get_average_rating(obj.car)  # Передаем объект car, а не obj (CarReview)
+
+    def get_review_count(self, obj):
+        """
+        Возвращает количество отзывов для автомобиля.
+        Использует метод get_review_count из модели CarReview.
+        """
+        return CarReview.get_review_count(obj.car)  # Передаем объект car, а не obj (CarReview)
+
 
 
 class CarReviewCreateUpdateSerializer(serializers.ModelSerializer):
@@ -60,7 +81,7 @@ class CarReviewCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CarReview
-        fields = ("id", "user", "car", "text", "ratings")
+        fields = ("id", "user", "car", "text", "ratings", "score",)
 
     def create(self, validated_data):
         """Создание отзыва вместе с оценками автомобиля."""

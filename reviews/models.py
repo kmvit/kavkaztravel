@@ -21,14 +21,34 @@ class CarReview(models.Model):
     text = models.TextField(verbose_name="Текст отзыва", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     is_approved = models.BooleanField(default=False, verbose_name="Одобрено")
+    score = models.PositiveIntegerField(
+        verbose_name="Оценка (1-10)",
+        validators=[MinValueValidator(1), MaxValueValidator(10)],)
+
 
     class Meta:
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
+        unique_together = ('user', 'car')  # Уникальность по пользователю и автомобилю
 
     def __str__(self):
         return f"Отзыв от {self.user} о {self.car}"
 
+    @staticmethod
+    def get_average_rating(car):
+        """
+        Метод для получения среднего рейтинга машины.
+        """
+        reviews = CarReview.objects.filter(car=car, is_approved=True)
+        total_rating = sum(review.score for review in reviews)
+        return total_rating / reviews.count() if reviews.exists() else 0
+
+    @staticmethod
+    def get_review_count(car):
+        """
+        Метод для получения количества отзывов для машины.
+        """
+        return CarReview.objects.filter(car=car, is_approved=True).count()
 
 class CarReviewImage(models.Model):
     car_review = models.ForeignKey(
