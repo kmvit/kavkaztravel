@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
-from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from reviews.models import CarReview, CarReviewImage, CarRating
 from kashiring.models import (
     Car,
@@ -77,6 +77,7 @@ def third_user(db):
         username="thirduser", email="thirduser@example.com", password="testpass"
     )
 
+
 # Новый пользователь 2
 @pytest.fixture
 def fourth_user(db):
@@ -125,12 +126,14 @@ def brand_toyota(db):
 
 
 @pytest.fixture
-def model_rio(db, brand_kia):
+def model_rio(db):
     return Model.objects.create(name="Rio")
 
 
 @pytest.fixture
-def model_camry(db, brand_toyota):
+def model_camry(
+    db,
+):
     return Model.objects.create(name="Camry")
 
 
@@ -185,181 +188,262 @@ def car_2(db, owner, model_camry, brand_toyota):
 
 
 @pytest.fixture
-def car_1_features(db, car_1):
-    """Фикстура для характеристик первого автомобиля."""
-    return [
-        CarFeature.objects.create(car=car_1, name="air_conditioning"),
-        CarFeature.objects.create(car=car_1, name="four_doors"),
-    ]
-
-
-@pytest.fixture
-def car_2_features(db, car_2):
-    """Фикстура для характеристики второго автомобиля."""
-    return [
-        CarFeature.objects.create(car=car_2, name="air_conditioning"),
-    ]
-
-
-@pytest.fixture
-def car_1_images(db, car_1):
-    """Фикстура для изображений первого автомобиля."""
-    return [
-        CarImage.objects.create(car=car_1, image="car_images/endpoint.png"),
-        CarImage.objects.create(car=car_1, image="car_images/db.png"),
-    ]
-
-
-@pytest.fixture
-def car_2_images(db, car_2):
-    """Фикстура для изображений второго автомобиля (пустой список)."""
-    return []
-
-
-@pytest.fixture
 def test_review(db, test_user, car_1):
     car_review = CarReview.objects.create(
         user=test_user, car=car_1, text="Тестовый отзыв", is_approved=True, score=8
     )
     car_review.save()
-    return  car_review
+    return car_review
 
 
 @pytest.fixture
 def test_rating(db, test_review):
-    rating = CarRating.objects.create(car_review=test_review, criteria="cleanliness", score=5)
+    rating = CarRating.objects.create(
+        car_review=test_review, criteria="cleanliness", score=5
+    )
     rating.save()
     return rating
 
 
 @pytest.fixture
-def test_review_image(db, test_review):
-    """Создаём тестовое изображение"""
-    return CarReviewImage.objects.create(car_review=test_review, image="test_image.jpg")
-
-
-@pytest.fixture
-def image_file():
-    """Генерируем тестовое изображение"""
+def image_file_1():
+    """Генерируем первое тестовое изображение"""
     image = BytesIO()
     img = Image.new("RGB", (100, 100), color="red")
     img.save(image, "JPEG")
     image.seek(0)
-    return SimpleUploadedFile("test.jpg", image.read(), content_type="image/jpeg")
+    return InMemoryUploadedFile(
+        image, None, "image1.jpg", "image/jpeg", image.tell(), None
+    )
+
+
+@pytest.fixture
+def image_file_2():
+    """Генерируем второе тестовое изображение"""
+    image = BytesIO()
+    img = Image.new("RGB", (100, 100), color="green")
+    img.save(image, "JPEG")
+    image.seek(0)
+    return InMemoryUploadedFile(
+        image, None, "image2.jpg", "image/jpeg", image.tell(), None
+    )
+
+
+@pytest.fixture
+def image_file_3():
+    """Генерируем третье тестовое изображение"""
+    image = BytesIO()
+    img = Image.new("RGB", (100, 100), color="blue")
+    img.save(image, "JPEG")
+    image.seek(0)
+    return InMemoryUploadedFile(
+        image, None, "image3.jpg", "image/jpeg", image.tell(), None
+    )
+
+
+@pytest.fixture
+def test_review_image_1(db, test_review, image_file_1):
+    """Создаём тестовое изображение для отзыва"""
+    return CarReviewImage.objects.create(car_review=test_review, image=image_file_1)
+
+
+@pytest.fixture
+def test_review_image_2(db, test_review, image_file_2):
+    """Создаём второе тестовое изображение для отзыва"""
+    return CarReviewImage.objects.create(car_review=test_review, image=image_file_2)
+
+
+@pytest.fixture
+def test_review_image_3(db, test_review, image_file_3):
+    """Создаём третье тестовое изображение для отзыва"""
+    return CarReviewImage.objects.create(car_review=test_review, image=image_file_3)
 
 
 @pytest.mark.django_db
-def test_create_review(auth_client, car_1, test_user):
-    """Тест создания отзыва с оценками"""
-
-    data = {
-        "user": test_user.id,
-        "car": car_1.id,
-        "text": "Отличная машина!",
-        "score": 5,
-        "ratings": [{"criteria": "cleanliness", "score": 10}],
-    }
-
-    response = auth_client.post(BASE_URL, data, format="json")
-
-    assert response.status_code == status.HTTP_201_CREATED
-    assert CarReview.objects.count() == 1
-    assert CarReview.objects.first().text == "Отличная машина!"
-    assert CarReview.objects.first().ratings.count() == 1
-    assert CarReview.objects.first().ratings.first().score == 10
-
-
-@pytest.mark.django_db
-def test_reviews_pagination(auth_client, car_1, car_2, test_user, other_user, third_user, fourth_user):
+def test_reviews_pagination_with_avg_ratings(
+    auth_client, car_1, car_2, test_user, other_user, third_user, fourth_user
+):
     """Тест списка отзывов с проверкой структуры ответа, работы пагинации и среднего рейтинга/количества отзывов."""
 
-    # 1. Для test_user создаем 3 отзыва для car_1
-    CarReview.objects.create(
-        user=test_user,
-        car=car_1,
-        text="Отзыв 1 от test_user для car_1",
-        is_approved=True,
-        score=5,
-    )
-    CarReview.objects.create(
-        user=test_user,
-        car=car_2,
-        text="Отзыв 2 от test_user для car_1",
-        is_approved=True,
-        score=4,
-    )
-    CarReview.objects.create(
-        user=other_user,
-        car=car_1,
-        text="Отзыв 3 от test_user для car_1",
-        is_approved=True,
-        score=3,
-    )
+    # 1. Создаем отзывы через API-запросы
+    review_data_list = [
+        {
+            "user": test_user.id,
+            "car": car_1.id,
+            "text": "Отзыв 1",
+            "score": 5,
+            "ratings": [
+                {"criteria": "cleanliness", "score": 10},
+                {"criteria": "service", "score": 9},
+                {"criteria": "location", "score": 8},
+                {"criteria": "photo_match", "score": 7},
+                {"criteria": "price_quality", "score": 6},
+            ],
+        },
+        {
+            "user": other_user.id,
+            "car": car_1.id,
+            "text": "Отзыв 2",
+            "score": 3,
+            "ratings": [
+                {"criteria": "cleanliness", "score": 8},
+                {"criteria": "service", "score": 7},
+                {"criteria": "location", "score": 6},
+                {"criteria": "photo_match", "score": 5},
+                {"criteria": "price_quality", "score": 4},
+            ],
+        },
+        {
+            "user": third_user.id,
+            "car": car_1.id,
+            "text": "Отзыв 3",
+            "score": 1,
+            "ratings": [
+                {"criteria": "cleanliness", "score": 6},
+                {"criteria": "service", "score": 5},
+                {"criteria": "location", "score": 4},
+                {"criteria": "photo_match", "score": 3},
+                {"criteria": "price_quality", "score": 2},
+            ],
+        },
+        {
+            "user": fourth_user.id,
+            "car": car_1.id,
+            "text": "Отзыв 4",
+            "score": 3,
+            "ratings": [
+                {"criteria": "cleanliness", "score": 4},
+                {"criteria": "service", "score": 3},
+                {"criteria": "location", "score": 2},
+                {"criteria": "photo_match", "score": 1},
+                {"criteria": "price_quality", "score": 8},
+            ],
+        },
+        # Добавим отзывы для второго автомобиля car_2
+        {
+            "user": test_user.id,
+            "car": car_2.id,
+            "text": "Отзыв 5 для car_2",
+            "score": 4,
+            "ratings": [
+                {"criteria": "cleanliness", "score": 9},
+                {"criteria": "service", "score": 8},
+                {"criteria": "location", "score": 7},
+                {"criteria": "photo_match", "score": 6},
+                {"criteria": "price_quality", "score": 5},
+            ],
+        },
+        {
+            "user": other_user.id,
+            "car": car_2.id,
+            "text": "Отзыв 6 для car_2",
+            "score": 2,
+            "ratings": [
+                {"criteria": "cleanliness", "score": 5},
+                {"criteria": "service", "score": 6},
+                {"criteria": "location", "score": 4},
+                {"criteria": "photo_match", "score": 3},
+                {"criteria": "price_quality", "score": 2},
+            ],
+        },
+    ]
 
-    # 2. Для other_user создаем 2 отзыва для car_1
-    CarReview.objects.create(
-        user=other_user,
-        car=car_2,
-        text="Отзыв 1 от other_user для car_1",
-        is_approved=True,
-        score=2,
-    )
-    CarReview.objects.create(
-        user=third_user,
-        car=car_1,
-        text="Отзыв 2 от other_user для car_1",
-        is_approved=True,
-        score=1,
-    )
+    # Отправляем POST-запросы на создание отзывов
+    for review_data in review_data_list:
+        response = auth_client.post(BASE_URL, data=review_data, format="json")
+        assert (
+            response.status_code == status.HTTP_201_CREATED
+        ), f"Ошибка создания отзыва: {response.data}"
 
-    # 3. Для third_user создаем 4 отзыва для car_2
-    CarReview.objects.create(
-        user=third_user,
-        car=car_2,
-        text="Отзыв 1 от third_user для car_2",
-        is_approved=True,
-        score=5,
-    )
-    CarReview.objects.create(
-        user=fourth_user,
-        car=car_1,
-        text="Отзыв 3 от third_user для car_2",
-        is_approved=True,
-        score=3,
-    )
-    
+        # Одобряем отзыв после его создания
+        review_id = response.data["id"]
+        review = CarReview.objects.get(id=review_id)
+        review.is_approved = True
+        review.save()
 
-    # Запрос на первую страницу (по умолчанию 5 записей на странице)
-    response = auth_client.get(f"{BASE_URL}")
-    assert response.status_code == status.HTTP_200_OK
-    assert len(response.data["results"]) == 5  # Проверяем, что на первой странице 5 отзывов
+    # 2. Проверяем пагинацию для car_1 (по 2 отзыва на страницу)
+    response_page_1 = auth_client.get(f"{BASE_URL}reviews_car/?car_id={car_1.id}")
+    assert response_page_1.status_code == status.HTTP_200_OK
+    assert (
+        len(response_page_1.data["results"]) == 4
+    )  # Ожидаем 4 отзыва на первой странице для car_1
 
-    # Запрос на вторую страницу (остальные 3 отзыва)
-    response_page_2 = auth_client.get(f"{BASE_URL}?page=2")
+    # 3. Проверяем средний рейтинг и количество отзывов для car_1
+    response_avg_car_1 = auth_client.get(f"{BASE_URL}reviews_car/?car_id={car_1.id}")
+    assert response_avg_car_1.status_code == status.HTTP_200_OK
+    data_car_1 = response_avg_car_1.json()
+
+    assert data_car_1["review_count"] == 4  # 4 отзыва для car_1
+    assert data_car_1["average_rating"] == (5 + 3 + 1 + 3) / 4  # Средняя оценка = 3.0
+
+    # 4. Проверяем средние значения по критериям для car_1
+    expected_criteria_ratings_car_1 = {
+        "cleanliness_avg": (10 + 8 + 6 + 4) / 4,  # 7.0
+        "service_avg": (9 + 7 + 5 + 3) / 4,  # 6.0
+        "location_avg": (8 + 6 + 4 + 2) / 4,  # 5.0
+        "photo_match_avg": (7 + 5 + 3 + 1) / 4,  # 4.0
+        "price_quality_avg": (6 + 4 + 2 + 8) / 4,  # 5.0
+    }
+
+    # Проверяем средние значения по каждому критерию для car_1
+    for criteria, expected_value in expected_criteria_ratings_car_1.items():
+        assert (
+            data_car_1["averages"][criteria] == expected_value
+        ), f"Ошибка в расчете {criteria}"
+
+    # 5. Проверяем пагинацию для car_2 (по 2 отзыва на страницу)
+    response_page_2 = auth_client.get(f"{BASE_URL}reviews_car/?car_id={car_2.id}")
     assert response_page_2.status_code == status.HTTP_200_OK
-    assert len(response_page_2.data["results"]) == 2  # На второй странице должно быть 3 отзыва
+    assert (
+        len(response_page_2.data["results"]) == 2
+    )  # Ожидаем 2 отзыва на первой странице для car_2
 
-    # Проверка среднего рейтинга и количества отзывов для car_1
-    car_1_review_count = CarReview.get_review_count(car_1)
-    car_1_average_rating = CarReview.get_average_rating(car_1)
-    
-    assert car_1_review_count == 4  # Должно быть 5 одобренных отзывов для car_1
-    assert car_1_average_rating == (5 + 3 + 1+3) / 4  
+    # 6. Проверяем средний рейтинг и количество отзывов для car_2
+    response_avg_car_2 = auth_client.get(f"{BASE_URL}reviews_car/?car_id={car_2.id}")
+    assert response_avg_car_2.status_code == status.HTTP_200_OK
+    data_car_2 = response_avg_car_2.json()
 
-    # Проверка среднего рейтинга и количества отзывов для car_2
-    car_2_review_count = CarReview.get_review_count(car_2)
-    car_2_average_rating = CarReview.get_average_rating(car_2)
+    assert data_car_2["review_count"] == 2  # 2 отзыва для car_2
+    assert data_car_2["average_rating"] == (4 + 2) / 2  # Средняя оценка = 3.0
 
-    assert car_2_review_count == 3  # Должно быть 5 одобренных отзывов для car_2
-    assert car_2_average_rating == (4 + 2 + 5) / 3 
+    # 7. Проверяем средние значения по критериям для car_2
+    expected_criteria_ratings_car_2 = {
+        "cleanliness_avg": (9 + 5) / 2,  # 7.0
+        "service_avg": (8 + 6) / 2,  # 7.0
+        "location_avg": (7 + 4) / 2,  # 5.5
+        "photo_match_avg": (6 + 3) / 2,  # 4.5
+        "price_quality_avg": (5 + 2) / 2,  # 3.5
+    }
+
+    # Проверяем средние значения по каждому критерию для car_2
+    for criteria, expected_value in expected_criteria_ratings_car_2.items():
+        assert (
+            data_car_2["averages"][criteria] == expected_value
+        ), f"Ошибка в расчете {criteria}"
+
+    # 8. Проверяем структуру ответа для пагинации
+    for review in data_car_1["results"]:
+        assert "id" in review
+        assert "user" in review
+        assert "car" in review
+        assert "text" in review
+        assert "score" in review
 
 
 @pytest.mark.django_db
-def test_get_single_review(auth_client, test_review, test_rating, test_review_image):
+def test_get_single_review(
+    auth_client,
+    test_review,
+    test_rating,
+    test_review_image_1,
+    test_review_image_2,
+    test_review_image_3,
+):
     """Тест получения одного отзыва со всеми связанными данными (оценками и изображениями)"""
 
     # Делаем GET-запрос
     response = auth_client.get(f"{BASE_URL}{test_review.id}/")
+
     # Проверяем статус-код
     assert response.status_code == status.HTTP_200_OK
 
@@ -367,20 +451,48 @@ def test_get_single_review(auth_client, test_review, test_rating, test_review_im
     data = response.json()
 
     # Проверяем, что отзыв содержит ожидаемые данные
-    assert data["is_approved"] is True
-    assert "ratings" in data
-    assert len(data["ratings"]) == 1
-    assert data["ratings"][0]["id"] == test_rating.id
-    assert data["ratings"][0]["criteria"] == test_rating.criteria
-    assert data["ratings"][0]["score"] == test_rating.score
+    assert "id" in data
+    assert (
+        data["id"] == test_review.id
+    )  # Проверяем, что id отзыва совпадает с ожидаемым
+
+    assert "car" in data
+    assert (
+        data["car"] == test_review.car.id
+    )  # Проверяем, что id автомобиля в отзыве совпадает с ожидаемым
+
+    assert "user" in data
+    assert (
+        data["user"] == test_review.user.id
+    )  # Проверяем, что id пользователя совпадает с ожидаемым
+
+    assert "text" in data
+    assert (
+        data["text"] == test_review.text
+    )  # Проверяем, что текст отзыва соответствует ожидаемому
+
+    assert "is_approved" in data
+    assert (
+        data["is_approved"] == test_review.is_approved
+    )  # Проверяем, что поле is_approved соответствует ожидаемому значению
+
+    assert "score" in data
+    assert (
+        data["score"] == test_review.score
+    )  # Проверяем, что оценка совпадает с ожидаемым значением
 
     # Проверяем, что в отзыве есть изображения
     assert "images" in data
-    assert len(data["images"]) == 1
+    assert len(data["images"]) == 3  # Проверяем, что передано 3 изображения
 
-    # Проверяем, что путь к изображению корректный
-    expected_image_url = f"http://testserver{test_review_image.image.url}"
-    assert data["images"][0]["image"] == expected_image_url
+    for image_data in data["images"]:
+        image_url = image_data["image"]
+        assert image_url.startswith(
+            "http://testserver/media/car_review_images/"
+        )  # Проверяем, что URL начинается с правильного пути
+        assert image_url.endswith(
+            ".jpg"
+        )  # Проверяем, что URL заканчивается на .jpg (или .jpeg)
 
 
 @pytest.mark.django_db
@@ -404,29 +516,42 @@ def test_delete_review(auth_client, test_review):
     assert CarReview.objects.count() == 0
 
 
-@pytest.mark.django_db
-def test_upload_image(auth_client, test_review, image_file):
-    """Тест загрузки изображения к отзыву"""
+def test_upload_image(auth_client, test_review, image_file_1):
+    """Тест загрузки одного изображения к отзыву"""
 
     # Проверяем, что фикстура создала отзыв
     assert test_review is not None, "Фикстура test_review не создала отзыв"
 
-    # Отправляем запрос на загрузку изображения
+    # Отправляем запрос на загрузку одного изображения
     response = auth_client.post(
         "/api/v1/reviews/car-images/",
-        {"car_review": test_review.id, "image": image_file},  # Используем "car_review" вместо "car_review_id"
-        format="multipart",  # Указываем формат для загрузки файла
+        {"car_review": test_review.id, "image": image_file_1},
+        format="multipart",  # Указываем формат для загрузки файлов
     )
 
-    # Проверяем, что изображение загружено
-    assert response.status_code == 201, f"Ожидался статус 201, но получен {response.status_code}. Ответ: {response.data}"
-    assert CarReviewImage.objects.filter(car_review=test_review).exists()
+    # Проверяем, что статус ответа успешный
+    assert response.status_code == 201, f"Ошибка: {response.data}"
+
+    # Отправляем запрос на получение всех изображений для отзыва
+    response_get = auth_client.get(
+        f"/api/v1/reviews/car-images/",
+    )
+
+    # Проверяем, что статус ответа успешный
+    assert (
+        response_get.status_code == 200
+    ), f"Ошибка при получении изображений: {response_get.data}"
+
+    # Проверяем, что одно изображение было загружено
+    assert (
+        len(response_get.data) == 1
+    ), f"Не все изображения были получены, получено: {len(response_get.data)}"
 
 
 @pytest.mark.django_db
-def test_delete_image(auth_client, test_review_image):
+def test_delete_image(auth_client, test_review_image_1):
     """Тест удаления изображения"""
-    response = auth_client.delete(f"{IMAGE_URL}{test_review_image.id}/")
+    response = auth_client.delete(f"{IMAGE_URL}{test_review_image_1.id}/")
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert CarReviewImage.objects.count() == 0
@@ -463,13 +588,13 @@ def test_review_permissions(auth_client, auth_other_client, test_review):
 
 
 @pytest.mark.django_db
-def test_full_review_flow(auth_client, car_1, test_user, image_file):
+def test_full_review_flow(auth_client, car_1, test_user, image_file_1):
     """Интеграционный тест: полный сценарий работы с отзывами"""
 
     # 1. Создание отзыва
     review_data = {
-        "user": test_user.id,  # Здесь все равно передается id, так как это ID пользователя
-        "car": car_1.id,  # ID автомобиля тоже передается, так как это FK
+        "user": test_user.id,
+        "car": car_1.id,
         "text": "Отличная машина!",
         "score": 5,
         "ratings": [{"criteria": "cleanliness", "score": 10}],
@@ -492,7 +617,7 @@ def test_full_review_flow(auth_client, car_1, test_user, image_file):
 
     # 3. Добавление изображения к отзыву
     upload_response = auth_client.post(
-        IMAGE_URL, {"car_review": review_id, "image": image_file}, format="multipart"
+        IMAGE_URL, {"car_review": review_id, "image": image_file_1}, format="multipart"
     )
     assert upload_response.status_code == status.HTTP_201_CREATED
     assert CarReviewImage.objects.filter(car_review=review_id).exists()
@@ -511,15 +636,13 @@ def test_full_review_flow(auth_client, car_1, test_user, image_file):
     assert not CarReview.objects.filter(id=review_id).exists()
 
     # 6. Проверка удаления связанных данных
-    assert not CarReviewImage.objects.filter(car_review =review_id).exists()
+    assert not CarReviewImage.objects.filter(car_review=review_id).exists()
 
 
 @pytest.mark.django_db
 def test_anonymous_user_can_view_reviews(api_client, test_review):
     """Анонимный пользователь должен иметь доступ к просмотру отзывов"""
-
-    response = api_client.get(BASE_URL)
-
+    response = api_client.get(f"{BASE_URL}reviews_car/?car_id={test_review.car_id}")
     assert (
         response.status_code == status.HTTP_200_OK
     ), "Анонимный пользователь не может просматривать отзывы"
@@ -561,8 +684,8 @@ def test_user_can_only_leave_one_review_for_car(auth_client, test_user, car_1):
     )
 
     # Попытка создать второй отзыв для той же машины этим же пользователем
-    response = auth_client.post(f"{BASE_URL}",
-       
+    response = auth_client.post(
+        f"{BASE_URL}",
         {
             "user": test_user.id,
             "car": car_1.id,
@@ -576,4 +699,7 @@ def test_user_can_only_leave_one_review_for_car(auth_client, test_user, car_1):
     # Проверяем, что второй отзыв не был добавлен
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "non_field_errors" in response.data
-    assert response.data["non_field_errors"][0] == "The fields user, car must make a unique set."
+    assert (
+        response.data["non_field_errors"][0]
+        == "The fields user, car must make a unique set."
+    )

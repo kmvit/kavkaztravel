@@ -18,11 +18,20 @@ car_review_create = extend_schema(
     },
 )
 
-car_review_list = extend_schema(
+car_review_car = extend_schema(
     methods=["GET"],
-    summary="📄 Список отзывов о машинах",
-    description="Возвращает список всех одобренных отзывов о машинах.",
+    summary="📄 Список отзывов о машине",
+    description="Возвращает список всех одобренных отзывов о машине.",
     responses={200: CarReviewDetailSerializer(many=True)},  # Использован префикс Car
+    parameters=[
+        OpenApiParameter(
+            name="car_id",
+            type=int,
+            location=OpenApiParameter.QUERY,  # Указываем, что это параметр в query
+            description="ID машины, для которой нужно получить отзывы",
+            required=True,  # Указываем, что параметр обязательный
+        )
+    ],
 )
 
 car_review_detail = extend_schema(
