@@ -5,7 +5,6 @@ from django.db import models
 from Kavkaztome import settings
 from core.models import BaseContent
 from regions.models import Region
-from reviews.models import Review
 
 class Tag(models.Model):
     """
@@ -107,7 +106,6 @@ class Hotel(BaseContent):
         default=1,
     )
     tags = models.ManyToManyField(Tag, related_name="hotels")
-    reviews = GenericRelation(Review, related_query_name="reviews")
 
     class Meta:
         verbose_name = "Гостиница"

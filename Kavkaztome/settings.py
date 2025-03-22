@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     "entertainments",
     "reviews",
     "drf_spectacular",
-    "drf_spectacular_sidecar",  # required for Django collectstatic discovery
+    "drf_spectacular_sidecar",  
     "oauth2_provider",
     "social_django",
     "rest_framework_social_oauth2",

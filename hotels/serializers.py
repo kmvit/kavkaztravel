@@ -10,7 +10,6 @@ from .models import (
     AccommodationType,
     MealPlan,
 )
-from reviews.serializers import ReviewSerializer
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -97,8 +96,6 @@ class HotelSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.username")
     rooms = RoomSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
-    reviews = ReviewSerializer(many=True, read_only=True)
-    rating = serializers.SerializerMethodField()
     images = HotelImageSerializers(many=True)
     meal_plan = MealPlanSerializer(many=True, read_only=True)
     accommodation_type = AccommodationTypeSerializer(many=True, read_only=True)
@@ -108,7 +105,3 @@ class HotelSerializer(serializers.ModelSerializer):
         model = Hotel
         fields = "__all__"
 
-    def get_rating(self, obj):
-        """Вычисляет и возвращает рейтинг 
-        отеля на основе его отзывов."""
-        return obj.calculate_rating()

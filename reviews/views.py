@@ -1,96 +1,188 @@
-from rest_framework.decorators import action
-from django.contrib.contenttypes.models import ContentType
-from rest_framework import viewsets
-from rest_framework import viewsets, status
+from django.db.models import Avg, Count
+from rest_framework import viewsets, mixins, permissions, status
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from .models import CarReview, CarReviewImage, CarRating, Car
+from .serializers import (
+    CarReviewDetailSerializer,
+    CarReviewCreateUpdateSerializer,
+    CarReviewImageSerializer,
+    CarReviewListSerializer,
+)
+from .pagination import ReviewPagination
+from .permissions import IsOwnerOrReadOnly
+from .swagger_schemas import (
+    car_review_create,
+    car_review_car,
+    car_review_detail,
+    car_review_update,
+    car_review_replace,
+    car_review_delete,
+    car_review_image_upload,
+    car_review_image_list,
+    car_review_image_detail,
+    car_review_image_update,
+    car_review_image_delete,
+)
 
-from Kavkaztome.permissions import IsOwnerOnly
-from .models import Review, ReviewPhoto
-from .serializers import ReviewSerializer
 
+class CarReviewViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+    """CRUD для отзывов автомобиля."""
 
-class ReviewViewSet(viewsets.ModelViewSet):
-    """Класс для модели, который содержит оценки и отзывы."""
+    queryset = CarReview.objects.select_related("user", "car").prefetch_related(
+        "ratings", "car_images"
+    )
+    pagination_class = ReviewPagination
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
-    queryset = Review.objects.prefetch_related('photos').all()
-    permission_classes = (IsOwnerOnly,)
-    parser_classes = (MultiPartParser, FormParser)  # Для обработки изображений
-    serializer_class = ReviewSerializer
+    def get_queryset(self):
+        """Фильтрация: админ видит всё, пользователи – только одобренные отзывы автомобиля."""
+        if self.request.user.is_staff:
+            return self.queryset
+        return self.queryset.filter(is_approved=True)
 
+    def get_serializer_class(self):
+        """Используем разные сериализаторы для GET и POST/PUT автомобиля."""
+        if self.action == "retrieve":
+            return CarReviewDetailSerializer
+        return CarReviewCreateUpdateSerializer
 
+    @car_review_create
     def create(self, request, *args, **kwargs):
-        # Создание отзыва
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            # Сохраняем отзыв
-            review = serializer.save(owner=self.request.user)
+        return super().create(request, *args, **kwargs)
 
-            # Если есть изображения, сохраняем их
-            review_images = request.FILES.getlist("photos")
-            if review_images:
-                review_photos = [
-                    ReviewPhoto(review=review, image=image) for image in review_images
-                ]
-                ReviewPhoto.objects.bulk_create(review_photos)
+    @car_review_detail
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @car_review_car
+    @action(detail=False, methods=["get"], url_path="reviews_car")
+    def car_reviews_for_car(self, request):
+        """Получение всех одобренных отзывов для конкретного автомобиля с добавлением средних оценок."""
 
-    def update(self, request, *args, **kwargs):
-        """
-        Обновление существующего отзыва с новыми фотографиями.
-        """
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        car_id = request.query_params.get("car_id")
 
-        if serializer.is_valid():
-            # Сначала обновляем отзыв
-            instance = serializer.save()
-
-            # Удаляем старые фотографии
-            instance.photos.all().delete()
-
-            # Сохраняем новые фотографии
-            review_images = request.FILES.getlist("photos")
-            if review_images:
-                for image in review_images:
-                    ReviewPhoto.objects.create(review=instance, image=image)
-
-            return Response(serializer.data)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=["get"], url_path="all-ratings-for-object")
-    def get_all_ratings_for_object(self, request, *args, **kwargs):
-        """
-        Получение всех рейтингов для конкретного объекта по его content_type и object_id.
-        """
-        content_type = request.query_params.get("content_type")
-        object_id = request.query_params.get("object_id")
-        # Проверка наличия обязательных параметров
-        if not content_type or not object_id:
+        if not car_id:
             return Response(
-                {"detail": "content_type and object_id are required."}, status=400
+                {"error": "car_id is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        try:
-            # Получаем ContentType по названию модели
-            content_type_instance = ContentType.objects.get(model=content_type)
-        except ContentType.DoesNotExist:
-            return Response({"detail": "Content type not found."}, status=400)
-        except ValueError:
-            return Response({"detail": "Invalid content_type value."}, status=400)
+        car = Car.objects.filter(id=car_id).first()
+        if not car:
+            return Response(
+                {"error": "Car not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
-        # Фильтруем все отзывы по content_type и object_id
-        reviews = Review.objects.filter(
-            content_type=content_type_instance, object_id=object_id
+        average_rating = CarReview.get_average_rating(car)
+        review_count = CarReview.get_review_count(car)
+
+        reviews = CarReview.objects.filter(car=car, is_approved=True)
+
+        criteria_averages = (
+            CarRating.objects.filter(car_review__car=car)
+            .values("criteria")
+            .annotate(avg_score=Avg("score"))
         )
 
-        if not reviews:
-            return Response({"detail": "No reviews found for this object."}, status=404)
+        averages = {
+            "cleanliness_avg": next(
+                (
+                    item["avg_score"]
+                    for item in criteria_averages
+                    if item["criteria"] == "cleanliness"
+                ),
+                0,
+            ),
+            "service_avg": next(
+                (
+                    item["avg_score"]
+                    for item in criteria_averages
+                    if item["criteria"] == "service"
+                ),
+                0,
+            ),
+            "location_avg": next(
+                (
+                    item["avg_score"]
+                    for item in criteria_averages
+                    if item["criteria"] == "location"
+                ),
+                0,
+            ),
+            "photo_match_avg": next(
+                (
+                    item["avg_score"]
+                    for item in criteria_averages
+                    if item["criteria"] == "photo_match"
+                ),
+                0,
+            ),
+            "price_quality_avg": next(
+                (
+                    item["avg_score"]
+                    for item in criteria_averages
+                    if item["criteria"] == "price_quality"
+                ),
+                0,
+            ),
+        }
+        page = self.paginate_queryset(reviews)
+        if page is not None:
+            serializer = CarReviewListSerializer(page, many=True)
+            response_data = serializer.data
 
-        # Сериализуем все отзывы
-        serializer = ReviewSerializer(reviews, many=True)
-        return Response(serializer.data)
+            return Response(
+                {
+                    "results": response_data,
+                    "review_count": review_count,
+                    "average_rating": average_rating,
+                    "averages": averages,
+                }
+            )
+
+        return Response({"error": "No reviews found"}, status=status.HTTP_404_NOT_FOUND)
+
+    @car_review_replace
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @car_review_delete
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+
+class CarReviewImageViewSet(viewsets.ModelViewSet):
+    """CRUD для загрузки изображений к отзывам автомобиля."""
+
+    queryset = CarReviewImage.objects.all()
+    serializer_class = CarReviewImageSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    parser_classes = (MultiPartParser, FormParser)
+
+    @car_review_image_list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @car_review_image_detail
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @car_review_image_upload
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @car_review_image_update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @car_review_image_delete
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)

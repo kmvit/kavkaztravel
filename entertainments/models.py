@@ -3,7 +3,6 @@ from django.db import models
 from core.models import BaseContent
 from Kavkaztome import settings
 from regions.models import Region
-from reviews.models import Review
 
 
 class Entertainment(BaseContent):
@@ -22,7 +21,6 @@ class Entertainment(BaseContent):
     region = models.ForeignKey(
         Region, on_delete=models.CASCADE, related_name="entertainments"
     )
-    reviews = GenericRelation(Review, related_query_name="reviews")
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=1
     )
@@ -34,11 +32,7 @@ class Entertainment(BaseContent):
     def __str__(self):
         return self.name
 
-    def calculate_rating(self):
-        reviews = self.reviews.all()
-        total_rating = sum(review.rating for review in reviews)
-        return total_rating / reviews.count() if reviews.exists() else 0
-
+    
 
 class EntertainmentImage(models.Model):
     """ Модель для хранения изображений развлекательных объектов.

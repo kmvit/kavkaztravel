@@ -1,41 +1,91 @@
 from rest_framework import serializers
-from .models import Review, ReviewPhoto
+from .models import CarReview, CarReviewImage, CarRating
 
 
-class ReviewPhotoSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для фотографии отзыва.
-    """
+class CarRatingSerializer(serializers.ModelSerializer):
+    """Сериализатор для оценок автомобиля."""
 
     class Meta:
-        model = ReviewPhoto
-        fields = ["image", "caption"]
+        model = CarRating
+        fields = ("id", "criteria", "score")
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для отзыва, который включает вложенные фотографии.
-    """
-
-    photos = ReviewPhotoSerializer(many=True, read_only=True)
-    content_type_name = (
-        serializers.SerializerMethodField()
-    )  # Поле для отображения названия модели
+class CarReviewImageSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField()
 
     class Meta:
-        model = Review
-        fields = [
+        model = CarReviewImage
+        fields = ["id", "car_review", "image"]
+
+
+class CarReviewDetailSerializer(serializers.ModelSerializer):
+    """Сериализатор для GET-запросов выводит отдельый запрос для автомобиля."""
+
+    ratings = CarRatingSerializer(many=True, read_only=True)
+    images = CarReviewImageSerializer(many=True, read_only=True, source="car_images")
+
+    class Meta:
+        model = CarReview
+        fields = (
             "id",
+            "user",
+            "car",
             "text",
-            "rating",
-            "content_type",
-            "object_id",
-            "photos",
-            "content_type_name",
-        ]
+            "created_at",
+            "is_approved",
+            "ratings",
+            "images",
+            "score",
+        )
 
-    def get_content_type_name(self, obj):
-        """
-        Получение названия модели для поля content_type.
-        """
-        return obj.content_type.model  # Возвращаем название модели как строку
+
+class CarReviewListSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для списка отзывов для одной машины с добавлением среднего рейтинга по критериям.
+    """
+
+    images = CarReviewImageSerializer(many=True, read_only=True, source="car_images")
+
+    class Meta:
+        model = CarReview
+        fields = ("id", "user", "car", "text", "score", "created_at", "images")
+
+
+class CarReviewCreateUpdateSerializer(serializers.ModelSerializer):
+    """Сериализатор для POST/PUT (только отзывы и оценки) автомобиля."""
+
+    ratings = CarRatingSerializer(many=True)
+
+    class Meta:
+        model = CarReview
+        fields = (
+            "id",
+            "user",
+            "car",
+            "text",
+            "ratings",
+            "score",
+        )
+
+    def create(self, validated_data):
+        """Создание отзыва вместе с оценками автомобиля."""
+        ratings_data = validated_data.pop("ratings", [])
+        review = CarReview.objects.create(**validated_data)
+
+        for rating in ratings_data:
+            CarRating.objects.create(car_review=review, **rating)
+
+        return review
+
+    def update(self, instance, validated_data):
+        """Обновление отзыва и оценок автомобиля."""
+        ratings_data = validated_data.pop("ratings", None)
+        instance.text = validated_data.get("text", instance.text)
+        instance.save()
+
+        if ratings_data is not None:
+            instance.ratings.all().delete()
+            for rating in ratings_data:
+                Rating.objects.create(Car_review=instance, **rating)
+
+        return instance
