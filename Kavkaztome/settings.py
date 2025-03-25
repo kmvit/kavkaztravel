@@ -53,8 +53,12 @@ INSTALLED_APPS = [
     "entertainments",
     "reviews",
     "drf_spectacular",
+<<<<<<< Updated upstream
     "drf_spectacular_sidecar",  # required for Django collectstatic discovery
     "oauth2_provider",
+=======
+    "drf_spectacular_sidecar",  
+>>>>>>> Stashed changes
     "social_django",
     "rest_framework_social_oauth2",
     "blog",
@@ -156,8 +160,6 @@ AUTH_USER_MODEL = "users.CustomUser"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",  # django-oauth-toolkit >= 1.0.0
-        "drf_social_oauth2.authentication.SocialAuthentication",
     ],
     #'DEFAULT_PERMISSION_CLASSES': [
     #    'rest_framework.permissions.IsAuthenticatedOrReadOnly',
@@ -166,32 +168,38 @@ REST_FRAMEWORK = {
 }
 
 AUTHENTICATION_BACKENDS = (
-    "social_core.backends.vk.VKOAuth2",
-    "drf_social_oauth2.backends.DjangoOAuth2",
     "django.contrib.auth.backends.ModelBackend",
 )
-
 SPECTACULAR_SETTINGS = {
     "TITLE": "KAVKAZ API",
     "DESCRIPTION": "Сервис для жизни на Кавказе",
     "VERSION": "0.0.1",
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
-    
 
+    # UI Settings
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
- 
+
+    # Core Settings
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_COERCE_PATH_PK_SUFFIX": True,
+    
+    # Отключаем проблемные хуки
+    "PREPROCESSING_HOOKS": [],
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums"
+    ],
+    
+    # Для правильного отображения Dict/List
+    "GENERIC_ADDITIONAL_PROPERTIES": "dict",
+    "COMPONENT_NO_READ_ONLY_REQUIRED": True
 }
 
 
-SOCIAL_AUTH_VK_OAUTH2_KEY = os.environ.get("SOCIAL_AUTH_VK_OAUTH2_KEY")  #'51471973'
-SOCIAL_AUTH_VK_OAUTH2_SECRET = os.environ.get(
-    "SOCIAL_AUTH_VK_OAUTH2_SECRET"
-)  #'0HKCRPAiifvxIdalGD01'
+
+
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=500),

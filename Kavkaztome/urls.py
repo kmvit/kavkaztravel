@@ -19,7 +19,7 @@ urlpatterns = [
     path("api/v1/blog/", include("blog.urls")),
     
     # OAuth авторизация
-    re_path(r"^auth/", include("drf_social_oauth2.urls", namespace="drf")),
+
 
     # DRF Spectacular: схема API и документация
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
