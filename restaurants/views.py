@@ -15,6 +15,8 @@ from .swagger_docs import *
 from Kavkaztome.permissions import IsOwnerOnly
 from .filters import RestaurantFilter
 from django_filters import rest_framework as filters
+from kashiring.permissions import IsOwnerOrReadOnly
+from .pagination import ReviewPagination
 class RestaurantViewSet(viewsets.ModelViewSet):
     """
     ViewSet для управления основными данными ресторанов
@@ -24,6 +26,9 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     serializer_class = RestaurantDetailSerializer
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = RestaurantFilter
+    #permission_classes = [IsOwnerOrReadOnly]
+    pagination_class = ReviewPagination
+    
 
     def get_serializer_class(self):
         if self.action == 'list':

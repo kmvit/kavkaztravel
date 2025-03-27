@@ -16,13 +16,7 @@ class RegionSerializer(serializers.ModelSerializer):
     """
 
     hotels = HotelSerializer(many=True, read_only=True)
-<<<<<<< Updated upstream
-    restaurants = RestaurantSerializer(many=True, read_only=True)
-    entertainments = EntertainmentSerializer(many=True, read_only=True)
-    reviews = ReviewSerializer(many=True, read_only=True)
-=======
     #restaurants = RestaurantSerializer(many=True, read_only=True)
->>>>>>> Stashed changes
     rating = serializers.SerializerMethodField()
 
     class Meta:

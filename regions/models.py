@@ -13,7 +13,6 @@ class Region(BaseContent):
     parent = models.ForeignKey(
         "self", on_delete=models.CASCADE, null=True, blank=True, related_name="children"
     )
-    reviews = GenericRelation(Review, related_query_name="reviews")
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=1
     )

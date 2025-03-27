@@ -53,14 +53,8 @@ INSTALLED_APPS = [
     "entertainments",
     "reviews",
     "drf_spectacular",
-<<<<<<< Updated upstream
     "drf_spectacular_sidecar",  # required for Django collectstatic discovery
-    "oauth2_provider",
-=======
-    "drf_spectacular_sidecar",  
->>>>>>> Stashed changes
     "social_django",
-    "rest_framework_social_oauth2",
     "blog",
     'kashiring',
     "sms",

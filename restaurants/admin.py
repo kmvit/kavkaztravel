@@ -2,19 +2,7 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from .models import RestaurantType, Service, Restaurant, RestaurantImage
 
-<<<<<<< Updated upstream
-from reviews.models import Review
-from .models import Restaurant, RestaurantImage
-
-
-class ReviewInline(GenericTabularInline):
-    model = Review
-
-
-class ImageInline(TabularInline):
-=======
 class RestaurantImageInline(admin.TabularInline):
->>>>>>> Stashed changes
     model = RestaurantImage
     extra = 1
     fields = ('image', 'preview')
@@ -50,11 +38,6 @@ class ServiceAdmin(admin.ModelAdmin):
 
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
-<<<<<<< Updated upstream
-    inlines = [ReviewInline, ImageInline]
-    list_display = ("name", "region", "owner")
-    search_fields = ("name", "region__name", "owner__username")
-=======
     list_display = ('name', 'address', 'region', 'owner', 'average_check', 'working_hours')
     list_filter = ('region', 'restaurant_type', 'owner')
     search_fields = ('name', 'address', 'description')
@@ -71,7 +54,6 @@ class RestaurantAdmin(admin.ModelAdmin):
             'fields': ('description', 'services')
         }),
     )
->>>>>>> Stashed changes
 
 @admin.register(RestaurantImage)
 class RestaurantImageAdmin(admin.ModelAdmin):

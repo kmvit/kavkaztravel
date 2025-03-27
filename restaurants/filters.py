@@ -37,5 +37,5 @@ class RestaurantFilter(filters.FilterSet):
     )
 
     class Meta:
-        model = Restaurant
+        model = Restaurant   
         fields = []

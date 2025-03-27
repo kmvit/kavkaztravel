@@ -37,9 +37,6 @@ class Restaurant(models.Model):
         related_name="restaurants",
         verbose_name="Владелец"
     )
-<<<<<<< Updated upstream
-    reviews = GenericRelation(Review, related_query_name="reviews")
-=======
     average_check = models.DecimalField("Средний чек", max_digits=10, decimal_places=2, null=True, blank=True)
     description = models.TextField("Описание", blank=True, null=True)
     restaurant_type = models.ForeignKey(
@@ -47,7 +44,6 @@ class Restaurant(models.Model):
     )
     working_hours = models.CharField('Часы работы', max_length=100, blank=True, null=True)  # Часы работы ресторана
     services = models.ManyToManyField(Service, blank=True, related_name="restaurants", verbose_name="Услуги")
->>>>>>> Stashed changes
 
     class Meta:
         verbose_name = "Ресторан"
@@ -56,15 +52,6 @@ class Restaurant(models.Model):
     def __str__(self):
         return self.name
 
-<<<<<<< Updated upstream
-    def calculate_rating(self):
-        reviews = self.reviews.all()
-        total_rating = sum(review.rating for review in reviews)
-        return total_rating / reviews.count() if reviews.exists() else 0
-
-
-=======
->>>>>>> Stashed changes
 class RestaurantImage(models.Model):
     restaurant = models.ForeignKey(
         Restaurant, related_name="images", on_delete=models.CASCADE, verbose_name="Ресторан"
