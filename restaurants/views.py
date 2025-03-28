@@ -26,7 +26,7 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     serializer_class = RestaurantDetailSerializer
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = RestaurantFilter
-    #permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
     pagination_class = ReviewPagination
     
 
@@ -88,6 +88,7 @@ class RestaurantImageViewSet(
     serializer_class = RestaurantImageSerializer
     queryset = RestaurantImage.objects.all()
     parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [IsOwnerOrReadOnly]
 
 
     @restaurant_image_upload
