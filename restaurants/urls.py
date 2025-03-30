@@ -6,7 +6,7 @@ app_name = "restaurants"
 
 router = DefaultRouter()
 router.register(r"meal", RestaurantViewSet)
-router.register(r'restaurant-images', RestaurantImageViewSet)
+router.register(r"restaurant-images", RestaurantImageViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),

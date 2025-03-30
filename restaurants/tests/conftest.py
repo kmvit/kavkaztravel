@@ -10,11 +10,11 @@ from restaurants.models import (
 from datetime import datetime, timedelta
 
 import random
+
 User = get_user_model()
 
 from regions.models import Region
-   
-    
+
 
 @pytest.fixture
 def api_client():
@@ -41,6 +41,7 @@ def user(db):
         username="renter_user", password="password123", email="renter@example.com"
     )
 
+
 @pytest.fixture
 def authenticated_api_client(owner):
     """Фикстура для аутентифицированного клиента API"""
@@ -48,14 +49,14 @@ def authenticated_api_client(owner):
     client.force_authenticate(user=owner)  # Используем force_authenticate для DRF
     return client
 
+
 # Фикстура для RestaurantType
 @pytest.fixture
 def restaurant_type(db):
     """Фикстура для типа ресторана."""
-   
+
     return RestaurantType.objects.create(
-        name="Кавказская кухня",
-        description="Традиционные блюда народов Кавказа"
+        name="Кавказская кухня", description="Традиционные блюда народов Кавказа"
     )
 
 
@@ -63,8 +64,7 @@ def restaurant_type(db):
 @pytest.fixture
 def restaurant(db, owner, child_region, restaurant_type, services):
     """Фикстура для ресторана со связанными объектами."""
-   
-    
+
     restaurant = Restaurant.objects.create(
         name="Ресторан 'Горный аул'",
         address="ул. Кавказская, 15",
@@ -73,9 +73,9 @@ def restaurant(db, owner, child_region, restaurant_type, services):
         average_check=1500.00,
         description="Лучшие блюда кавказской кухни",
         restaurant_type=restaurant_type,
-        working_hours="10:00-22:00"
+        working_hours="10:00-22:00",
     )
-    
+
     # Добавляем M2M связи
     restaurant.services.add(*services)
     return restaurant
@@ -84,11 +84,13 @@ def restaurant(db, owner, child_region, restaurant_type, services):
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 
-
 @pytest.fixture
 def restaurant_image_1(restaurant):
-    image_file = SimpleUploadedFile("test_image_1.jpg", b"image_data", content_type="image/jpeg")
+    image_file = SimpleUploadedFile(
+        "test_image_1.jpg", b"image_data", content_type="image/jpeg"
+    )
     return RestaurantImage.objects.create(restaurant=restaurant, image=image_file)
+
 
 # Фикстура для родительского региона
 @pytest.fixture
@@ -101,7 +103,7 @@ def parent_region(db, owner):
         content="Информация о Московской области",
         seo_title="Московская область - регион",
         seo_description="Описание Московской области",
-        owner=owner
+        owner=owner,
     )
 
 
@@ -117,7 +119,7 @@ def child_region(db, parent_region, owner):
         seo_title="Москва - столица",
         seo_description="Описание Москвы",
         parent=parent_region,
-        owner=owner
+        owner=owner,
     )
 
 
@@ -134,7 +136,7 @@ def additional_regions(db, parent_region, owner):
             seo_title="Санкт-Петербург - город",
             seo_description="Описание Санкт-Петербурга",
             parent=parent_region,
-            owner=owner
+            owner=owner,
         ),
         Region.objects.create(
             name="Новосибирск",
@@ -144,8 +146,8 @@ def additional_regions(db, parent_region, owner):
             seo_title="Новосибирск - город",
             seo_description="Описание Новосибирска",
             parent=parent_region,
-            owner=owner
-        )
+            owner=owner,
+        ),
     ]
 
 
@@ -154,10 +156,13 @@ def additional_regions(db, parent_region, owner):
 def restaurant_types(db):
     """Фикстура для типа ресторанов."""
     return [
-        RestaurantType.objects.create(name="Кавказская кухня", description="Традиционные блюда народов Кавказа"),
-        RestaurantType.objects.create(name="Японская кухня", description="Традиционные блюда японской кухни"),
-        RestaurantType.objects.create(name="Итальянская кухня", description="Традиционные блюда Италии"),
-        RestaurantType.objects.create(name="Фастфуд", description="Быстрая еда")
+        RestaurantType.objects.create(
+            name="Японская кухня", description="Традиционные блюда японской кухни"
+        ),
+        RestaurantType.objects.create(
+            name="Итальянская кухня", description="Традиционные блюда Италии"
+        ),
+        RestaurantType.objects.create(name="Фастфуд", description="Быстрая еда"),
     ]
 
 
@@ -173,13 +178,15 @@ def services(db):
         Service.objects.create(name="Паста"),
         Service.objects.create(name="Пицца"),
         Service.objects.create(name="Барбекю"),
-        Service.objects.create(name="Тортилья")
+        Service.objects.create(name="Тортилья"),
     ]
 
 
 # Фикстура для ресторанов
 @pytest.fixture
-def restaurants(db, owner, child_region, additional_regions, restaurant_types, services):
+def restaurants(
+    db, owner, child_region, additional_regions, restaurant_types, services
+):
     """Фикстура для создания 15 ресторанов с различными значениями."""
     restaurants = []
     for i in range(15):
@@ -188,7 +195,9 @@ def restaurants(db, owner, child_region, additional_regions, restaurant_types, s
         # Случайным образом выбираем регион
         region = random.choice([child_region] + additional_regions)
         # Случайным образом выбираем услуги
-        service_list = random.sample(services, random.randint(1, 3))  # Выбираем случайное количество услуг
+        service_list = random.sample(
+            services, random.randint(1, 3)
+        )  # Выбираем случайное количество услуг
         name = f"Ресторан {i+1} - {r_type.name}"
         address = f"ул. Адрес {i+1}, {region.name}"
         description = f"Описание ресторана {i+1} - {r_type.name}"
@@ -204,13 +213,15 @@ def restaurants(db, owner, child_region, additional_regions, restaurant_types, s
             average_check=average_check,
             description=description,
             restaurant_type=r_type,
-            working_hours=working_hours
+            working_hours=working_hours,
         )
 
         restaurant.services.add(*service_list)
 
         # Добавляем изображение для ресторана
-        image_file = SimpleUploadedFile(f"test_image_{i+1}.jpg", b"image_data", content_type="image/jpeg")
+        image_file = SimpleUploadedFile(
+            f"test_image_{i+1}.jpg", b"image_data", content_type="image/jpeg"
+        )
         RestaurantImage.objects.create(restaurant=restaurant, image=image_file)
         restaurants.append(restaurant)
     return restaurants

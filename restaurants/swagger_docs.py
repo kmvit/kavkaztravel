@@ -4,7 +4,7 @@ from .serializers import (
     RestaurantDetailSerializer,
     RestaurantListSerializer,
     RestaurantImageSerializer,
-    RestaurantSerializer
+    RestaurantSerializer,
 )
 
 # 📌 Restaurant Endpoints
@@ -25,11 +25,11 @@ restaurant_list = extend_schema(
             location=OpenApiParameter.QUERY,
             description="Фильтр по типу ресторана",
             required=False,
-        )
+        ),
     ],
     responses={
         200: RestaurantListSerializer(many=True),
-    }
+    },
 )
 
 restaurant_create = extend_schema(
@@ -40,7 +40,7 @@ restaurant_create = extend_schema(
         201: RestaurantSerializer,
         400: OpenApiResponse(description="Неверные данные"),
         403: OpenApiResponse(description="Доступ запрещен"),
-    }
+    },
 )
 
 restaurant_detail = extend_schema(
@@ -49,7 +49,7 @@ restaurant_detail = extend_schema(
     responses={
         200: RestaurantDetailSerializer,
         404: OpenApiResponse(description="Ресторан не найден"),
-    }
+    },
 )
 
 restaurant_update = extend_schema(
@@ -61,7 +61,7 @@ restaurant_update = extend_schema(
         400: OpenApiResponse(description="Неверные данные"),
         403: OpenApiResponse(description="Доступ запрещен"),
         404: OpenApiResponse(description="Ресторан не найден"),
-    }
+    },
 )
 
 restaurant_delete = extend_schema(
@@ -71,7 +71,7 @@ restaurant_delete = extend_schema(
         204: OpenApiResponse(description="Ресторан удален"),
         403: OpenApiResponse(description="Доступ запрещен"),
         404: OpenApiResponse(description="Ресторан не найден"),
-    }
+    },
 )
 
 
@@ -90,22 +90,24 @@ restaurant_image_upload = extend_schema(
                 "image": {
                     "type": "string",
                     "format": "binary",
-                    "description": "Файл изображения (JPEG/PNG/WEBP, макс. 5MB)"
+                    "description": "Файл изображения (JPEG/PNG/WEBP, макс. 5MB)",
                 },
                 "restaurant": {
                     "type": "integer",
-                    "description": "ID ресторана, к которому прикрепляется изображение"
-                }
+                    "description": "ID ресторана, к которому прикрепляется изображение",
+                },
             },
-            "required": ["image", "restaurant"]
+            "required": ["image", "restaurant"],
         }
     },
     responses={
         201: RestaurantImageSerializer,
-        400: OpenApiResponse(description="Неверные данные: отсутствует restaurant или неверный формат изображения"),
+        400: OpenApiResponse(
+            description="Неверные данные: отсутствует restaurant или неверный формат изображения"
+        ),
         403: OpenApiResponse(description="Доступ запрещен"),
-        404: OpenApiResponse(description="Ресторан не найден")
-    }
+        404: OpenApiResponse(description="Ресторан не найден"),
+    },
 )
 
 
@@ -119,10 +121,10 @@ restaurant_image_update = extend_schema(
                 "image": {
                     "type": "string",
                     "format": "binary",
-                    "description": "Новый файл изображения"
+                    "description": "Новый файл изображения",
                 }
             },
-            "required": ["image"]
+            "required": ["image"],
         }
     },
     responses={
@@ -130,7 +132,7 @@ restaurant_image_update = extend_schema(
         400: OpenApiResponse(description="Ошибка загрузки"),
         403: OpenApiResponse(description="Доступ запрещен"),
         404: OpenApiResponse(description="Изображение не найдено"),
-    }
+    },
 )
 restaurant_image_update = extend_schema(
     summary="🔄 Обновить изображение ресторана",
@@ -145,18 +147,18 @@ restaurant_image_update = extend_schema(
                 "image": {
                     "type": "string",
                     "format": "binary",
-                    "description": "Новый файл изображения (обязательно)"
+                    "description": "Новый файл изображения (обязательно)",
                 }
             },
-            "required": ["image"]
+            "required": ["image"],
         }
     },
     responses={
         200: RestaurantImageSerializer,
         400: OpenApiResponse(description="Ошибка валидации файла"),
         403: OpenApiResponse(description="Доступ запрещен"),
-        404: OpenApiResponse(description="Изображение не найдено")
-    }
+        404: OpenApiResponse(description="Изображение не найдено"),
+    },
 )
 
 restaurant_image_delete = extend_schema(
@@ -168,6 +170,6 @@ restaurant_image_delete = extend_schema(
     responses={
         204: OpenApiResponse(description="Изображение удалено"),
         403: OpenApiResponse(description="Доступ запрещен"),
-        404: OpenApiResponse(description="Изображение не найдено")
-    }
+        404: OpenApiResponse(description="Изображение не найдено"),
+    },
 )

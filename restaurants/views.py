@@ -9,7 +9,7 @@ from .serializers import (
     RestaurantListSerializer,
     RestaurantDetailSerializer,
     RestaurantImageSerializer,
-    RestaurantSerializer
+    RestaurantSerializer,
 )
 from .swagger_docs import *
 from Kavkaztome.permissions import IsOwnerOnly
@@ -17,26 +17,29 @@ from .filters import RestaurantFilter
 from django_filters import rest_framework as filters
 from kashiring.permissions import IsOwnerOrReadOnly
 from .pagination import ReviewPagination
+
+
 class RestaurantViewSet(viewsets.ModelViewSet):
     """
     ViewSet для управления основными данными ресторанов
     """
-    queryset = Restaurant.objects.select_related("region", "restaurant_type").prefetch_related("services", "images")
+
+    queryset = Restaurant.objects.select_related(
+        "region", "restaurant_type"
+    ).prefetch_related("services", "images")
     permission_classes = (IsOwnerOnly,)
     serializer_class = RestaurantDetailSerializer
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = RestaurantFilter
     permission_classes = [IsOwnerOrReadOnly]
     pagination_class = ReviewPagination
-    
 
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == "list":
             return RestaurantListSerializer
         elif self.action == "retrieve":
             return RestaurantDetailSerializer
         return RestaurantSerializer
-    
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -65,6 +68,7 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 
+
 from rest_framework import mixins, viewsets
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import RestaurantImage
@@ -72,24 +76,24 @@ from .serializers import RestaurantImageSerializer
 from .swagger_docs import (
     restaurant_image_upload,
     restaurant_image_update,
-    restaurant_image_delete
+    restaurant_image_delete,
 )
+
 
 class RestaurantImageViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
+    viewsets.GenericViewSet,
 ):
     """
     ViewSet для управления изображениями ресторанов
     Поддерживает только создание, обновление и удаление
     """
+
     serializer_class = RestaurantImageSerializer
     queryset = RestaurantImage.objects.all()
     parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [IsOwnerOrReadOnly]
-
 
     @restaurant_image_upload
     def create(self, request, *args, **kwargs):
@@ -102,4 +106,3 @@ class RestaurantImageViewSet(
     @restaurant_image_delete
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
-   

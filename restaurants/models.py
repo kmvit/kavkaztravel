@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from regions.models import Region
-from reviews.models import Review
+
 
 class RestaurantType(models.Model):
     name = models.CharField("Название", max_length=100, unique=True)
@@ -14,6 +14,7 @@ class RestaurantType(models.Model):
     def __str__(self):
         return self.name
 
+
 class Service(models.Model):
     name = models.CharField("Название", max_length=100, unique=True)
     description = models.TextField("Описание", blank=True, null=True)
@@ -25,25 +26,40 @@ class Service(models.Model):
     def __str__(self):
         return self.name
 
+
 class Restaurant(models.Model):
     address = models.CharField("Адрес", max_length=300)
     name = models.CharField("Название", max_length=300)
     region = models.ForeignKey(
-        Region, on_delete=models.CASCADE, related_name="restaurants", verbose_name="Регион"
+        Region,
+        on_delete=models.CASCADE,
+        related_name="restaurants",
+        verbose_name="Регион",
     )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="restaurants",
-        verbose_name="Владелец"
+        verbose_name="Владелец",
     )
-    average_check = models.DecimalField("Средний чек", max_digits=10, decimal_places=2, null=True, blank=True)
+    average_check = models.DecimalField(
+        "Средний чек", max_digits=10, decimal_places=2, null=True, blank=True
+    )
     description = models.TextField("Описание", blank=True, null=True)
     restaurant_type = models.ForeignKey(
-        RestaurantType, on_delete=models.SET_NULL, null=True, blank=True, related_name="restaurants", verbose_name="Тип ресторана"
+        RestaurantType,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="restaurants",
+        verbose_name="Тип ресторана",
     )
-    working_hours = models.CharField('Часы работы', max_length=100, blank=True, null=True)  # Часы работы ресторана
-    services = models.ManyToManyField(Service, blank=True, related_name="restaurants", verbose_name="Услуги")
+    working_hours = models.CharField(
+        "Часы работы", max_length=100, blank=True, null=True
+    )  # Часы работы ресторана
+    services = models.ManyToManyField(
+        Service, blank=True, related_name="restaurants", verbose_name="Услуги"
+    )
 
     class Meta:
         verbose_name = "Ресторан"
@@ -52,9 +68,13 @@ class Restaurant(models.Model):
     def __str__(self):
         return self.name
 
+
 class RestaurantImage(models.Model):
     restaurant = models.ForeignKey(
-        Restaurant, related_name="images", on_delete=models.CASCADE, verbose_name="Ресторан"
+        Restaurant,
+        related_name="images",
+        on_delete=models.CASCADE,
+        verbose_name="Ресторан",
     )
     image = models.ImageField("Изображение")
 

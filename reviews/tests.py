@@ -1,8 +1,5 @@
 from django.test import TestCase
 
-<<<<<<< Updated upstream
-# Create your tests here.
-=======
 
 BASE_URL = "/api/v1/reviews/car/"
 IMAGE_URL = "/api/v1/reviews/car-images/"
@@ -688,4 +685,3 @@ def test_user_can_only_leave_one_review_for_car(auth_client, test_user, car_1):
         response.data["non_field_errors"][0]
         == "The fields user, car must make a unique set."
     )
->>>>>>> Stashed changes
