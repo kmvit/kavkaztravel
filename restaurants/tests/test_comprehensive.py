@@ -20,13 +20,12 @@ def test_filter_restaurants(
 ):
     """
     Комплексный тест:
-    1. Проверяет начальное состояние (15 ресторанов из фикстуры)
-    2. Создает новый ресторан с типом и услугой
+    1. Проверяет начальное состояние
+    2. Создает новые рестораны с типом и услугой
     3. Проверяет увеличение счетчиков в моделях
-    4. Добавляет изображение к ресторану
-    5. Тестирует фильтрацию через API
-    6. Сравнивает результаты API с прямым запросом к модели
-    7. Проверяет конечное состояние всех моделей
+    4. Тестирует фильтрацию через API
+    5. Сравнивает результаты API с прямым запросом к модели
+    6. Проверяет конечное состояние всех моделей
     """
     from restaurants.models import Restaurant, RestaurantType, Service
     import json
@@ -76,7 +75,6 @@ def test_filter_restaurants(
     assert after_creation_counts["types"] == 3
     assert after_creation_counts["services"] == 8
 
-    # 6. Тестирование фильтрации
 
     # Формируем строку запроса с параметрами
     filter_url = f"/api/v1/restaurants/meal/?region={child_region}&average_check_min=1000&average_check_max=2000"
@@ -154,5 +152,3 @@ def test_filter_restaurants(
         response_api_detail.data["description"] == db_restaurant.description
     ), f"Несоответствие описания для ресторана с ID {api_restaurant_id}"
 
-    # Если все утверждения прошли, то ресторан успешно проверен
-    print(f"Ресторан с ID {api_restaurant_id} успешно проверен.")

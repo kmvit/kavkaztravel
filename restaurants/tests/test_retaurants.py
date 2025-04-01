@@ -158,13 +158,13 @@ def test_restaurant_list_with_pagination_and_fields_check(
     """
     Тест для проверки метода list с пагинацией, полями и изображениями.
     Для каждого ресторана (включая фикстурный) добавляем изображение через фикстуру restaurant_image_1.
-    Создаем 7 новых ресторанов (итого 8) и проверяем, что пагинация работает корректно,
+    Создаем 23 новых ресторанов (итого 8) и проверяем, что пагинация работает корректно,
     а в данных присутствуют необходимые поля.
     """
 
     # Для ресторана из фикстуры добавляем изображение
 
-    # Создаем 7 новых ресторанов
+    # Создаем 23 новых ресторанов
     for i in range(23):
         r_type = RestaurantType.objects.create(
             name=f"Тип ресторана {i+1}", description=f"Описание типа {i+1}"
@@ -189,7 +189,7 @@ def test_restaurant_list_with_pagination_and_fields_check(
         RestaurantImage.objects.create(restaurant=new_rest, image=image_file)
         new_rest.services.add(serv)
 
-    # Отправляем запрос на получение списка ресторанов (пагинация: 5 на страницу)
+    # Отправляем запрос на получение списка ресторанов (пагинация: 20 на страницу)
     response = authenticated_api_client.get(BASE_ULR, {"page": 1}, format="json")
 
     # Проверяем статус ответа
@@ -202,7 +202,7 @@ def test_restaurant_list_with_pagination_and_fields_check(
 
     # Проверяем пагинацию: 5 ресторанов на первой странице
     results = response.data.get("results", [])
-    assert len(results) == 20, "Expected 5 restaurants on page 1"
+    assert len(results) == 20, "Expected 20 restaurants on page 1"
 
     # Проверяем ссылки пагинации
     assert (

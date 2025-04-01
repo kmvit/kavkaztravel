@@ -3,6 +3,18 @@ from .models import Restaurant, Region, Service, RestaurantType
 
 
 class RestaurantFilter(filters.FilterSet):
+    """
+    Фильтр для модели Restaurant.
+
+    Позволяет фильтровать рестораны по следующим критериям:
+      - Название региона (без учета регистра).
+      - Минимальный и максимальный диапазон среднего чека.
+      - Тип заведения (без учета регистра).
+      - Услуги ресторана по полному совпадению названия.
+
+    Каждый фильтр использует соответствующий lookup выражение для точного и гибкого поиска.
+    """
+
     # Фильтр по названию региона
     region = filters.CharFilter(
         field_name="region__name", lookup_expr="icontains", label="Название региона"

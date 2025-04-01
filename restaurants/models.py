@@ -4,6 +4,10 @@ from regions.models import Region
 
 
 class RestaurantType(models.Model):
+    """
+    Модель, представляющая тип ресторана.
+    """
+
     name = models.CharField("Название", max_length=100, unique=True)
     description = models.TextField("Описание", blank=True, null=True)
 
@@ -16,6 +20,10 @@ class RestaurantType(models.Model):
 
 
 class Service(models.Model):
+    """
+    Модель, представляющая услугу, предоставляемую рестораном.
+    """
+
     name = models.CharField("Название", max_length=100, unique=True)
     description = models.TextField("Описание", blank=True, null=True)
 
@@ -28,6 +36,10 @@ class Service(models.Model):
 
 
 class Restaurant(models.Model):
+    """
+    Модель, представляющая ресторан.
+    """
+
     address = models.CharField("Адрес", max_length=300)
     name = models.CharField("Название", max_length=300)
     region = models.ForeignKey(
@@ -56,7 +68,7 @@ class Restaurant(models.Model):
     )
     working_hours = models.CharField(
         "Часы работы", max_length=100, blank=True, null=True
-    )  # Часы работы ресторана
+    )
     services = models.ManyToManyField(
         Service, blank=True, related_name="restaurants", verbose_name="Услуги"
     )
@@ -70,6 +82,10 @@ class Restaurant(models.Model):
 
 
 class RestaurantImage(models.Model):
+    """
+    Модель, представляющая изображение ресторана.
+    """
+
     restaurant = models.ForeignKey(
         Restaurant,
         related_name="images",
