@@ -1,43 +1,102 @@
-from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-
-from Kavkaztome import settings
-from core.models import BaseContent
+from django.conf import settings
 from regions.models import Region
-from reviews.models import Review
 
 
-class Restaurant(BaseContent):
-    address = models.CharField(max_length=300)
+class RestaurantType(models.Model):
+    """
+    Модель, представляющая тип ресторана.
+    """
+
+    name = models.CharField("Название", max_length=100, unique=True)
+    description = models.TextField("Описание", blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Тип ресторана"
+        verbose_name_plural = "Типы ресторанов"
+
+    def __str__(self):
+        return self.name
+
+
+class Service(models.Model):
+    """
+    Модель, представляющая услугу, предоставляемую рестораном.
+    """
+
+    name = models.CharField("Название", max_length=100, unique=True)
+    description = models.TextField("Описание", blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Услуга"
+        verbose_name_plural = "Услуги"
+
+    def __str__(self):
+        return self.name
+
+
+class Restaurant(models.Model):
+    """
+    Модель, представляющая ресторан.
+    """
+
+    address = models.CharField("Адрес", max_length=300)
+    name = models.CharField("Название", max_length=300)
     region = models.ForeignKey(
-        Region, on_delete=models.CASCADE, related_name="restaurants"
+        Region,
+        on_delete=models.CASCADE,
+        related_name="restaurants",
+        verbose_name="Регион",
     )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="restaurants",
-        default=1,
+        verbose_name="Владелец",
     )
-    reviews = GenericRelation(Review, related_query_name="reviews")
+    average_check = models.DecimalField(
+        "Средний чек", max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    description = models.TextField("Описание", blank=True, null=True)
+    restaurant_type = models.ForeignKey(
+        RestaurantType,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="restaurants",
+        verbose_name="Тип ресторана",
+    )
+    working_hours = models.CharField(
+        "Часы работы", max_length=100, blank=True, null=True
+    )
+    services = models.ManyToManyField(
+        Service, blank=True, related_name="restaurants", verbose_name="Услуги"
+    )
 
     class Meta:
-        verbose_name = "Объект питания"
-        verbose_name_plural = "Объекты питания"
+        verbose_name = "Ресторан"
+        verbose_name_plural = "Рестораны"
 
     def __str__(self):
         return self.name
 
-    def calculate_rating(self):
-        reviews = self.reviews.all()
-        total_rating = sum(review.rating for review in reviews)
-        return total_rating / reviews.count() if reviews.exists() else 0
-
 
 class RestaurantImage(models.Model):
+    """
+    Модель, представляющая изображение ресторана.
+    """
+
     restaurant = models.ForeignKey(
-        Restaurant, related_name="images", on_delete=models.CASCADE
+        Restaurant,
+        related_name="images",
+        on_delete=models.CASCADE,
+        verbose_name="Ресторан",
     )
-    image = models.ImageField()
+    image = models.ImageField("Изображение")
+
+    class Meta:
+        verbose_name = "Изображение ресторана"
+        verbose_name_plural = "Изображения ресторанов"
 
     def __str__(self):
-        return self.restaurant.id
+        return f"Image {self.id} for {self.restaurant.name}"

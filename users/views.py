@@ -16,7 +16,7 @@ from rest_framework.views import APIView
 from hotels.models import Hotel
 from hotels.serializers import HotelSerializer
 from restaurants.models import Restaurant
-from restaurants.serializers import RestaurantSerializer
+
 from tours.models import Guide, TourOperator
 from tours.serializers import GuideSerializer, TourOperatorSerializer
 from .models import CustomUser, SMSVerification, Notification, Booking, UserNotificationChannel
