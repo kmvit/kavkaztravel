@@ -17,8 +17,7 @@ from hotels.models import Hotel
 from hotels.serializers import HotelSerializer
 from restaurants.models import Restaurant
 from restaurants.serializers import RestaurantSerializer
-from tours.models import Guide, TourOperator
-from tours.serializers import GuideSerializer, TourOperatorSerializer
+
 from .models import CustomUser, SMSVerification, Notification, Booking, UserNotificationChannel
 from .serializers import CustomUserSerializer, SMSVerificationSerializer, NotificationSerializer, BookingSerializer
 from .service import send_notification, send_verification_sms

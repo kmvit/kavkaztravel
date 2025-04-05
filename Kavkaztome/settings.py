@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",  # required for Django collectstatic discovery
     "oauth2_provider",
-    "social_django",
+    'drf_social_oauth2',
     "rest_framework_social_oauth2",
     "blog",
     'kashiring',

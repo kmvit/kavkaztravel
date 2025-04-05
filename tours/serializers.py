@@ -1,188 +1,178 @@
 from rest_framework import serializers
+
+
+from rest_framework import serializers, viewsets
 from .models import (
-    DateTour,
-    EstimationTour,
-    GalleryTour,
-    Geo,
-    Guide,
-    Order,
-    Tag,
-    Tour,
-    TourOperator,
+    TourOperator, Tour, AttractionTour, ThemeTour, ParticipantTypeTour,
+    FormatTour, DurationTour, SpecialOfferTour, GalleryTour, TourConditions,
+    AvailableDateTour, Order
 )
-
-
-class GuideSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели Guide.
-    
-    Позволяет преобразовывать данные о гиде в формат JSON и обратно.
-    Включает информацию о владельце.
-    """
-    owner = serializers.StringRelatedField(
-        read_only=True
-    )  # serializers.ReadOnlyField(source='owner.username')
-
-    class Meta:
-        model = Guide
-        fields = "__all__"
-
-
 class TourOperatorSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели TourOperator.
-    
-    Позволяет преобразовывать данные о туроператоре в формат JSON и обратно.
-    Включает информацию о владельце.
-    """
-    owner = serializers.StringRelatedField(
-        read_only=True
-    )  # serializers.ReadOnlyField(source='owner.username')
-
     class Meta:
         model = TourOperator
-        fields = "__all__"
+        fields = ['id', 'region', 'owner', 'license_number']
 
-
-class TagSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели геолокаций тура при get запросе.
-
-    Этот класс отвечает за преобразование экземпляров модели Tag
-    в JSON и обратно, а также за валидацию входных данных.
-    """
-
+class AttractionTourSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Tag
-        fields = ("id", "name")
+        model = AttractionTour
+        fields = ['id', 'name', 'description', 'region']
 
-
-class GeoSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели геолокаций тура при get запросе.
-
-    Этот класс отвечает за преобразование экземпляров модели Geo
-    в JSON и обратно, а также за валидацию входных данных.
-    """
-
+class ThemeTourSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Geo
-        fields = ["id", "geo_title", "geo_description"]
+        model = ThemeTour
+        fields = ['id', 'name']
 
-
-class TourGETSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели тура при get запросе.
-
-    Этот класс отвечает за преобразование экземпляров модели Tour
-    в JSON и обратно, а также за валидацию входных данных.
-    """
-
-    tag = TagSerializer()
-    tour_operator = serializers.StringRelatedField(read_only=True)
-    geo = GeoSerializer()
-
+class ParticipantTypeTourSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Tour
-        fields = ("id", "name", "description", "geo", "tag", "tour_operator", "slug")
+        model = ParticipantTypeTour
+        fields = ['id', 'name']
 
-
-class TourSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели  тура.
-
-    Этот класс отвечает за преобразование экземпляров модели Tour
-    в JSON и обратно, а также за валидацию входных данных.
-    """
-
+class FormatTourSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Tour
-        fields = ("id", "name", "description", "geo", "tag", "tour_operator", "slug")
+        model = FormatTour
+        fields = ['id', 'name']
 
+class DurationTourSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DurationTour
+        fields = ['id', 'name']
+
+class SpecialOfferTourSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpecialOfferTour
+        fields = ['id', 'offer_type', 'description']
 
 class GalleryTourSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели изображений тура.
-
-    Этот класс отвечает за преобразование экземпляров модели GalleryTour
-    в JSON и обратно, а также за валидацию входных данных.
-    """
-
-    tour = TourGETSerializer()
-
     class Meta:
         model = GalleryTour
-        fields = ("id", "tour", "image")
+        fields = ['id', 'tour', 'image']
 
-
-class DateTourrSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели даты и дат продолжительности тура.
-
-    Этот класс отвечает за преобразование экземпляров модели DateTour
-    в JSON и обратно, а также за валидацию входных данных.
-    """
-
-    tour = TourGETSerializer()
-
+class TourConditionsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DateTour
-        fields = ("id", "tour", "begin_date", "end_date", "is_free")
+        model = TourConditions
+        fields = ['id', 'tour', 'group_size', 'children', 'meeting_point', 'booking_terms', 'organizational_details']
 
+class AvailableDateTourSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AvailableDateTour
+        fields = ['id', 'tour', 'start_date', 'end_date', 'is_active']
 
 class OrderSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели заказа тура.
-
-    Этот класс отвечает за преобразование экземпляров модели Order
-    в JSON и обратно, а также за валидацию входных данных.
-    """
-
     class Meta:
         model = Order
-        fields = ["id", "tour", "date", "size", "username", "email", "phone"]
+        fields = ['id', 'tour', 'date', 'size', 'username', 'email', 'phone', 'owner']
 
-
-class OrderGetSerializer(OrderSerializer):
-    """Сериализатор для модели заказа тура.
-
-    Этот класс отвечает за преобразование экземпляров модели Order
-    в JSON и обратно, а также за валидацию входных данных.
-    """
-
-    tour = TourGETSerializer()
-
-
-class EstimationTourSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели оценок и отзывов тура.
-
-    Этот класс преобразует экземпляры модели EstimationTour
-    в JSON и обратно, а также валидирует входные данные.
-    """
+class TourSerializer(serializers.ModelSerializer):
+    attractions = AttractionTourSerializer(many=True, required=False)
+    theme = ThemeTourSerializer(required=False)
+    participant_types = ParticipantTypeTourSerializer(many=True, required=False)
+    formats = FormatTourSerializer(many=True, required=False)
+    duration = DurationTourSerializer(required=False)
+    special_offer = SpecialOfferTourSerializer(required=False)
 
     class Meta:
-        model = EstimationTour
-        fields = ["id", "tour", "estimation", "feedback", "image"]
+        model = Tour
+        fields = [
+            'id', 'guide', 'title', 'description', 'region', 'attractions', 'price',
+            'theme', 'participant_types', 'formats', 'duration', 'special_offer', 'created_at'
+        ]
 
-
-class EstimationTourGetSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели оценок и отзывов тура.
-
-    Этот класс преобразует экземпляры модели EstimationTour
-    в JSON и обратно, а также валидирует входные данные.
-    """
-
-    rating = serializers.SerializerMethodField()
-    tour = TourGETSerializer()
-
-    class Meta:
-        model = EstimationTour
-        fields = ["id", "tour", "estimation", "feedback", "image", "date", "rating"]
-
-    def get_rating(self, obj):
+    def get_or_create_related_object(self, model, filter_field, filter_value, error_message):
         """
-        Функция предназначена для получения рейтинга тура.
-
-        Значение передаеться в поле "rating"
-        Рассчитываеться как сумма всех оценок тура
-        деленная на количество отзывов. По умолчанию оценка равна 10.
+        Вспомогательный метод для получения связанного объекта.
+        Если объект не найден, выбрасывает ошибку.
         """
-        estimations = EstimationTour.objects.filter(tour=obj.tour)
-        total_estimation = len(estimations)
-        sum_estimation = sum(est.estimation for est in estimations)
-        if total_estimation > 0:
-            return round(sum_estimation / total_estimation, 2)
-        return 10
+        try:
+            return model.objects.get(**{filter_field: filter_value})
+        except model.DoesNotExist:
+            raise serializers.ValidationError(error_message)
+
+    def handle_many_to_many(self, instance, related_field, data, model_class):
+        """
+        Вспомогательный метод для обработки Many-to-Many связей.
+        Очищает старые данные и добавляет новые, если они переданы.
+        """
+        if data is not None:
+            getattr(instance, related_field).clear()
+            for item_data in data:
+                obj = self.get_or_create_related_object(
+                    model_class,
+                    'name',
+                    item_data['name'],
+                    f"{model_class.__name__} с таким названием не существует."
+                )
+                getattr(instance, related_field).add(obj)
+
+    def create(self, validated_data):
+        attractions_data = validated_data.pop('attractions', [])
+        theme_data = validated_data.pop('theme', None)
+        participant_types_data = validated_data.pop('participant_types', [])
+        formats_data = validated_data.pop('formats', [])
+        duration_data = validated_data.pop('duration', None)
+        special_offer_data = validated_data.pop('special_offer', None)
+
+        # Получаем связанные объекты, если данные предоставлены
+        theme = (
+            self.get_or_create_related_object(ThemeTour, 'name', theme_data['name'], "Тематика тура с таким названием не существует.")
+            if theme_data else None
+        )
+        duration = (
+            self.get_or_create_related_object(DurationTour, 'name', duration_data['name'], "Продолжительность тура с таким названием не существует.")
+            if duration_data else None
+        )
+        special_offer = (
+            self.get_or_create_related_object(SpecialOfferTour, 'offer_type', special_offer_data['offer_type'], "Спецпредложение с таким типом не существует.")
+            if special_offer_data else None
+        )
+
+        # Создаем тур с основными полями
+        tour = Tour.objects.create(
+            **validated_data,
+            theme=theme,
+            duration=duration,
+            special_offer=special_offer
+        )
+
+        # Обрабатываем Many-to-Many связи, если данные присутствуют
+        self.handle_many_to_many(tour, 'attractions', attractions_data, AttractionTour)
+        self.handle_many_to_many(tour, 'participant_types', participant_types_data, ParticipantTypeTour)
+        self.handle_many_to_many(tour, 'formats', formats_data, FormatTour)
+
+        return tour
+
+    def update(self, instance, validated_data):
+        attractions_data = validated_data.pop('attractions', None)
+        theme_data = validated_data.pop('theme', None)
+        participant_types_data = validated_data.pop('participant_types', None)
+        formats_data = validated_data.pop('formats', None)
+        duration_data = validated_data.pop('duration', None)
+        special_offer_data = validated_data.pop('special_offer', None)
+
+        # Обновляем связанные объекты, если переданы данные
+        if theme_data is not None:
+            instance.theme = self.get_or_create_related_object(
+                ThemeTour, 'name', theme_data['name'], "Тематика тура с таким названием не существует."
+            )
+        if duration_data is not None:
+            instance.duration = self.get_or_create_related_object(
+                DurationTour, 'name', duration_data['name'], "Продолжительность тура с таким названием не существует."
+            )
+        if special_offer_data is not None:
+            instance.special_offer = self.get_or_create_related_object(
+                SpecialOfferTour, 'offer_type', special_offer_data['offer_type'], "Спецпредложение с таким типом не существует."
+            )
+
+        # Обновляем Many-to-Many связи, если данные переданы
+        if attractions_data is not None:
+            self.handle_many_to_many(instance, 'attractions', attractions_data, AttractionTour)
+        if participant_types_data is not None:
+            self.handle_many_to_many(instance, 'participant_types', participant_types_data, ParticipantTypeTour)
+        if formats_data is not None:
+            self.handle_many_to_many(instance, 'formats', formats_data, FormatTour)
+
+        # Обновляем остальные поля
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance

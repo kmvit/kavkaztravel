@@ -2,194 +2,346 @@ from Kavkaztome.permissions import IsOwnerOnly
 
 from .filter import TourFilter
 from rest_framework import viewsets
+from rest_framework import serializers, viewsets
 from .models import (
-    DateTour,
-    EstimationTour,
-    GalleryTour,
-    Geo,
-    Guide,
-    Order,
-    Tag,
-    Tour,
-    TourOperator,
+    TourOperator, Tour, AttractionTour, ThemeTour, ParticipantTypeTour,
+    FormatTour, DurationTour, SpecialOfferTour, GalleryTour, TourConditions,
+    AvailableDateTour, Order
 )
 from .serializers import (
-    DateTourrSerializer,
-    EstimationTourGetSerializer,
-    EstimationTourSerializer,
-    GalleryTourSerializer,
-    GeoSerializer,
-    GuideSerializer,
-    OrderGetSerializer,
-    OrderSerializer,
-    TagSerializer,
-    TourGETSerializer,
     TourOperatorSerializer,
-    TourSerializer,
+    AttractionTourSerializer,
+    ThemeTourSerializer,
+    ParticipantTypeTourSerializer,
+    FormatTourSerializer,
+    DurationTourSerializer,
+    SpecialOfferTourSerializer,
+    GalleryTourSerializer,
+    TourConditionsSerializer,
+    AvailableDateTourSerializer,
+    OrderSerializer,
+    TourSerializer
 )
-from django.shortcuts import get_object_or_404
-from rest_framework.response import Response
-from rest_framework import status
-from django_filters.rest_framework import DjangoFilterBackend
+from .swagger_docs import (
+    TourOperatorSwagger,
+    AttractionTourSwagger,
+    ParticipantTypeTourSwagger,
+    FormatTourSwagger,
+    DurationTourSwagger,
+    SpecialOfferTourSwagger,
+    GalleryTourSwagger,
+    TourConditionsSwagger,
+    AvailableDateTourSwagger,
+    OrderSwagger,
+    TourSwagger,
+    ThemeTourSwagger
+)
 
 
-class GuideViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet для управления объектами модели Guide.
-    
-    Предоставляет полный набор действий (CRUD) для работы с гидами.
-    """
-    queryset = Guide.objects.all()
-    serializer_class = GuideSerializer
-    permission_classes = (IsOwnerOnly,)
 
 
 class TourOperatorViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet для управления объектами модели TourOperator.
-    
-    Предоставляет полный набор действий (CRUD) для работы с туроператорами.
-    """
+    """CRUD для Туроператоров"""
     queryset = TourOperator.objects.all()
     serializer_class = TourOperatorSerializer
-    permission_classes = (IsOwnerOnly,)
+
+    @TourOperatorSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @TourOperatorSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @TourOperatorSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @TourOperatorSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @TourOperatorSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+class AttractionTourViewSet(viewsets.ModelViewSet):
+    """CRUD для Достопримечательностей туров"""
+    queryset = AttractionTour.objects.all()
+    serializer_class = AttractionTourSerializer
+
+    @AttractionTourSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @AttractionTourSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @AttractionTourSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @AttractionTourSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @AttractionTourSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+class ThemeTourViewSet(viewsets.ModelViewSet):
+    """ CRUD для Тем туров """
+    queryset = ThemeTour.objects.all()
+    serializer_class = ThemeTourSerializer
+
+    @ThemeTourSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @ThemeTourSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @ThemeTourSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @ThemeTourSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @ThemeTourSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+    
+class ParticipantTypeTourViewSet(viewsets.ModelViewSet):
+    """CRUD для Типов участников туров"""
+    queryset = ParticipantTypeTour.objects.all()
+    serializer_class = ParticipantTypeTourSerializer
+
+    @ParticipantTypeTourSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @ParticipantTypeTourSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @ParticipantTypeTourSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @ParticipantTypeTourSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @ParticipantTypeTourSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+class FormatTourViewSet(viewsets.ModelViewSet):
+    """CRUD для Форматов туров"""
+    queryset = FormatTour.objects.all()
+    serializer_class = FormatTourSerializer
+
+    @FormatTourSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @FormatTourSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @FormatTourSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @FormatTourSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @FormatTourSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
 
 
-class TourViewSet(viewsets.ModelViewSet):
-    """Представление для управления тура.
 
-    Этот класс предоставляет операции для создания, чтения,
-    обновления и удаления заказов.
-    Также представление делать выборку из таблицы по тэгам,
-    геолокациям, и тэгам и геолакациям.
-    """
+class DurationTourViewSet(viewsets.ModelViewSet):
+    """CRUD для Продолжительности туров"""
+    queryset = DurationTour.objects.all()
+    serializer_class = DurationTourSerializer
 
-    queryset = Tour.objects.all()
-    serializer_class = TourGETSerializer
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = TourFilter
-    permission_classes = (IsOwnerOnly,)
+    @DurationTourSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
-    def get_serializer_class(self):
-        "Функция выбора сериализатора в зависимости от метода."
-        if self.action in ("list", "retrieve"):
-            return TourGETSerializer
-        return TourSerializer
+    @DurationTourSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
-    def perform_create(self, serializer):
-        """
-        Переопределяем метод perform_create.
-        """
-        tour_operator_id = int(self.request.data.get("tour_operator"))
-        tour_operator = get_object_or_404(TourOperator, id=tour_operator_id)
-        tag_id = int(self.request.data.get("tag"))
-        tag = get_object_or_404(Tag, id=tag_id)
-        geo_id = int(self.request.data.get("geo"))
-        geo = get_object_or_404(Geo, id=geo_id)
-        serializer.save(
-            tour_operator=tour_operator, tag=tag, geo=geo, owner=self.request.user
-        )
-        return Response(status=status.HTTP_201_CREATED)
+    @DurationTourSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
-    def perform_update(self, serializer):
-        """
-        Переопределяем метод perform_update.
-        """
-        tour_operator_id = int(
-            self.request.data.get("tour_operator", self.get_object().tour_operator_id)
-        )
-        tour_operator = get_object_or_404(TourOperator, id=tour_operator_id)
-        tag_id = int(self.request.data.get("tag", self.get_object().tag_id))
-        tag = get_object_or_404(Tag, id=tag_id)
-        geo_id = int(self.request.data.get("geo", self.get_object().geo_id))
-        geo = get_object_or_404(Geo, id=geo_id)
-        serializer.save(
-            tour_operator=tour_operator, tag=tag, geo=geo, owner=self.request.user
-        )
-        return Response(status=status.HTTP_200_OK)
+    @DurationTourSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
 
+    @DurationTourSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
 
-class GalleryTourViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Этот класс предоставляет операции для чтения
-    изображения тура.
-    """
+class SpecialOfferTourViewSet(viewsets.ModelViewSet):
+    """CRUD для Спецпредложений туров"""
+    queryset = SpecialOfferTour.objects.all()
+    serializer_class = SpecialOfferTourSerializer
 
+    @SpecialOfferTourSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @SpecialOfferTourSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @SpecialOfferTourSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @SpecialOfferTourSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @SpecialOfferTourSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+class GalleryTourViewSet(viewsets.ModelViewSet):
+    """CRUD для Галерей туров"""
     queryset = GalleryTour.objects.all()
     serializer_class = GalleryTourSerializer
 
+    @GalleryTourSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
-class DateTourViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Этот класс предоставляет операции для чтения
-    дат и продолжительности тура.
-    """
+    @GalleryTourSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
-    queryset = DateTour.objects.all()
-    serializer_class = DateTourrSerializer
+    @GalleryTourSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
+    @GalleryTourSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
 
-class TagViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Этот класс предоставляет операции для чтения
-    тэгов тура.
-    """
+    @GalleryTourSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
 
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
+class TourConditionsViewSet(viewsets.ModelViewSet):
+    """CRUD для Условий туров"""
+    queryset = TourConditions.objects.all()
+    serializer_class = TourConditionsSerializer
 
+    @TourConditionsSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
-class GeoViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Этот класс предоставляет операции для чтения
-    геолокаций тура.
-    """
+    @TourConditionsSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
-    queryset = Geo.objects.all()
-    serializer_class = GeoSerializer
+    @TourConditionsSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
+    @TourConditionsSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @TourConditionsSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+class AvailableDateTourViewSet(viewsets.ModelViewSet):
+    """CRUD для Доступных дат туров"""
+    queryset = AvailableDateTour.objects.all()
+    serializer_class = AvailableDateTourSerializer
+
+    @AvailableDateTourSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @AvailableDateTourSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @AvailableDateTourSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @AvailableDateTourSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @AvailableDateTourSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
 
 class OrderViewSet(viewsets.ModelViewSet):
-    """Представление для управления заказами тура.
-
-    Этот класс предоставляет операции для создания, чтения,
-    обновления и удаления заказов, используя сериализатор OrderSerializer.
-    """
-
+    """CRUD для Заказов туров"""
     queryset = Order.objects.all()
-    permission_classes = (IsOwnerOnly,)
+    serializer_class = OrderSerializer
 
-    def get_serializer_class(self):
-        if self.action in ("list", "retrieve"):
-            return OrderGetSerializer
-        return OrderSerializer
+    @OrderSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
-    def perform_create(self, serializer):
-        """
-        Переопределяем метод perform_create.
-        """
-        tour_id = int(self.request.data.get("tour"))
-        tour = get_object_or_404(Tour, id=tour_id)
-        serializer.save(tour=tour, owner=self.request.user)
-        return Response(status=status.HTTP_201_CREATED)
+    @OrderSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
-    def perform_update(self, serializer):
-        """
-        Переопределяем метод perform_update.
-        """
-        tour_id = int(self.request.data.get("tour_operator", self.get_object().tour_id))
-        tour = get_object_or_404(Tour, id=tour_id)
-        serializer.save(tour=tour, owner=self.request.user)
-        return Response(status=status.HTTP_200_OK)
+    @OrderSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
+    @OrderSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
 
-class EstimationTourViewSet(OrderViewSet):
-    """Класс для модели, который содержит оценки и отзывы."""
+    @OrderSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
 
-    queryset = EstimationTour.objects.all()
-    permission_classes = (IsOwnerOnly,)
+class TourViewSet(viewsets.ModelViewSet):
+    """CRUD для Туров"""
+    queryset = Tour.objects.select_related(
+        'guide', 'region', 'theme', 'duration', 'special_offer'
+    ).prefetch_related(
+        'attractions', 'participant_types', 'formats'
+    )
+    serializer_class = TourSerializer
 
-    def get_serializer_class(self):
-        if self.action in ("list", "retrieve"):
-            return EstimationTourGetSerializer
-        return EstimationTourSerializer
+    @TourSwagger.list
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @TourSwagger.create
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @TourSwagger.retrieve
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @TourSwagger.update
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @TourSwagger.destroy
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
