@@ -8,7 +8,6 @@ from .views import (
     DurationTourViewSet,
     SpecialOfferTourViewSet,
     GalleryTourViewSet,
-    TourConditionsViewSet,
     AvailableDateTourViewSet,
     OrderViewSet,
     TourViewSet,
@@ -29,7 +28,6 @@ router.register(r"participant_types", ParticipantTypeTourViewSet)
 router.register(r"formats", FormatTourViewSet)
 router.register(r"durations", DurationTourViewSet)
 router.register(r"special_offers", SpecialOfferTourViewSet)
-router.register(r"tour_conditions", TourConditionsViewSet)
 router.register(r"available_dates", AvailableDateTourViewSet)
 
 urlpatterns = router.urls

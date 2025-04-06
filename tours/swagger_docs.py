@@ -8,7 +8,7 @@ from .serializers import (
     DurationTourSerializer,
     SpecialOfferTourSerializer,
     GalleryTourSerializer,
-    TourConditionsSerializer,
+   
     AvailableDateTourSerializer,
     OrderSerializer,
     TourSerializer
@@ -104,10 +104,6 @@ GalleryTourSwagger = SimpleSwagger.make(
     serializer=GalleryTourSerializer
 )
 
-
-TourConditionsSwagger = SimpleSwagger.make(
-    serializer=TourConditionsSerializer
-)
 
 AvailableDateTourSwagger = SimpleSwagger.make(
     serializer=AvailableDateTourSerializer

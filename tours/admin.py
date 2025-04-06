@@ -3,16 +3,10 @@ from django.utils.html import format_html
 from .models import (
     Tour, AttractionTour, ThemeTour, ParticipantTypeTour,
     FormatTour, DurationTour, SpecialOfferTour,
-    GalleryTour, TourConditions, AvailableDateTour, Order
+    GalleryTour,  AvailableDateTour, Order
 )
 
-# Inline-классы для связанных моделей
-class TourConditionsInline(admin.TabularInline):
-    model = TourConditions
-    extra = 1
-    fields = ('group_size', 'children', 'meeting_point', 'booking_terms', 'organizational_details')
-    verbose_name = "Условие тура"
-    verbose_name_plural = "Условия проведения тура"
+
 
 class GalleryTourInline(admin.TabularInline):
     model = GalleryTour
@@ -44,14 +38,13 @@ class OrderInline(admin.TabularInline):
 # Основной класс админки для Tour
 @admin.register(Tour)
 class TourAdmin(admin.ModelAdmin):
-    list_display = ('title', 'region', 'price', 'duration', 'created_at')
+    list_display = ('title', 'region', 'price', 'duration', 'created_at', 'terms')
     list_filter = ('region', 'theme', 'duration', 'special_offer')
     search_fields = ('title', 'description')
     filter_horizontal = ('attractions', 'participant_types', 'formats')
     readonly_fields = ('created_at',)
     
     inlines = [
-        TourConditionsInline,
         GalleryTourInline,
         AvailableDateTourInline,
         OrderInline,
@@ -107,7 +100,6 @@ class SpecialOfferTourAdmin(admin.ModelAdmin):
     search_fields = ('offer_type', 'description')
 
 # Дополнительные регистрации
-admin.site.register(TourConditions)
 admin.site.register(GalleryTour)
 admin.site.register(AvailableDateTour)
 admin.site.register(Order)

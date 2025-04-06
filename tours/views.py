@@ -5,7 +5,7 @@ from rest_framework import viewsets
 from rest_framework import serializers, viewsets
 from .models import (
     TourOperator, Tour, AttractionTour, ThemeTour, ParticipantTypeTour,
-    FormatTour, DurationTour, SpecialOfferTour, GalleryTour, TourConditions,
+    FormatTour, DurationTour, SpecialOfferTour, GalleryTour,
     AvailableDateTour, Order
 )
 from .serializers import (
@@ -17,7 +17,6 @@ from .serializers import (
     DurationTourSerializer,
     SpecialOfferTourSerializer,
     GalleryTourSerializer,
-    TourConditionsSerializer,
     AvailableDateTourSerializer,
     OrderSerializer,
     TourSerializer
@@ -30,7 +29,6 @@ from .swagger_docs import (
     DurationTourSwagger,
     SpecialOfferTourSwagger,
     GalleryTourSwagger,
-    TourConditionsSwagger,
     AvailableDateTourSwagger,
     OrderSwagger,
     TourSwagger,
@@ -242,30 +240,6 @@ class GalleryTourViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 
-class TourConditionsViewSet(viewsets.ModelViewSet):
-    """CRUD для Условий туров"""
-    queryset = TourConditions.objects.all()
-    serializer_class = TourConditionsSerializer
-
-    @TourConditionsSwagger.list
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-
-    @TourConditionsSwagger.create
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
-
-    @TourConditionsSwagger.retrieve
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
-
-    @TourConditionsSwagger.update
-    def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
-
-    @TourConditionsSwagger.destroy
-    def destroy(self, request, *args, **kwargs):
-        return super().destroy(request, *args, **kwargs)
 
 class AvailableDateTourViewSet(viewsets.ModelViewSet):
     """CRUD для Доступных дат туров"""

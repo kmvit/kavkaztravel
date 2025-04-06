@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework import serializers, viewsets
 from .models import (
     TourOperator, Tour, AttractionTour, ThemeTour, ParticipantTypeTour,
-    FormatTour, DurationTour, SpecialOfferTour, GalleryTour, TourConditions,
+    FormatTour, DurationTour, SpecialOfferTour, GalleryTour,
     AvailableDateTour, Order
 )
 class TourOperatorSerializer(serializers.ModelSerializer):
@@ -20,17 +20,17 @@ class AttractionTourSerializer(serializers.ModelSerializer):
 class ThemeTourSerializer(serializers.ModelSerializer):
     class Meta:
         model = ThemeTour
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'description']
 
 class ParticipantTypeTourSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParticipantTypeTour
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'description']
 
 class FormatTourSerializer(serializers.ModelSerializer):
     class Meta:
         model = FormatTour
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'description']
 
 class DurationTourSerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,11 +46,6 @@ class GalleryTourSerializer(serializers.ModelSerializer):
     class Meta:
         model = GalleryTour
         fields = ['id', 'tour', 'image']
-
-class TourConditionsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TourConditions
-        fields = ['id', 'tour', 'group_size', 'children', 'meeting_point', 'booking_terms', 'organizational_details']
 
 class AvailableDateTourSerializer(serializers.ModelSerializer):
     class Meta:
@@ -74,7 +69,7 @@ class TourSerializer(serializers.ModelSerializer):
         model = Tour
         fields = [
             'id', 'guide', 'title', 'description', 'region', 'attractions', 'price',
-            'theme', 'participant_types', 'formats', 'duration', 'special_offer', 'created_at'
+            'theme', 'participant_types', 'formats', 'duration', 'special_offer', 'created_at', 'terms' 
         ]
 
     def get_or_create_related_object(self, model, filter_field, filter_value, error_message):

@@ -30,7 +30,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", default=get_random_secret_key())
 DEBUG = True
 
 
-ALLOWED_HOSTS = os.environ.get("HOST", default="127.0.0.1, localhost").split(",")
+ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [

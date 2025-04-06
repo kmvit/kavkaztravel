@@ -36,8 +36,8 @@ class Tour(models.Model):
     Основная модель тура, создаваемого гидом.
     
     Включает информацию о регионе, тематике, достопримечательностях,
-    формате проведения, типах участников, стоимости, продолжительности
-    и наличии спецпредложения (со скидкой, спецпредложение и пр.).
+    формате проведения, типах участников, стоимости, продолжительности,
+    наличии спецпредложения и условиях тура.
     """
     guide = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -50,6 +50,12 @@ class Tour(models.Model):
         verbose_name="Название тура"
     )
     description = models.TextField("Описание", blank=True, null=True)
+    terms = models.TextField(
+        "Условия тура",
+        blank=True,
+        null=True,
+        help_text="Правила отмены, что включено в стоимость, требования к участникам и т.д."
+    )
     region = models.ForeignKey(
         Region,
         on_delete=models.PROTECT,
@@ -113,7 +119,6 @@ class Tour(models.Model):
     class Meta:
         verbose_name = "Тур"
         verbose_name_plural = "Туры"
-
 
 class AttractionTour(models.Model):
     """
@@ -203,7 +208,6 @@ class DurationTour(models.Model):
         verbose_name = "Продолжительность тура"
         verbose_name_plural = "Продолжительности туров"
 
-from django.db import models
 
 class SpecialOfferTour(models.Model):
     """
@@ -238,58 +242,6 @@ class GalleryTour(models.Model):
     )
     image = models.ImageField(upload_to="content_images/", blank=True, null=True)
 
-
-
-class TourConditions(models.Model):
-    """
-    Модель, содержащая условия проведения тура:
-    - размер группы,
-    - наличие детей,
-    - место встречи,
-    - условия бронирования,
-    - организационные детали.
-    """
-
-    tour = models.ForeignKey(
-        Tour,
-        on_delete=models.CASCADE,
-        related_name="tour_conditions",
-        verbose_name="Тур"
-    )
-    group_size = models.IntegerField(
-        blank=True,
-        null=True,
-        verbose_name="Количество человек в группе"
-    )
-    children = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        verbose_name="Наличие детей в группе"
-    )
-    meeting_point = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        verbose_name="Место встречи"
-    )
-    booking_terms = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Условия бронирования"
-    )
-    organizational_details = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Организационные детали"
-    )
-
-    def __str__(self):
-        return f"Условия тура для: {self.tour.title}"
-
-    class Meta:
-        verbose_name = "Условие тура"
-        verbose_name_plural = "Условия туров"
 
 
 from django.db import models
