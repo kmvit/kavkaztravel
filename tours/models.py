@@ -24,20 +24,9 @@ class TourOperator(BaseContent):
         return self.license_number
 
 
-from django.conf import settings
-from django.db import models
-
-from django.conf import settings
-from django.db import models
-
-
 class Tour(models.Model):
     """
     Основная модель тура, создаваемого гидом.
-    
-    Включает информацию о регионе, тематике, достопримечательностях,
-    формате проведения, типах участников, стоимости, продолжительности,
-    наличии спецпредложения и условиях тура.
     """
     guide = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -62,51 +51,16 @@ class Tour(models.Model):
         related_name='tours',
         verbose_name="Регион тура"
     )
-    attractions = models.ManyToManyField(
-        'AttractionTour',
+    tags = models.ManyToManyField(
+        'Tag',
         related_name='tours',
-        verbose_name="Достопримечательности тура",
+        verbose_name="Теги тура",
         blank=True
     )
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         verbose_name="Стоимость тура"
-    )
-    theme = models.ForeignKey(
-        'ThemeTour',
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='tours',
-        verbose_name="Тематика тура"
-    )
-    participant_types = models.ManyToManyField(
-        'ParticipantTypeTour',
-        related_name='tours',
-        verbose_name="Типы участников тура",
-        blank=True
-    )
-    formats = models.ManyToManyField(
-        'FormatTour',
-        related_name='tours',
-        verbose_name="Форматы тура",
-        blank=True
-    )
-    duration = models.ForeignKey(
-        'DurationTour',
-        on_delete=models.PROTECT,
-        related_name='tours',
-        verbose_name="Продолжительность тура",
-        null=True,
-        blank=True
-    )
-    special_offer = models.ForeignKey(
-        'SpecialOfferTour',
-        on_delete=models.PROTECT,
-        related_name='tours',
-        verbose_name="Прочее",
-        null=True,
-        blank=True
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -120,116 +74,20 @@ class Tour(models.Model):
         verbose_name = "Тур"
         verbose_name_plural = "Туры"
 
-class AttractionTour(models.Model):
+class Tag(models.Model):
     """
-    Достопримечательность тура.
-
-    Пример: "Озеро Байкал", "Эльбрус", "Кижи"
+    Универсальная модель для тегов.
     """
-    name = models.CharField(max_length=100, unique=True, verbose_name="Название достопримечательности")
-    description = models.TextField(blank=True, verbose_name="Описание достопримечательности")
-    region = models.ForeignKey(
-        Region,
-        on_delete=models.CASCADE,
-        related_name='attractions',
-        verbose_name="Регион достопримечательности"
-    )
+    name = models.CharField(max_length=100, unique=True, verbose_name="Название тега")
+    description = models.TextField(blank=True, null=True, verbose_name="Описание тега")
+    tag_type = models.CharField(max_length=50, verbose_name="Тип тега")  # теперь любой тип
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.tag_type})"
 
     class Meta:
-        verbose_name = "Достопримечательность тура"
-        verbose_name_plural = "Достопримечательности туров"
-
-
-
-class ThemeTour(models.Model):
-    """
-    Тематика тура.
-
-    Пример: "Эко-туризм", "Исторический", "Приключения"
-    """
-    name = models.CharField(max_length=100, unique=True, verbose_name="Название тематики")
-    description = models.TextField(blank=True, verbose_name="Описание тематики тура")
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = "Тематика тура"
-        verbose_name_plural = "Тематики туров"
-
-class ParticipantTypeTour(models.Model):
-    """
-    Тип участников тура.
-
-    Пример: "Взрослые", "Семьи с детьми", "Пенсионеры"
-    """
-    name = models.CharField(max_length=100, unique=True, verbose_name="Название типа участников")
-    description = models.TextField(blank=True, verbose_name="Описание типа участников")
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = "Тип участников тура"
-        verbose_name_plural = "Типы участников туров"
-
-class FormatTour(models.Model):
-    """
-    Формат проведения тура.
-
-    Пример: "Групповой", "Индивидуальный", "Онлайн"
-    """
-    name = models.CharField(max_length=100, unique=True, verbose_name="Название формата")
-    description = models.TextField(blank=True, verbose_name="Описание формата участников")
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = "Формат тура"
-        verbose_name_plural = "Форматы туров"
-
-
-class DurationTour(models.Model):
-    """
-    Модель, описывающая продолжительность тура.
-    
-    Пример: "2 часа", "3 дня"
-    """
-    name = models.CharField(max_length=100, unique=True, verbose_name="Продолжительность тура")
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = "Продолжительность тура"
-        verbose_name_plural = "Продолжительности туров"
-
-
-class SpecialOfferTour(models.Model):
-    """
-    Модель спецпредложения или скидки для тура.
-
-    В этой модели можно задать тип предложения (например, скидка или спецпредложение),
-    """
-   
-    offer_type = models.CharField(
-        max_length=250,
-        verbose_name="Тип предложения",
-    )
-    description = models.TextField(
-        verbose_name="Описание",
-        blank=True,
-        null=True,
-        help_text="Описание предложения (например, условия или дополнительные детали)."
-    )
-
-    class Meta:
-        verbose_name = "Спецпредложение/скидка тура"
-        verbose_name_plural = "Спецпредложения/скидки туров"
+        verbose_name = "Тег"
+        verbose_name_plural = "Теги"
 
 
 

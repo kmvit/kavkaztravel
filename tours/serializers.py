@@ -3,44 +3,18 @@ from rest_framework import serializers
 
 from rest_framework import serializers, viewsets
 from .models import (
-    TourOperator, Tour, AttractionTour, ThemeTour, ParticipantTypeTour,
-    FormatTour, DurationTour, SpecialOfferTour, GalleryTour,
-    AvailableDateTour, Order
+    TourOperator, Tour, GalleryTour,
+    AvailableDateTour, Order, Tag
 )
 class TourOperatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = TourOperator
         fields = ['id', 'region', 'owner', 'license_number']
 
-class AttractionTourSerializer(serializers.ModelSerializer):
+class TagSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AttractionTour
-        fields = ['id', 'name', 'description', 'region']
-
-class ThemeTourSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ThemeTour
-        fields = ['id', 'name', 'description']
-
-class ParticipantTypeTourSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ParticipantTypeTour
-        fields = ['id', 'name', 'description']
-
-class FormatTourSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FormatTour
-        fields = ['id', 'name', 'description']
-
-class DurationTourSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DurationTour
-        fields = ['id', 'name']
-
-class SpecialOfferTourSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SpecialOfferTour
-        fields = ['id', 'offer_type', 'description']
+        model = Tag
+        fields = ['id', 'name', 'description', 'tag_type']
 
 class GalleryTourSerializer(serializers.ModelSerializer):
     class Meta:
@@ -56,118 +30,48 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'tour', 'date', 'size', 'username', 'email', 'phone', 'owner']
+class TourDetailSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True)  
+    gallery_tour = GalleryTourSerializer(many=True)  
 
-class TourSerializer(serializers.ModelSerializer):
-    attractions = AttractionTourSerializer(many=True, required=False)
-    theme = ThemeTourSerializer(required=False)
-    participant_types = ParticipantTypeTourSerializer(many=True, required=False)
-    formats = FormatTourSerializer(many=True, required=False)
-    duration = DurationTourSerializer(required=False)
-    special_offer = SpecialOfferTourSerializer(required=False)
 
     class Meta:
         model = Tour
-        fields = [
-            'id', 'guide', 'title', 'description', 'region', 'attractions', 'price',
-            'theme', 'participant_types', 'formats', 'duration', 'special_offer', 'created_at', 'terms' 
-        ]
+        fields = ['id', 'guide', 'title', 'description', 'terms', 'region', 'tags', 'price', 'created_at', 'gallery_tour']
 
-    def get_or_create_related_object(self, model, filter_field, filter_value, error_message):
-        """
-        Вспомогательный метод для получения связанного объекта.
-        Если объект не найден, выбрасывает ошибку.
-        """
-        try:
-            return model.objects.get(**{filter_field: filter_value})
-        except model.DoesNotExist:
-            raise serializers.ValidationError(error_message)
+class TourCreateUpdateSerializer(serializers.ModelSerializer):
+    tags = serializers.ListField(
+        child=serializers.IntegerField(), required=False, allow_empty=True
+    )
 
-    def handle_many_to_many(self, instance, related_field, data, model_class):
-        """
-        Вспомогательный метод для обработки Many-to-Many связей.
-        Очищает старые данные и добавляет новые, если они переданы.
-        """
-        if data is not None:
-            getattr(instance, related_field).clear()
-            for item_data in data:
-                obj = self.get_or_create_related_object(
-                    model_class,
-                    'name',
-                    item_data['name'],
-                    f"{model_class.__name__} с таким названием не существует."
-                )
-                getattr(instance, related_field).add(obj)
+    class Meta:
+        model = Tour
+        fields = ['id', 'guide', 'title', 'description', 'terms', 'region', 'tags', 'price']
+
+    def validate_tags(self, value):
+        # Проверяем, что все переданные теги существуют в базе данных
+        if value:
+            existing_tags = Tag.objects.filter(id__in=value)
+            existing_tag_ids = existing_tags.values_list('id', flat=True)
+            
+            # Если переданные теги не совпадают с существующими тегами, выбрасываем ошибку
+            missing_tags = set(value) - set(existing_tag_ids)
+            if missing_tags:
+                raise serializers.ValidationError(f"Некоторые теги не существуют: {', '.join(map(str, missing_tags))}!")
+        return value
 
     def create(self, validated_data):
-        attractions_data = validated_data.pop('attractions', [])
-        theme_data = validated_data.pop('theme', None)
-        participant_types_data = validated_data.pop('participant_types', [])
-        formats_data = validated_data.pop('formats', [])
-        duration_data = validated_data.pop('duration', None)
-        special_offer_data = validated_data.pop('special_offer', None)
-
-        # Получаем связанные объекты, если данные предоставлены
-        theme = (
-            self.get_or_create_related_object(ThemeTour, 'name', theme_data['name'], "Тематика тура с таким названием не существует.")
-            if theme_data else None
-        )
-        duration = (
-            self.get_or_create_related_object(DurationTour, 'name', duration_data['name'], "Продолжительность тура с таким названием не существует.")
-            if duration_data else None
-        )
-        special_offer = (
-            self.get_or_create_related_object(SpecialOfferTour, 'offer_type', special_offer_data['offer_type'], "Спецпредложение с таким типом не существует.")
-            if special_offer_data else None
-        )
-
-        # Создаем тур с основными полями
-        tour = Tour.objects.create(
-            **validated_data,
-            theme=theme,
-            duration=duration,
-            special_offer=special_offer
-        )
-
-        # Обрабатываем Many-to-Many связи, если данные присутствуют
-        self.handle_many_to_many(tour, 'attractions', attractions_data, AttractionTour)
-        self.handle_many_to_many(tour, 'participant_types', participant_types_data, ParticipantTypeTour)
-        self.handle_many_to_many(tour, 'formats', formats_data, FormatTour)
-
+        tags_data = validated_data.pop('tags', [])
+        tour = Tour.objects.create(**validated_data)
+        if tags_data:
+            tour.tags.set(tags_data)  # Связываем теги с туром
         return tour
 
     def update(self, instance, validated_data):
-        attractions_data = validated_data.pop('attractions', None)
-        theme_data = validated_data.pop('theme', None)
-        participant_types_data = validated_data.pop('participant_types', None)
-        formats_data = validated_data.pop('formats', None)
-        duration_data = validated_data.pop('duration', None)
-        special_offer_data = validated_data.pop('special_offer', None)
-
-        # Обновляем связанные объекты, если переданы данные
-        if theme_data is not None:
-            instance.theme = self.get_or_create_related_object(
-                ThemeTour, 'name', theme_data['name'], "Тематика тура с таким названием не существует."
-            )
-        if duration_data is not None:
-            instance.duration = self.get_or_create_related_object(
-                DurationTour, 'name', duration_data['name'], "Продолжительность тура с таким названием не существует."
-            )
-        if special_offer_data is not None:
-            instance.special_offer = self.get_or_create_related_object(
-                SpecialOfferTour, 'offer_type', special_offer_data['offer_type'], "Спецпредложение с таким типом не существует."
-            )
-
-        # Обновляем Many-to-Many связи, если данные переданы
-        if attractions_data is not None:
-            self.handle_many_to_many(instance, 'attractions', attractions_data, AttractionTour)
-        if participant_types_data is not None:
-            self.handle_many_to_many(instance, 'participant_types', participant_types_data, ParticipantTypeTour)
-        if formats_data is not None:
-            self.handle_many_to_many(instance, 'formats', formats_data, FormatTour)
-
-        # Обновляем остальные поля
+        tags_data = validated_data.pop('tags', [])
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-
+        if tags_data:
+            instance.tags.set(tags_data)  # Связываем теги с туром
         instance.save()
         return instance
