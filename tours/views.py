@@ -1,15 +1,16 @@
 from Kavkaztome.permissions import IsOwnerOnly
-
+from django.utils import timezone
 from .filter import TourFilter
 from rest_framework import viewsets
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import serializers, viewsets
 from .models import (
-    TourOperator, Tour, Tag, GalleryTour,
+    TourOperator, Tour, TagTour, GalleryTour,
     AvailableDateTour, Order
 )
 from .serializers import (
     TourOperatorSerializer,
-    TagSerializer,
+    TagTourSerializer,
     GalleryTourSerializer,
     AvailableDateTourSerializer,
     OrderSerializer,
@@ -22,7 +23,7 @@ from .swagger_docs import (
     AvailableDateTourSwagger,
     OrderSwagger,
     TourSwagger,
-    TagSwagger
+    TagTourSwagger
 )
 
 
@@ -32,6 +33,7 @@ class GalleryTourViewSet(viewsets.ModelViewSet):
     """CRUD для Галерей туров"""
     queryset = GalleryTour.objects.all()
     serializer_class = GalleryTourSerializer
+    parser_classes = [MultiPartParser, FormParser]
 
     @GalleryTourSwagger.gallery_tour_list
     def list(self, request, *args, **kwargs):
@@ -56,7 +58,7 @@ class GalleryTourViewSet(viewsets.ModelViewSet):
 
 class AvailableDateTourViewSet(viewsets.ModelViewSet):
     """CRUD для Доступных дат туров"""
-    queryset = AvailableDateTour.objects.all()
+    queryset = AvailableDateTour.objects.filter(start_date__gte=timezone.now().date())
     serializer_class = AvailableDateTourSerializer
 
     @AvailableDateTourSwagger.available_date_tour_list 
@@ -111,7 +113,7 @@ class TourViewSet(viewsets.ModelViewSet):
         'guide', 'region'
     ).prefetch_related(
         'tags',
-        'gallery_tour'  # Добавляем prefetch для галереи
+        'gallery_tour'
     )
     
     def get_serializer_class(self):
@@ -141,30 +143,29 @@ class TourViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
-  # или откуда импортируешь
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagTourViewSet(viewsets.ModelViewSet):
     """CRUD для Тегов"""
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
+    queryset = TagTour.objects.all()
+    serializer_class = TagTourSerializer
 
-    @TagSwagger.list
+    @TagTourSwagger.list
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-    @TagSwagger.create
+    @TagTourSwagger.create
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-    @TagSwagger.retrieve
+    @TagTourSwagger.retrieve
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @TagSwagger.update
+    @TagTourSwagger.update
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
-    @TagSwagger.destroy
+    @TagTourSwagger.destroy
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 

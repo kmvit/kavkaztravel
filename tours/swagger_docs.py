@@ -5,11 +5,10 @@ from .serializers import (
     AvailableDateTourSerializer,
     OrderSerializer,
     TourCreateUpdateSerializer,
-    TourDetailSerializer
+    TourDetailSerializer,
+    TagTourSerializer
 )
 
-
-from .serializers import TourDetailSerializer, TourCreateUpdateSerializer
 from .models import Tour
 
 class TourSwagger:
@@ -264,40 +263,38 @@ class TourOperatorSwagger:
         responses={204: None, 404: "Не найдено"},
     )
 
-from drf_spectacular.utils import extend_schema
-from .serializers import TagSerializer
 
-class TagSwagger:
+class TagTourSwagger:
     """Документация для API тегов."""
 
     list = extend_schema(
         methods=["GET"],
         summary="📋 Список тегов",
         description="Возвращает список всех доступных тегов.",
-        responses={200: TagSerializer(many=True)},
+        responses={200: TagTourSerializer(many=True)},
     )
 
     create = extend_schema(
         methods=["POST"],
         summary="➕ Создать тег",
         description="Создаёт новый тег.",
-        request=TagSerializer,
-        responses={201: TagSerializer, 400: "Ошибка"},
+        request=TagTourSerializer,
+        responses={201: TagTourSerializer, 400: "Ошибка"},
     )
 
     retrieve = extend_schema(
         methods=["GET"],
         summary="🔍 Получить тег по ID",
         description="Получает данные тега по его ID.",
-        responses={200: TagSerializer, 404: "Не найдено"},
+        responses={200: TagTourSerializer, 404: "Не найдено"},
     )
 
     update = extend_schema(
         methods=["PUT", "PATCH"],
         summary="✏️ Обновить тег",
         description="Обновляет существующий тег по ID. Поддерживает PUT и PATCH.",
-        request=TagSerializer,
-        responses={200: TagSerializer, 400: "Ошибка", 404: "Не найдено"},
+        request=TagTourSerializer,
+        responses={200: TagTourSerializer, 400: "Ошибка", 404: "Не найдено"},
     )
 
     destroy = extend_schema(

@@ -52,7 +52,7 @@ class Tour(models.Model):
         verbose_name="Регион тура"
     )
     tags = models.ManyToManyField(
-        'Tag',
+        'TagTour',
         related_name='tours',
         verbose_name="Теги тура",
         blank=True
@@ -74,13 +74,14 @@ class Tour(models.Model):
         verbose_name = "Тур"
         verbose_name_plural = "Туры"
 
-class Tag(models.Model):
+class TagTour(models.Model):
     """
     Универсальная модель для тегов.
     """
     name = models.CharField(max_length=100, unique=True, verbose_name="Название тега")
     description = models.TextField(blank=True, null=True, verbose_name="Описание тега")
-    tag_type = models.CharField(max_length=50, verbose_name="Тип тега")  # теперь любой тип
+    tag_type = models.CharField(max_length=50, verbose_name="Тип тега", blank=True,  # Разрешить пустую строку
+        null=True,)  # теперь любой тип
 
     def __str__(self):
         return f"{self.name} ({self.tag_type})"
@@ -127,21 +128,6 @@ class AvailableDateTour(models.Model):
 
     def __str__(self):
         return f"{self.tour.title}: {self.start_date} — {self.end_date}"
-
-    def clean(self):
-        """Проверка корректности дат"""
-        # Получаем сегодняшнюю дату
-        today = timezone.now().date()
-
-        # Проверяем, что даты не в прошлом
-        if self.start_date < today:
-            raise ValidationError("Дата начала тура не может быть в прошлом.")
-        if self.end_date < today:
-            raise ValidationError("Дата окончания тура не может быть в прошлом.")
-
-        # Проверяем, что дата окончания позже даты начала
-        if self.end_date <= self.start_date:
-            raise ValidationError("Дата окончания тура должна быть позже даты начала.")
 
     @property
     def duration(self):

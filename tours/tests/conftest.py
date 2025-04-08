@@ -2,12 +2,9 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from regions.models import Region
-from tours.models import (
-    TourOperator, Tour, AttractionTour, ThemeTour, ParticipantTypeTour,
-    FormatTour, DurationTour, SpecialOfferTour, GalleryTour,
-    AvailableDateTour, Order
-)
-
+from tours.models import TourOperator, Tour, TagTour, AvailableDateTour, Order, GalleryTour
+from core.models import BaseContent
+from django.core.files.uploadedfile import SimpleUploadedFile
 User = get_user_model()
 
 
@@ -71,116 +68,97 @@ def child_region(db, parent_region, owner):
 
 
 
-import pytest
-from datetime import date, timedelta
+from core.models import BaseContent
 
-# Фикстуры для моделей туров
+
+
+
+
 @pytest.fixture
-def tour_operator(db, owner, parent_region):
-    """
-    Фикстура для создания тестового туроператора. 
-    """
+def region(db):
+    """Создание региона."""
+    return Region.objects.create(
+        name='Московская область'
+    )
+
+
+@pytest.fixture
+def tour_operator(db, region, user):
+    """Создание туроператора."""
     return TourOperator.objects.create(
-        region=parent_region,
-        owner=owner,
-        license_number="TO-123456"
+        region=region,
+        owner=user,
+        license_number="1234567890"
     )
 
+
 @pytest.fixture
-def theme_tour(db):
-    """
-    Фикстура для создания тестовой тематики тура.
-    """
-    return ThemeTour.objects.create(
-        name="Экстремальный туризм",
-        description="Туры с элементами экстрима"
+def tag(db):
+    """Создание тега для тура."""
+    return TagTour.objects.create(
+        name='Пешеходный',
+        description='Тур для любителей пеших прогулок',
+        tag_type='Тип 1'
     )
 
-@pytest.fixture
-def attraction_tour(db, parent_region):
-    """
-    Фикстура для создания тестовой достопримечательности.
-    """
-    return AttractionTour.objects.create(
-        name="Эльбрус",
-        description="Высочайшая вершина России",
-        region=parent_region
-    )
 
 @pytest.fixture
-def participant_type_tour(db):
-    """Фикстура для типа участников тура."""
-    return ParticipantTypeTour.objects.create(
-        name="Семьи с детьми",
-        description="Тур для семейного отдыха"
-    )
-
-@pytest.fixture
-def format_tour(db):
-    """Фикстура для формата проведения тура."""
-    return FormatTour.objects.create(
-        name="Индивидуальный",
-        description="Персональный тур"
-    )
-
-@pytest.fixture
-def duration_tour(db):
-    """Фикстура описывающая продолжительность тура."""
-    return DurationTour.objects.create(name="5 дней")
-
-@pytest.fixture
-def special_offer_tour(db):
-    """Фикстура для спецпредложений или скидки для тура."""
-    return SpecialOfferTour.objects.create(
-        offer_type="Скидка 15%",
-        description="Сезонное предложение"
-    )
-
-@pytest.fixture
-def tour(db, owner, parent_region, theme_tour, duration_tour, 
-        special_offer_tour, attraction_tour, participant_type_tour, 
-        format_tour):
-    """Фикстура для тура."""        
+def tour(db, region, user, tag):
+    """Создание тура."""
     tour = Tour.objects.create(
-        guide=owner,
-        title="Экскурсия по Москве",
-        description="Обзорная экскурсия по столице",
-        terms="Без ограничений",
-        region=parent_region,
-        price=5000.00,
-        theme=theme_tour,
-        duration=duration_tour,
-        special_offer=special_offer_tour
+        guide=user,
+        title="Горный тур в Алтай",
+        description="Тур по горам Алтая",
+        terms="Условия туров",
+        region=region,
+        price=12000.00,
     )
-    
-    # Добавляем M2M связи
-    tour.attractions.add(attraction_tour)
-    tour.participant_types.add(participant_type_tour)
-    tour.formats.add(format_tour)
-    
+    tour.tags.add(tag)
     return tour
 
-@pytest.fixture
-def gallery_tour(db, tour):
-    return GalleryTour.objects.create(tour=tour)
 
 @pytest.fixture
 def available_date_tour(db, tour):
+    """Создание доступной даты для тура."""
     return AvailableDateTour.objects.create(
         tour=tour,
-        start_date=date.today() + timedelta(days=7),
-        end_date=date.today() + timedelta(days=10),
+        start_date="2025-05-01",
+        end_date="2025-05-10",
         is_active=True
     )
 
+
 @pytest.fixture
 def order(db, tour, user):
+    """Создание заказа для тура."""
     return Order.objects.create(
         tour=tour,
-        date=date.today() + timedelta(days=14),
+        date="2025-05-05",
         size=2,
-        username="test_client",
-        email="client@test.ru",
-        phone="+79001234567",
+        username="client_name",
+        email="client@example.com",
+        phone="+71234567890",
         owner=user
     )
+
+import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
+import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+@pytest.fixture
+def valid_image():
+    """Создает валидное тестовое изображение"""
+    return SimpleUploadedFile(
+        name='test_image.jpg',
+        content=b'\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00\xFF\xDB\x00',  # Минимальный валидный JPEG
+        content_type='image/jpeg'
+    )
+
+@pytest.fixture
+def gallery_data(tour, valid_image):
+    """Данные для создания элемента галереи"""
+    return {
+        'tour': tour.id,
+        'image': valid_image
+    }

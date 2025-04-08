@@ -1,19 +1,19 @@
 from rest_framework import serializers
-
-
+from datetime import timedelta
+from django.utils import timezone 
 from rest_framework import serializers, viewsets
 from .models import (
     TourOperator, Tour, GalleryTour,
-    AvailableDateTour, Order, Tag
+    AvailableDateTour, Order, TagTour
 )
 class TourOperatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = TourOperator
         fields = ['id', 'region', 'owner', 'license_number']
 
-class TagSerializer(serializers.ModelSerializer):
+class TagTourSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Tag
+        model = TagTour
         fields = ['id', 'name', 'description', 'tag_type']
 
 class GalleryTourSerializer(serializers.ModelSerializer):
@@ -26,12 +26,36 @@ class AvailableDateTourSerializer(serializers.ModelSerializer):
         model = AvailableDateTour
         fields = ['id', 'tour', 'start_date', 'end_date', 'is_active']
 
+    def validate(self, data):
+        today = timezone.now().date()
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+
+        # Проверка дат
+        if start_date and end_date:
+            if start_date < today:
+                raise serializers.ValidationError(
+                    {"start_date": "Дата начала не может быть в прошлом."}
+                )
+            
+            if end_date < today:
+                raise serializers.ValidationError(
+                    {"end_date": "Дата окончания не может быть в прошлом."}
+                )
+            
+            if end_date <= start_date:
+                raise serializers.ValidationError(
+                    {"end_date": "Должна быть позже даты начала."}
+                )
+
+        return data
+
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'tour', 'date', 'size', 'username', 'email', 'phone', 'owner']
 class TourDetailSerializer(serializers.ModelSerializer):
-    tags = TagSerializer(many=True)  
+    tags = TagTourSerializer(many=True)  
     gallery_tour = GalleryTourSerializer(many=True)  
 
 
