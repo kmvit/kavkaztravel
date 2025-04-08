@@ -141,24 +141,28 @@ def order(db, tour, user):
         owner=user
     )
 
-import pytest
-from django.core.files.uploadedfile import SimpleUploadedFile
-import pytest
-from django.core.files.uploadedfile import SimpleUploadedFile
 
 @pytest.fixture
-def valid_image():
-    """Создает валидное тестовое изображение"""
+def image_file():
+    """Создает действительно валидное тестовое изображение"""
+    from PIL import Image
+    import io
+    
+    # Создаем минимальное валидное изображение 1x1 пиксель
+    image = Image.new('RGB', (1, 1), color='red')
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='JPEG')
+    
     return SimpleUploadedFile(
         name='test_image.jpg',
-        content=b'\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00\xFF\xDB\x00',  # Минимальный валидный JPEG
+        content=img_byte_arr.getvalue(),
         content_type='image/jpeg'
     )
 
 @pytest.fixture
-def gallery_data(tour, valid_image):
-    """Данные для создания элемента галереи"""
-    return {
-        'tour': tour.id,
-        'image': valid_image
-    }
+def gallery_item(tour, image_file):
+    """Фикстура для элемента галереи"""
+    return GalleryTour.objects.create(
+        tour=tour,
+        image=image_file
+    )

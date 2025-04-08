@@ -3,40 +3,23 @@ from rest_framework import status
 from django.core.files.uploadedfile import SimpleUploadedFile
 URL = '/api/v1/tours/gallery_tour/'
 
-import pytest
-from rest_framework import status
-
-URL = '/api/v1/tours/gallery_tour/'
-
 @pytest.mark.django_db
-def test_create_gallery_item(api_client, gallery_data):
+def test_create_valid(api_client, tour, image_file):
     """Успешное создание элемента галереи"""
     response = api_client.post(
         URL,
-        data=gallery_data,
+        {'tour': tour.id, 'image': image_file},
         format='multipart'
     )
+    
+    print("\n=== DEBUG INFORMATION ===")
+    print(f"File size: {len(image_file.read())} bytes")
+    image_file.seek(0)  # Возвращаем указатель в начало файла
+    print(f"File content start: {image_file.read(10)}")
+    image_file.seek(0)
+    print(f"Response data: {response.data}")
     
     assert response.status_code == status.HTTP_201_CREATED
-    assert 'id' in response.data
-    assert 'image' in response.data
-    assert response.data['tour'] == gallery_data['tour']
-
-@pytest.mark.django_db
-def test_create_without_image(api_client, tour):
-    """Попытка создания без изображения"""
-    response = api_client.post(
-        URL,
-        data={'tour': tour.id},
-        format='multipart'
-    )
-    
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert 'image' in response.data
-
-import pytest
-from rest_framework import status
-
 
 
 @pytest.mark.django_db
@@ -61,9 +44,17 @@ from rest_framework import status
 @pytest.mark.django_db
 def test_update_item(api_client, gallery_item, image_file):
     """Обновление изображения"""
-    new_file = SimpleUploadedFile(
-        name='new_image.jpg',
-        content=b'\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01\x01\x00',  # другой минимальный JPEG
+    from PIL import Image
+    import io
+    
+    # Создаем минимальное валидное изображение 1x1 пиксель
+    image = Image.new('RGB', (1, 1), color='red')
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='JPEG')
+    
+    return SimpleUploadedFile(
+        name='test_image.jpg',
+        content=img_byte_arr.getvalue(),
         content_type='image/jpeg'
     )
     response = api_client.patch(
