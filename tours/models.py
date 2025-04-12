@@ -3,21 +3,8 @@ from django.db import models
 from core.models import BaseContent
 from regions.models import Region
 from django.core.validators import RegexValidator
-
-
-class Guide(BaseContent):
-    """
-    Класс для модели гид.
-    """
-
-    region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="guides")
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="guides",
-        default=1,
-    )
-    experience = models.IntegerField()  
+from regions.models import Region
+from django.core.validators import MinValueValidator
 
 
 class TourOperator(BaseContent):
@@ -39,35 +26,74 @@ class TourOperator(BaseContent):
 
 
 class Tour(models.Model):
-    """Класс для модели тура."""
+    """
+    Основная модель тура, создаваемого гидом.
+    """
 
-    tour_operator = models.ForeignKey(
-        TourOperator, on_delete=models.CASCADE, related_name="touroperators"
-    )
-    tag = models.ForeignKey("Tag", on_delete=models.CASCADE, related_name="tag")
-    geo = models.ForeignKey("Geo", on_delete=models.CASCADE, related_name="tag")
-    name = models.CharField(max_length=100)
-    content = models.TextField(blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-    date = models.DateField(auto_now_add=True, null=True)
-    slug = models.SlugField(unique=True, blank=True)
-    owner = models.ForeignKey(
+    guide = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="tour",
-        default=1,
+        related_name="tours",
+        verbose_name="Гид тура",
+    )
+    title = models.CharField(max_length=255, unique=True, verbose_name="Название тура")
+    description = models.TextField("Описание", blank=True, null=True)
+    terms = models.TextField(
+        "Условия тура",
+        blank=True,
+        null=True,
+        help_text="Правила отмены, что включено в стоимость, требования к участникам и т.д.",
+    )
+    region = models.ForeignKey(
+        Region,
+        on_delete=models.PROTECT,
+        related_name="tours",
+        verbose_name="Регион тура",
+    )
+    tags = models.ManyToManyField(
+        "TagTour",
+        related_name="tours",
+        verbose_name="Теги тура",
+        blank=True,
+    )
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Стоимость тура",
+        validators=[MinValueValidator(0)],
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Дата создания тура"
     )
 
     def __str__(self):
-        return self.name
+        return f"{self.title} ({self.region.name})"
+
+    class Meta:
+        verbose_name = "Тур"
+        verbose_name_plural = "Туры"
 
 
-class Geo(models.Model):
-    geo_title = models.CharField(max_length=255, blank=True, null=True)
-    geo_description = models.TextField(blank=True, null=True)
+class TagTour(models.Model):
+    """
+    Универсальная модель для тегов.
+    """
+
+    name = models.CharField(max_length=100, unique=True, verbose_name="Название тега")
+    description = models.TextField(blank=True, null=True, verbose_name="Описание тега")
+    tag_type = models.CharField(
+        max_length=50,
+        verbose_name="Тип тега",
+        blank=True,  # Разрешить пустую строку
+        null=True,
+    )  # теперь любой тип
 
     def __str__(self):
-        return self.geo_title
+        return f"{self.name} ({self.tag_type})"
+
+    class Meta:
+        verbose_name = "Тег"
+        verbose_name_plural = "Теги"
 
 
 class GalleryTour(models.Model):
@@ -80,71 +106,34 @@ class GalleryTour(models.Model):
     image = models.ImageField(upload_to="content_images/", blank=True, null=True)
 
 
-class EstimationTour(models.Model):
-    """Класс для модели, который содержит оценки и отзывы."""
-
-    tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name="estimations")
-    estimation = models.IntegerField(
-        blank=True,
-        null=True,
-        verbose_name="Оценка тура",
-        choices=list(zip(range(1, 11), range(1, 11))),
-    )
-    feedback = models.TextField(blank=True, null=True, verbose_name="Отзыв")
-    image = models.ImageField(upload_to="content_images/", blank=True, null=True)
-    date = models.DateField(auto_now_add=True, null=True)
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="estimation",
-        default=1,
-    )
+from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 
-class DateTour(models.Model):
-    """Класс для модели, которая содержит
-    даты начало и конца тура."""
-
-    tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name="date_tour")
-    begin_date = models.DateField(
-        verbose_name="Начало тура",
-    )
-    end_date = models.DateField(
-        verbose_name="Конец тура",
-    )
-    is_free = models.BooleanField(default=True)
-
-
-class TourConditions(models.Model):
-    """Класс для модели, которая содержит условия тура.
-    Продолжительность, количество человек в группе,
-    наличие детей в группе, стоимость.
-    """
-
+class AvailableDateTour(models.Model):
     tour = models.ForeignKey(
-        Tour, on_delete=models.CASCADE, related_name="tour_conditions"
-    )
-    duration = models.IntegerField(
-        blank=True,
-        null=True,
-        verbose_name="Продолжительность тура",
-    )
-    group_size = models.IntegerField(
-        blank=True, null=True, verbose_name="Количество человек"
-    )
-    children = models.CharField(
-        max_length=100, blank=True, null=True, verbose_name="Наличие детей"
-    )
-    transport = models.CharField(max_length=100, blank=True, null=True)
-    cost = models.PositiveIntegerField(
-        blank=True, null=True, verbose_name="Стоимость тура"
-    )
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        "Tour",
         on_delete=models.CASCADE,
-        related_name="conditions",
-        default=1,
+        related_name="available_dates",
+        verbose_name="Тур",
     )
+    start_date = models.DateField(verbose_name="Дата начала тура")
+    end_date = models.DateField(verbose_name="Дата окончания тура")
+    is_active = models.BooleanField(default=True, verbose_name="Активна ли дата")
+
+    class Meta:
+        verbose_name = "Доступный период тура"
+        verbose_name_plural = "Доступные периоды туров"
+        ordering = ["start_date"]
+
+    def __str__(self):
+        return f"{self.tour.title}: {self.start_date} — {self.end_date}"
+
+    @property
+    def duration(self):
+        """Вычисляем продолжительность тура как разницу между датой окончания и датой начала."""
+        return self.end_date - self.start_date
 
 
 class Order(models.Model):
@@ -172,19 +161,3 @@ class Order(models.Model):
         related_name="owner",
         default=1,
     )
-
-
-class Tag(models.Model):
-    """Класс для работы таблицы тэг."""
-
-    name = models.CharField(
-        max_length=200,
-        verbose_name="Название",
-    )
-
-    class Meta:
-        verbose_name = "Тэг"
-        verbose_name_plural = "Теги"
-
-    def __str__(self):
-        return self.name

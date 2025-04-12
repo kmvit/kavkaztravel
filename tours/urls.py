@@ -1,25 +1,21 @@
 from rest_framework.routers import DefaultRouter
 from .views import (
-    DateTourViewSet,
-    EstimationTourViewSet,
-    GalleryTourViewSet,
-    GeoViewSet,
-    GuideViewSet,
-    OrderViewSet,
-    TagViewSet,
     TourOperatorViewSet,
+    TagTourViewSet,
+    AvailableDateTourViewSet,
+    GalleryTourViewSet,
+    OrderViewSet,
     TourViewSet,
 )
 
 router = DefaultRouter()
-router.register(r"guides", GuideViewSet)
+
+# Основные маршруты
 router.register(r"touroperators", TourOperatorViewSet)
-router.register(r"tour", TourViewSet)
+router.register(r"current", TourViewSet)
 router.register(r"gallery_tour", GalleryTourViewSet)
-router.register(r"date_tour", DateTourViewSet)
-router.register(r"tag", TagViewSet)
-router.register(r"geo", GeoViewSet)
 router.register(r"order", OrderViewSet)
-router.register(r"estimations", EstimationTourViewSet)
+router.register(r"tag", TagTourViewSet)
+router.register(r"available_dates", AvailableDateTourViewSet)
 
 urlpatterns = router.urls
