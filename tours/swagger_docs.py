@@ -6,10 +6,11 @@ from .serializers import (
     OrderSerializer,
     TourCreateUpdateSerializer,
     TourDetailSerializer,
-    TagTourSerializer
+    TagTourSerializer,
 )
 
 from .models import Tour
+
 
 class TourSwagger:
     """Документация для API туров."""
@@ -58,10 +59,17 @@ class TourSwagger:
         responses={204: None, 404: "Не найдено"},
     )
 
+    my_tours = extend_schema(
+        methods=["GET"],
+        summary="🌍 Мои туры",
+        description="Возвращает только туры, принадлежащие текущему пользователю (гиду).",
+        responses={200: TourDetailSerializer(many=True)},
+    )
 
 
 from .serializers import OrderSerializer
 from .models import Order
+
 
 class OrderSwagger:
     """Документация для API заказов туров."""
@@ -110,9 +118,11 @@ class OrderSwagger:
         responses={204: None, 404: "Не найдено"},
     )
 
+
 from drf_spectacular.utils import extend_schema
 from .serializers import AvailableDateTourSerializer
 from .models import AvailableDateTour
+
 
 class AvailableDateTourSwagger:
     """Документация для API доступных дат туров."""
@@ -160,9 +170,12 @@ class AvailableDateTourSwagger:
         description="Удаляет доступную дату для тура по ID.",
         responses={204: None, 404: "Не найдено"},
     )
+
+
 from drf_spectacular.utils import extend_schema
 from .serializers import GalleryTourSerializer
 from .models import GalleryTour
+
 
 class GalleryTourSwagger:
     """Документация для API галерей туров."""
@@ -212,9 +225,9 @@ class GalleryTourSwagger:
     )
 
 
-
 from .serializers import TourOperatorSerializer
 from .models import TourOperator
+
 
 class TourOperatorSwagger:
     """Документация для API туроператоров."""

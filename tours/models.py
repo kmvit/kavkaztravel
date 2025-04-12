@@ -4,8 +4,9 @@ from core.models import BaseContent
 from regions.models import Region
 from django.core.validators import RegexValidator
 from regions.models import Region
+from django.core.validators import MinValueValidator
 
- 
+
 class TourOperator(BaseContent):
     """Класс для модели фирмы туроператор."""
 
@@ -28,43 +29,41 @@ class Tour(models.Model):
     """
     Основная модель тура, создаваемого гидом.
     """
+
     guide = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="tours",
-        verbose_name="Гид тура"
+        verbose_name="Гид тура",
     )
-    title = models.CharField(
-        max_length=255, unique=True,
-        verbose_name="Название тура"
-    )
+    title = models.CharField(max_length=255, unique=True, verbose_name="Название тура")
     description = models.TextField("Описание", blank=True, null=True)
     terms = models.TextField(
         "Условия тура",
         blank=True,
         null=True,
-        help_text="Правила отмены, что включено в стоимость, требования к участникам и т.д."
+        help_text="Правила отмены, что включено в стоимость, требования к участникам и т.д.",
     )
     region = models.ForeignKey(
         Region,
         on_delete=models.PROTECT,
-        related_name='tours',
-        verbose_name="Регион тура"
+        related_name="tours",
+        verbose_name="Регион тура",
     )
     tags = models.ManyToManyField(
-        'TagTour',
-        related_name='tours',
+        "TagTour",
+        related_name="tours",
         verbose_name="Теги тура",
-        blank=True
+        blank=True,
     )
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        verbose_name="Стоимость тура"
+        verbose_name="Стоимость тура",
+        validators=[MinValueValidator(0)],
     )
     created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата создания тура"
+        auto_now_add=True, verbose_name="Дата создания тура"
     )
 
     def __str__(self):
@@ -74,14 +73,20 @@ class Tour(models.Model):
         verbose_name = "Тур"
         verbose_name_plural = "Туры"
 
+
 class TagTour(models.Model):
     """
     Универсальная модель для тегов.
     """
+
     name = models.CharField(max_length=100, unique=True, verbose_name="Название тега")
     description = models.TextField(blank=True, null=True, verbose_name="Описание тега")
-    tag_type = models.CharField(max_length=50, verbose_name="Тип тега", blank=True,  # Разрешить пустую строку
-        null=True,)  # теперь любой тип
+    tag_type = models.CharField(
+        max_length=50,
+        verbose_name="Тип тега",
+        blank=True,  # Разрешить пустую строку
+        null=True,
+    )  # теперь любой тип
 
     def __str__(self):
         return f"{self.name} ({self.tag_type})"
@@ -89,7 +94,6 @@ class TagTour(models.Model):
     class Meta:
         verbose_name = "Тег"
         verbose_name_plural = "Теги"
-
 
 
 class GalleryTour(models.Model):
@@ -102,24 +106,21 @@ class GalleryTour(models.Model):
     image = models.ImageField(upload_to="content_images/", blank=True, null=True)
 
 
-
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+
 class AvailableDateTour(models.Model):
     tour = models.ForeignKey(
-        'Tour',
+        "Tour",
         on_delete=models.CASCADE,
         related_name="available_dates",
-        verbose_name="Тур"
+        verbose_name="Тур",
     )
     start_date = models.DateField(verbose_name="Дата начала тура")
     end_date = models.DateField(verbose_name="Дата окончания тура")
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name="Активна ли дата"
-    )
+    is_active = models.BooleanField(default=True, verbose_name="Активна ли дата")
 
     class Meta:
         verbose_name = "Доступный период тура"
@@ -133,6 +134,7 @@ class AvailableDateTour(models.Model):
     def duration(self):
         """Вычисляем продолжительность тура как разницу между датой окончания и датой начала."""
         return self.end_date - self.start_date
+
 
 class Order(models.Model):
     """Класс для модели заказа тура. Содержит информацию

@@ -1,13 +1,12 @@
-from Kavkaztome.permissions import IsOwnerOnly
+from rest_framework.response import Response
+from rest_framework import status
 from django.utils import timezone
-from .filter import TourFilter
+from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import serializers, viewsets
-from .models import (
-    TourOperator, Tour, TagTour, GalleryTour,
-    AvailableDateTour, Order
-)
+from .models import TourOperator, Tour, TagTour, GalleryTour, AvailableDateTour, Order
 from .serializers import (
     TourOperatorSerializer,
     TagTourSerializer,
@@ -15,22 +14,24 @@ from .serializers import (
     AvailableDateTourSerializer,
     OrderSerializer,
     TourCreateUpdateSerializer,
-    TourDetailSerializer
+    TourDetailSerializer,
 )
+from .filter import TourFilter
 from .swagger_docs import (
     TourOperatorSwagger,
     GalleryTourSwagger,
     AvailableDateTourSwagger,
     OrderSwagger,
     TourSwagger,
-    TagTourSwagger
+    TagTourSwagger,
 )
-
-
+from .permissions import IsOwnerOrReadOnly
+from .pagination import TourPagination
 
 
 class GalleryTourViewSet(viewsets.ModelViewSet):
     """CRUD для Галерей туров"""
+
     queryset = GalleryTour.objects.all()
     serializer_class = GalleryTourSerializer
     parser_classes = [MultiPartParser, FormParser]
@@ -58,10 +59,11 @@ class GalleryTourViewSet(viewsets.ModelViewSet):
 
 class AvailableDateTourViewSet(viewsets.ModelViewSet):
     """CRUD для Доступных дат туров"""
+
     queryset = AvailableDateTour.objects.filter(start_date__gte=timezone.now().date())
     serializer_class = AvailableDateTourSerializer
 
-    @AvailableDateTourSwagger.available_date_tour_list 
+    @AvailableDateTourSwagger.available_date_tour_list
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
@@ -81,8 +83,10 @@ class AvailableDateTourViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 
+
 class OrderViewSet(viewsets.ModelViewSet):
     """CRUD для Заказов туров"""
+
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
@@ -94,7 +98,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-    @OrderSwagger. order_detail
+    @OrderSwagger.order_detail
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
@@ -109,16 +113,20 @@ class OrderViewSet(viewsets.ModelViewSet):
 
 class TourViewSet(viewsets.ModelViewSet):
     """CRUD для Туров"""
-    queryset = Tour.objects.select_related(
-        'guide', 'region'
-    ).prefetch_related(
-        'tags',
-        'gallery_tour'
+
+    queryset = (
+        Tour.objects.select_related("guide", "region")
+        .prefetch_related("tags", "gallery_tour")
+        .order_by("id")
     )
-    
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TourFilter
+    permission_classes = [IsOwnerOrReadOnly]
+    pagination_class = TourPagination
+
     def get_serializer_class(self):
         """Выбираем сериализатор в зависимости от действия"""
-        if self.action in ['create', 'update']:
+        if self.action in ["create", "update"]:
             return TourCreateUpdateSerializer
         return TourDetailSerializer
 
@@ -142,10 +150,25 @@ class TourViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
 
+    @TourSwagger.my_tours
+    @action(detail=False, methods=["get"])
+    def my_tours(self, request):
+        """
+        Метод для получения только туров текущего пользователя (гида).
+        """
+        tours = Tour.objects.filter(guide=request.user)
+        page = self.paginate_queryset(tours)
+        if page is not None:
+            serializer = TourDetailSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = TourDetailSerializer(tours, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TagTourViewSet(viewsets.ModelViewSet):
     """CRUD для Тегов"""
+
     queryset = TagTour.objects.all()
     serializer_class = TagTourSerializer
 
@@ -170,9 +193,9 @@ class TagTourViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
-
 class TourOperatorViewSet(viewsets.ModelViewSet):
     """CRUD для Туроператоров"""
+
     queryset = TourOperator.objects.all()
     serializer_class = TourOperatorSerializer
 
