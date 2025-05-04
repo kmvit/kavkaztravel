@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "sms",
     "phonenumber_field",
     'django_celery_results',
+    'custom_notifications',
 ]
 
 MIDDLEWARE = [

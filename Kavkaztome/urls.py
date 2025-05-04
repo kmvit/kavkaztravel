@@ -17,6 +17,7 @@ urlpatterns = [
     path("api/v1/users/", include("users.urls")),
     path("api/v1/reviews/", include("reviews.urls")),
     path("api/v1/blog/", include("blog.urls")),
+    path('api/v1/notifications', include('custom_notifications.urls')),
     
     # OAuth авторизация
     re_path(r"^auth/", include("drf_social_oauth2.urls", namespace="drf")),
