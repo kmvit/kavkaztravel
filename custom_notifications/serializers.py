@@ -1,32 +1,27 @@
 from rest_framework import serializers
-from .models import Message, NotificationSettings, Notification
+from .models import NotificationSettings
 
-class MessageSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для модели сообщений.
-    """
-    class Meta:
-        model = Message
-        fields = ['id', 'sender', 'receiver', 'text', 'created_at']
-       
 
 class NotificationSettingsSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для настроек уведомлений.
-    """
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model = NotificationSettings
-        fields = ['email']
+        fields = ["id", "user", "email"]
         extra_kwargs = {
-            'email': {
-                'help_text': 'Получать уведомления по электронной почте'
-            }
+            "user": {"write_only": True},
+            "email": {"help_text": "Получать уведомления по электронной почте"},
         }
 
-class NotificationSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для уведомлений.
-    """
-    class Meta:
-        model = Notification
-        fields = ['id', 'actor', 'recipient', 'message', 'timestamp', 'unread']
+    def validate(self, data):
+
+        if self.instance is None:  # Только при создании (POST)
+            if NotificationSettings.objects.filter(user=data["user"]).exists():
+                raise serializers.ValidationError(
+                    "Настройки уже существуют для этого пользователя."
+                )
+        return data
+
+    def update(self, instance, validated_data):
+        validated_data.pop("user", None)
+        return super().update(instance, validated_data)
